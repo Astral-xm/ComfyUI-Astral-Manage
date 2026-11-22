@@ -2,19 +2,123 @@ import { app } from "../../scripts/app.js";
 
 const MODE = 1001;
 const MODE_TEXT = "直角曲线";
-const STUB = 12;
-const LANE_PITCH = 10;
 const RADIUS = 10;
+const PORT_STUB = 10 + RADIUS;
+const CLEARANCE = 20;
+const CHANNEL_STEP = 10;
+const CHANNEL_TOLERANCE = 8;
+const MAX_DETOUR = 220;
 
-const frameLanes = new Map();
+const frameChannels = new Map();
+let frameRects = [];
+let frameRectsReady = false;
 const state = { patched: false, option: false };
 
 function isActive() {
   return Number(app.canvas?.links_render_mode) === MODE;
 }
 
+function collectNodeRects() {
+  const graph = app.canvas?.graph || app.graph;
+  const nodes = graph?._nodes || [];
+  const title = Number(window.LiteGraph?.NODE_TITLE_HEIGHT) || 30;
+  const rects = [];
+  for (const node of nodes) {
+    if (!node || node.flags?.collapsed) continue;
+    const width = Number(node.size?.[0]) || 0;
+    const height = Number(node.size?.[1]) || 0;
+    if (width <= 0 || height <= 0) continue;
+    rects.push({
+      id: String(node.id),
+      x1: node.pos[0] - CLEARANCE,
+      y1: node.pos[1] - title - CLEARANCE,
+      x2: node.pos[0] + width + CLEARANCE,
+      y2: node.pos[1] + height + CLEARANCE,
+    });
+  }
+  return rects;
+}
+
 function resetFrameLanes() {
-  frameLanes.clear();
+  frameChannels.clear();
+  frameRects = collectNodeRects();
+  frameRectsReady = true;
+}
+
+function segmentHitsRect(x1, y1, x2, y2, rect) {
+  if (Math.abs(x1 - x2) < 0.01) {
+    return (
+      x1 > rect.x1 &&
+      x1 < rect.x2 &&
+      Math.max(y1, y2) > rect.y1 &&
+      Math.min(y1, y2) < rect.y2
+    );
+  }
+  if (Math.abs(y1 - y2) < 0.01) {
+    return (
+      y1 > rect.y1 &&
+      y1 < rect.y2 &&
+      Math.max(x1, x2) > rect.x1 &&
+      Math.min(x1, x2) < rect.x2
+    );
+  }
+  return false;
+}
+
+function countNodeHits(pts, rects) {
+  let hits = 0;
+  for (const rect of rects) {
+    for (let i = 1; i < pts.length; i++) {
+      if (
+        segmentHitsRect(
+          pts[i - 1][0],
+          pts[i - 1][1],
+          pts[i][0],
+          pts[i][1],
+          rect,
+        )
+      ) {
+        hits++;
+        break;
+      }
+    }
+  }
+  return hits;
+}
+
+function countChannelHits(pts, channels) {
+  let hits = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const [x1, y1] = pts[i - 1];
+    const [x2, y2] = pts[i];
+    if (Math.abs(x1 - x2) > 0.01) continue;
+    const ranges = channels.get(Math.round(x1 / CHANNEL_TOLERANCE));
+    if (!ranges) continue;
+    const low = Math.min(y1, y2);
+    const high = Math.max(y1, y2);
+    for (const range of ranges) {
+      if (high > range[0] + 0.5 && low < range[1] - 0.5) {
+        hits++;
+        break;
+      }
+    }
+  }
+  return hits;
+}
+
+function registerChannels(pts, channels) {
+  for (let i = 1; i < pts.length; i++) {
+    const [x1, y1] = pts[i - 1];
+    const [x2, y2] = pts[i];
+    if (Math.abs(x1 - x2) > 0.01) continue;
+    const key = Math.round(x1 / CHANNEL_TOLERANCE);
+    let ranges = channels.get(key);
+    if (!ranges) {
+      ranges = [];
+      channels.set(key, ranges);
+    }
+    ranges.push([Math.min(y1, y2), Math.max(y1, y2)]);
+  }
 }
 
 function dist(a, b) {
@@ -44,25 +148,6 @@ function dedupe(pts) {
   return out;
 }
 
-function laneFor(linkData, orientation) {
-  const s = linkData.startPoint;
-  const e = linkData.endPoint;
-  const key =
-    orientation === "horizontal"
-      ? `H|${Math.round(s.y / 8)}`
-      : `V|${Math.round(s.x / 8)}|${Math.round(e.x / 8)}`;
-  let group = frameLanes.get(key);
-  if (!group) {
-    group = new Map();
-    frameLanes.set(key, group);
-  }
-  const id = String(linkData.id);
-  if (!group.has(id)) group.set(id, group.size);
-  const index = group.get(id);
-  const step = Math.ceil(index / 2);
-  return (index % 2 ? -step : step) * LANE_PITCH;
-}
-
 function buildRoute(linkData) {
   if (linkData.startDirection !== "right" || linkData.endDirection !== "left") {
     return null;
@@ -70,47 +155,83 @@ function buildRoute(linkData) {
 
   const s = linkData.startPoint;
   const e = linkData.endPoint;
-  const ax = s.x + STUB;
-  const bx = e.x - STUB;
 
-  const horizontal =
-    e.x - s.x > 0 &&
-    Math.abs(e.x - s.x) >= Math.abs(e.y - s.y) * 1.5;
-
-  let pts;
-  if (horizontal) {
-    const lane = laneFor(linkData, "horizontal");
-    const laneY = s.y + lane;
-    pts = dedupe([
+  if (Math.abs(e.y - s.y) <= 10) {
+    const pts = dedupe([
       [s.x, s.y],
-      [ax, s.y],
-      [ax, laneY],
-      [bx, laneY],
-      [bx, e.y],
       [e.x, e.y],
     ]);
-  } else {
-    const lane = laneFor(linkData, "vertical");
-    let midX;
-    if (bx - ax >= 16) {
-      midX = (ax + bx) / 2 + lane;
-      const low = Math.min(ax, bx) + 4;
-      const high = Math.max(ax, bx) - 4;
-      if (low < high) midX = Math.max(low, Math.min(high, midX));
-    } else {
-      midX = Math.max(ax, bx) + STUB + Math.abs(lane);
-    }
-    pts = dedupe([
+    return pts.length < 2 ? null : { pts, measure: measure(pts) };
+  }
+
+  if (!frameRectsReady) {
+    frameRects = collectNodeRects();
+    frameRectsReady = true;
+  }
+
+  const graph = app.canvas?.graph || app.graph;
+  const rawId = linkData.id;
+  const link =
+    graph?.getLink?.(rawId) || graph?.getLink?.(Number(rawId)) || null;
+  const excluded = new Set();
+  if (link) {
+    excluded.add(String(link.origin_id));
+    excluded.add(String(link.target_id));
+  }
+
+  const minX = Math.min(s.x, e.x) - MAX_DETOUR;
+  const maxX = Math.max(s.x, e.x) + MAX_DETOUR;
+  const minY = Math.min(s.y, e.y) - MAX_DETOUR;
+  const maxY = Math.max(s.y, e.y) + MAX_DETOUR;
+  const relevant = frameRects.filter(
+    (rect) =>
+      !excluded.has(rect.id) &&
+      rect.x2 >= minX &&
+      rect.x1 <= maxX &&
+      rect.y2 >= minY &&
+      rect.y1 <= maxY,
+  );
+
+  const makePoints = (midX) =>
+    dedupe([
       [s.x, s.y],
-      [ax, s.y],
       [midX, s.y],
       [midX, e.y],
-      [bx, e.y],
       [e.x, e.y],
     ]);
+
+  const forward = e.x - s.x >= PORT_STUB * 2;
+  const startX = forward
+    ? s.x + PORT_STUB
+    : Math.max(s.x, e.x) + PORT_STUB;
+  const endX = forward ? e.x - PORT_STUB : startX + MAX_DETOUR;
+
+  const consider = (midX) => {
+    const pts = makePoints(midX);
+    const nodeHits = countNodeHits(pts, relevant);
+    const channelHits = countChannelHits(pts, frameChannels);
+    return { pts, score: nodeHits * 1000 + channelHits * 10000 };
+  };
+
+  let best = null;
+  for (let midX = startX; midX <= endX + 0.01; midX += CHANNEL_STEP) {
+    const candidate = consider(midX);
+    if (!best || candidate.score < best.score) best = candidate;
+    if (candidate.score === 0) break;
   }
-  if (pts.length < 2) return null;
-  return { pts, measure: measure(pts) };
+  if (
+    best &&
+    best.score > 0 &&
+    forward &&
+    Math.abs((endX - startX) % CHANNEL_STEP) > 0.01
+  ) {
+    const candidate = consider(endX);
+    if (candidate.score < best.score) best = candidate;
+  }
+  if (!best) best = consider(startX);
+
+  registerChannels(best.pts, frameChannels);
+  return { pts: best.pts, measure: measure(best.pts) };
 }
 
 function emitRounded(path, pts) {
