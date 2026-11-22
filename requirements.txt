@@ -1,0 +1,15 @@
+# ComfyUI-Astral-Manage
+#
+# No additional pip packages are required for the default nodes.
+# ComfyUI already provides: Pillow, aiohttp, requests, torch, numpy.
+#
+# Optional, install manually only if you use local GGUF chat:
+#   llama-cpp-python>=0.3.0
+# Choose a prebuilt wheel that matches your Python, CUDA and platform, or run:
+#   python -m pip install -e ".[local-llm]"
+#
+# Optional system dependency:
+#   ffmpeg  (video frame extraction for chat attachments, must be on PATH)
+#
+# Optional node packs:
+#   rgthree-comfy                  (dialog and menu styling for LoRA Stack Loader)

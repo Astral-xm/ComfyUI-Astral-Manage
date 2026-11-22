@@ -5,6 +5,7 @@ description = "ComfyUI node pack for LoRA stacks, prompt handling, media and mod
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
+dependencies = []
 authors = [{ name = "Astral星芒" }]
 keywords = ["comfyui", "comfyui-nodes", "lora", "prompt", "asset-manager"]
 classifiers = [

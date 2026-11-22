@@ -44,7 +44,26 @@ ComfyUI/custom_nodes/ComfyUI-Astral-Manage
 
 重启 ComfyUI。`LoRA Stack Loader` 的部分交互复用了已安装的 `rgthree-comfy` 的对话框和菜单样式。
 
-### 可选依赖：本地 GGUF 对话
+## 依赖
+
+默认功能不额外安装 pip 包，使用的都是 ComfyUI 自带组件：
+
+| 依赖 | 用途 |
+| --- | --- |
+| `Pillow` | 图片读取、缩略图与遮罩处理 |
+| `aiohttp` | Asset Manager 的 HTTP 路由 |
+| `requests` | C站 / Hugging Face / 魔搭社区查询 |
+| `torch`、`numpy` | 节点运行时 |
+
+仓库根目录的 `requirements.txt` 只包含说明和可选依赖，不会安装额外包。
+
+可选依赖：
+
+- `llama-cpp-python`：本地 GGUF 对话，安装方式见下节。
+- `ffmpeg`：聊天附件视频抽帧，需要位于系统 `PATH`。
+- `rgthree-comfy`：`LoRA Stack Loader` 的对话框与菜单样式；未安装时节点仍可正常使用。
+
+### 本地 GGUF 对话
 
 本地 LLM 模式需要 `llama-cpp-python`，并把主模型放在 ComfyUI 的 `models/LLM` 目录中。建议按当前 Python、CUDA 和平台安装对应的预编译轮子，而不是在普通 `pip install` 中强制编译：
 
