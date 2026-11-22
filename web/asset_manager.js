@@ -11715,10 +11715,17 @@ class AssetManager {
       createElement("span", "astral-am-heading-divider", "·"),
       starControl,
     );
-    heading.append(
-      createElement("span", "astral-am-kicker", "ComfyUI-Astral-Manage"),
-      headingLinks,
+    const projectLink = createElement(
+      "a",
+      "astral-am-kicker astral-am-kicker-link",
+      "ComfyUI-Astral-Manage",
     );
+    projectLink.href =
+      "https://github.com/Astral-xm/ComfyUI-Astral-Manage/releases";
+    projectLink.target = "_blank";
+    projectLink.rel = "noopener noreferrer";
+    projectLink.title = "打开 ComfyUI-Astral-Manage 的 GitHub 发布页";
+    heading.append(projectLink, headingLinks);
     const headerActions = createElement("div", "astral-am-header-actions");
     headerActions.append(
       createElement(

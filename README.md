@@ -2,7 +2,7 @@
 
 作者：**Astral星芒** · 许可证：**AGPL-3.0** · 节点与界面中的原作者信息不得删除或替换
 
-ComfyUI 自定义节点与资产管理合集，包含 `Anything Everywhere`、`LoRA Stack Loader`、`Typed Bypass Switch`、`String Mode Selector`、`SetGroup` / `GetGroup`、`忽略多框`、提示词与 API 对话节点、`Prompt Processor`、本地 GGUF 对话，以及通过 ComfyUI 顶部“资产管理”按钮打开的资产管理器。提示词处理同时提供画布浮动工具。
+ComfyUI 自定义节点与资产管理合集，包含 `Anything Everywhere`、`LoRA Stack Loader`、`Typed Bypass Switch`、`String Mode Selector`、`SetGroup` / `GetGroup`、`忽略多框`、提示词与 API 对话节点、`Prompt Processor`、本地 GGUF 对话，以及通过 ComfyUI 顶部“资产管理”按钮打开的资产管理器。提示词处理同时提供画布浮动工具；资产管理器顶部的 `ComfyUI-Astral-Manage` 标题可点击打开 GitHub 发布页。
 
 ## 功能一览
 
