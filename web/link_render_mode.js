@@ -4,7 +4,7 @@ const MODE = 1001;
 const MODE_TEXT = "直角曲线";
 const RADIUS = 5;
 const PORT_STUB = 10 + RADIUS;
-const CLEARANCE = 20;
+const CLEARANCE = 5;
 const CHANNEL_STEP = 10;
 const CHANNEL_TOLERANCE = 8;
 const MAX_DETOUR = 220;
@@ -228,16 +228,11 @@ function buildRoute(linkData) {
   } else {
     // Backward or too-short forward: loop around so the input is entered
     // from the left, with a horizontal final segment into the port.
-    const rightX = Math.max(s.x, e.x) + PORT_STUB;
+    const rightX = s.x + PORT_STUB;
     const leftX = e.x - PORT_STUB;
-    const high = Math.min(s.y, e.y);
-    const low = Math.max(s.y, e.y);
     const detourYs = [];
-    for (const ratio of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+    for (const ratio of [0.5, 0.35, 0.65, 0.2, 0.8, 0.1, 0.9]) {
       detourYs.push(s.y + (e.y - s.y) * ratio);
-    }
-    for (const offset of [70, 110, 150, 200, 260]) {
-      detourYs.push(high - offset, low + offset);
     }
     for (const detourY of detourYs) {
       const pts = dedupe([
