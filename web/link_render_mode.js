@@ -2,7 +2,7 @@ import { app } from "../../scripts/app.js";
 
 const MODE = 1001;
 const MODE_TEXT = "直角曲线";
-const RADIUS = 10;
+const RADIUS = 5;
 const PORT_STUB = 10 + RADIUS;
 const CLEARANCE = 20;
 const CHANNEL_STEP = 10;
@@ -156,7 +156,7 @@ function buildRoute(linkData) {
   const s = linkData.startPoint;
   const e = linkData.endPoint;
 
-  if (Math.abs(e.y - s.y) <= 10) {
+  if (Math.abs(e.y - s.y) <= 10 && e.x - s.x >= 10) {
     const pts = dedupe([
       [s.x, s.y],
       [e.x, e.y],
@@ -200,35 +200,68 @@ function buildRoute(linkData) {
       [e.x, e.y],
     ]);
 
-  const forward = e.x - s.x >= PORT_STUB * 2;
-  const startX = forward
-    ? s.x + PORT_STUB
-    : Math.max(s.x, e.x) + PORT_STUB;
-  const endX = forward ? e.x - PORT_STUB : startX + MAX_DETOUR;
-
-  const consider = (midX) => {
-    const pts = makePoints(midX);
+  const scorePoints = (pts) => {
     const nodeHits = countNodeHits(pts, relevant);
     const channelHits = countChannelHits(pts, frameChannels);
     return { pts, score: nodeHits * 1000 + channelHits * 10000 };
   };
 
+  const forward = e.x - s.x >= PORT_STUB * 2;
   let best = null;
-  for (let midX = startX; midX <= endX + 0.01; midX += CHANNEL_STEP) {
-    const candidate = consider(midX);
-    if (!best || candidate.score < best.score) best = candidate;
-    if (candidate.score === 0) break;
+
+  if (forward) {
+    const startX = s.x + PORT_STUB;
+    const endX = e.x - PORT_STUB;
+    for (let midX = startX; midX <= endX + 0.01; midX += CHANNEL_STEP) {
+      const candidate = scorePoints(makePoints(midX));
+      if (!best || candidate.score < best.score) best = candidate;
+      if (candidate.score === 0) break;
+    }
+    if (
+      best &&
+      best.score > 0 &&
+      Math.abs((endX - startX) % CHANNEL_STEP) > 0.01
+    ) {
+      const candidate = scorePoints(makePoints(endX));
+      if (candidate.score < best.score) best = candidate;
+    }
+  } else {
+    // Backward or too-short forward: loop around so the input is entered
+    // from the left, with a horizontal final segment into the port.
+    const rightX = Math.max(s.x, e.x) + PORT_STUB;
+    const leftX = e.x - PORT_STUB;
+    const high = Math.min(s.y, e.y);
+    const low = Math.max(s.y, e.y);
+    const detourYs = [];
+    for (const ratio of [0.5, 0.35, 0.65, 0.2, 0.8]) {
+      detourYs.push(s.y + (e.y - s.y) * ratio);
+    }
+    for (const offset of [70, 110, 150, 200, 260]) {
+      detourYs.push(high - offset, low + offset);
+    }
+    for (const detourY of detourYs) {
+      const pts = dedupe([
+        [s.x, s.y],
+        [rightX, s.y],
+        [rightX, detourY],
+        [leftX, detourY],
+        [leftX, e.y],
+        [e.x, e.y],
+      ]);
+      const candidate = scorePoints(pts);
+      const crossesSource =
+        leftX > Math.min(s.x, rightX) &&
+        leftX < Math.max(s.x, rightX) &&
+        s.y > Math.min(detourY, e.y) &&
+        s.y < Math.max(detourY, e.y);
+      const score = candidate.score + (crossesSource ? 500 : 0);
+      if (!best || score < best.score) {
+        best = { pts: candidate.pts, score };
+      }
+      if (score === 0) break;
+    }
   }
-  if (
-    best &&
-    best.score > 0 &&
-    forward &&
-    Math.abs((endX - startX) % CHANNEL_STEP) > 0.01
-  ) {
-    const candidate = consider(endX);
-    if (candidate.score < best.score) best = candidate;
-  }
-  if (!best) best = consider(startX);
+  if (!best) return null;
 
   registerChannels(best.pts, frameChannels);
   return { pts: best.pts, measure: measure(best.pts) };
