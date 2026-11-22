@@ -65,7 +65,6 @@ const state = {
       skillId: "",
       mode: "api",
       clearVram: false,
-      language: "en",
     },
   },
   loadedCategories: new Set(),
@@ -78,6 +77,7 @@ const ui = {
   translateEnButton: null,
   translateZhButton: null,
   invertButton: null,
+  invertEnButton: null,
   settings: null,
   settingsHeading: null,
   settingsSource: null,
@@ -87,8 +87,6 @@ const ui = {
   settingsSkillSelect: null,
   settingsServiceField: null,
   settingsServiceSelect: null,
-  settingsLanguageField: null,
-  settingsLanguageSelect: null,
   settingsClearLabel: null,
   settingsClearVram: null,
   settingsManageButton: null,
@@ -574,15 +572,19 @@ function createFloatingUi() {
   ui.expandButton = createToolIconButton("expand", "expand");
   ui.translateEnButton = createTranslationButton("en");
   ui.translateZhButton = createTranslationButton("zh");
-  ui.invertButton = createToolIconButton(
-    "invert",
-    getLanguage() === "en" ? "caption-en" : "caption-zh",
+  ui.invertButton = createToolIconButton("invert-zh", "caption-zh");
+  ui.invertEnButton = createButton(
+    "astral-pt-tool-button astral-pt-translate-button",
+    "EN",
+    "invert-en",
   );
+  ui.invertEnButton.setAttribute("aria-haspopup", "menu");
   ui.toolbar.append(
     ui.expandButton,
     ui.translateEnButton,
     ui.translateZhButton,
     ui.invertButton,
+    ui.invertEnButton,
   );
 
   ui.panel = createElement("section", PANEL_CLASS);
@@ -737,12 +739,6 @@ function createFloatingUi() {
     ui.settingsServiceSelect,
     "astral-pt-wide-field",
   );
-  ui.settingsLanguageSelect = createElement("select", "astral-pt-select");
-  ui.settingsLanguageField = createField(
-    "反推语言",
-    ui.settingsLanguageSelect,
-    "astral-pt-wide-field",
-  );
   ui.settingsClearLabel = createElement("label", "astral-pt-check");
   ui.settingsClearVram = document.createElement("input");
   ui.settingsClearVram.type = "checkbox";
@@ -760,7 +756,6 @@ function createFloatingUi() {
     ui.settingsRuleField,
     ui.settingsSkillField,
     ui.settingsServiceField,
-    ui.settingsLanguageField,
     ui.settingsClearLabel,
     ui.settingsHint,
   );
@@ -800,9 +795,15 @@ function createFloatingUi() {
     openTranslation("zh"),
   );
   ui.invertButton.addEventListener("click", () =>
-    handleToolClick("invert"),
+    handleToolClick("invert", "zh"),
   );
   ui.invertButton.addEventListener("contextmenu", (event) =>
+    openSettings("invert", event),
+  );
+  ui.invertEnButton.addEventListener("click", () =>
+    handleToolClick("invert", "en"),
+  );
+  ui.invertEnButton.addEventListener("contextmenu", (event) =>
     openSettings("invert", event),
   );
   ui.closeButton.addEventListener("click", closePanel);
@@ -843,11 +844,6 @@ function createFloatingUi() {
     config.mode =
       ui.settingsServiceSelect.value === "local" ? "local" : "api";
     refreshSettingsOptions();
-  });
-  ui.settingsLanguageSelect.addEventListener("change", () => {
-    const config = state.settings[state.menuAction];
-    if (!config) return;
-    config.language = ui.settingsLanguageSelect.value || "en";
   });
   ui.settingsClearVram.addEventListener("change", () => {
     const config = state.settings[state.menuAction];
@@ -989,10 +985,6 @@ function refreshSettingsOptions() {
   );
   ui.settingsSkillField.__label.textContent = "Skill";
   ui.settingsServiceField.__label.textContent = text("服务", "Service");
-  ui.settingsLanguageField.__label.textContent = text(
-    "反推语言",
-    "Inversion language",
-  );
   setCheckCaption(
     ui.settingsClearLabel,
     "任务后清理显存",
@@ -1027,17 +1019,6 @@ function refreshSettingsOptions() {
     ui.settingsServiceSelect.append(option);
   }
   ui.settingsServiceSelect.value = serviceValue;
-  const isInvert = action === "invert";
-  ui.settingsLanguageField.hidden = !isInvert;
-  if (isInvert) {
-    ui.settingsLanguageSelect.replaceChildren();
-    for (const item of TARGET_LANGUAGES) {
-      const option = createElement("option", "", text(item.zh, item.en));
-      option.value = item.value;
-      ui.settingsLanguageSelect.append(option);
-    }
-    ui.settingsLanguageSelect.value = config.language || "en";
-  }
   ui.settingsClearLabel.hidden = serviceValue !== "local";
   ui.settingsClearVram.checked =
     serviceValue === "local" && Boolean(config.clearVram);
@@ -1047,7 +1028,6 @@ function refreshSettingsOptions() {
   ui.settingsRuleSelect.disabled = state.running || skillSelected;
   ui.settingsSkillSelect.disabled = state.running || ruleSelected;
   ui.settingsServiceSelect.disabled = state.running;
-  ui.settingsLanguageSelect.disabled = state.running;
   ui.settingsClearVram.disabled = state.running;
   ui.settingsManageButton.disabled = state.running;
   ui.settingsRefreshButton.disabled = state.running;
@@ -1104,6 +1084,7 @@ function setRunning(running) {
   for (const [action, button] of [
     ["expand", ui.expandButton],
     ["invert", ui.invertButton],
+    ["invert", ui.invertEnButton],
   ]) {
     button.dataset.running =
       activeTool === action ? "true" : "false";
@@ -1146,8 +1127,14 @@ function refreshTexts() {
   ui.invertButton.title = invertRunning
     ? text("停止图像反推", "Stop image inversion")
     : text(
-        "图像反推（左键执行，右键设置）",
-        "Invert image (left-click to run, right-click to configure)",
+        "中文图像反推（左键执行，右键设置）",
+        "Chinese image inversion (left-click to run, right-click to configure)",
+      );
+  ui.invertEnButton.title = invertRunning
+    ? text("停止图像反推", "Stop image inversion")
+    : text(
+        "英文图像反推（左键执行，右键设置）",
+        "English image inversion (left-click to run, right-click to configure)",
       );
   ui.expandButton.setAttribute("aria-label", ui.expandButton.title);
   ui.translateEnButton.setAttribute(
@@ -1159,13 +1146,7 @@ function refreshTexts() {
     ui.translateZhButton.title,
   );
   ui.invertButton.setAttribute("aria-label", ui.invertButton.title);
-  const invertIcon =
-    ui.invertButton.querySelector?.("[data-icon]") ||
-    ui.invertButton.firstElementChild;
-  if (invertIcon) {
-    invertIcon.dataset.icon =
-      getLanguage() === "en" ? "caption-en" : "caption-zh";
-  }
+  ui.invertEnButton.setAttribute("aria-label", ui.invertEnButton.title);
   ui.panelHeading.textContent = actionTitle("translate");
   ui.closeButton.title = text("关闭", "Close");
   ui.closeButton.setAttribute("aria-label", ui.closeButton.title);
@@ -1261,6 +1242,7 @@ function showToolbar(selection) {
   ui.translateEnButton.hidden = selection.kind !== "text";
   ui.translateZhButton.hidden = selection.kind !== "text";
   ui.invertButton.hidden = selection.kind !== "image";
+  ui.invertEnButton.hidden = selection.kind !== "image";
   syncToolbarVisibility();
 }
 
@@ -1419,6 +1401,7 @@ function positionFloatingUi() {
     ui.translateEnButton,
     ui.translateZhButton,
     ui.invertButton,
+    ui.invertEnButton,
   ].find(
     (candidate) =>
       candidate?.dataset?.running === "true",
@@ -1567,7 +1550,7 @@ function closeSettings() {
   syncToolbarVisibility();
 }
 
-function handleToolClick(action) {
+function handleToolClick(action, language = "") {
   if (state.running) {
     if (state.action === action) return stopTask();
     return undefined;
@@ -1576,7 +1559,7 @@ function handleToolClick(action) {
     return runTask("expand");
   }
   if (action === "invert" && state.kind === "image") {
-    return runTask("invert");
+    return runTask("invert", false, language);
   }
   return undefined;
 }
@@ -1719,7 +1702,11 @@ async function writeClipboardText(value) {
   throw clipboardError || new Error(text("复制失败", "Copy failed"));
 }
 
-async function runTask(action = state.action, isRetry = false) {
+async function runTask(
+  action = state.action,
+  isRetry = false,
+  targetLanguageOverride = "",
+) {
   if (typeof action === "boolean") {
     isRetry = action;
     action = state.action;
@@ -1751,7 +1738,7 @@ async function runTask(action = state.action, isRetry = false) {
         state.translationTarget ||
         "en"
       : action === "invert"
-        ? config?.language || "en"
+        ? targetLanguageOverride || "en"
         : "en";
   state.action = action;
   if (action === "translate") {
