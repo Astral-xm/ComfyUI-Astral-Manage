@@ -65,6 +65,7 @@ const state = {
       skillId: "",
       mode: "api",
       clearVram: false,
+      language: "en",
     },
   },
   loadedCategories: new Set(),
@@ -86,6 +87,8 @@ const ui = {
   settingsSkillSelect: null,
   settingsServiceField: null,
   settingsServiceSelect: null,
+  settingsLanguageField: null,
+  settingsLanguageSelect: null,
   settingsClearLabel: null,
   settingsClearVram: null,
   settingsManageButton: null,
@@ -734,6 +737,12 @@ function createFloatingUi() {
     ui.settingsServiceSelect,
     "astral-pt-wide-field",
   );
+  ui.settingsLanguageSelect = createElement("select", "astral-pt-select");
+  ui.settingsLanguageField = createField(
+    "反推语言",
+    ui.settingsLanguageSelect,
+    "astral-pt-wide-field",
+  );
   ui.settingsClearLabel = createElement("label", "astral-pt-check");
   ui.settingsClearVram = document.createElement("input");
   ui.settingsClearVram.type = "checkbox";
@@ -751,6 +760,7 @@ function createFloatingUi() {
     ui.settingsRuleField,
     ui.settingsSkillField,
     ui.settingsServiceField,
+    ui.settingsLanguageField,
     ui.settingsClearLabel,
     ui.settingsHint,
   );
@@ -833,6 +843,11 @@ function createFloatingUi() {
     config.mode =
       ui.settingsServiceSelect.value === "local" ? "local" : "api";
     refreshSettingsOptions();
+  });
+  ui.settingsLanguageSelect.addEventListener("change", () => {
+    const config = state.settings[state.menuAction];
+    if (!config) return;
+    config.language = ui.settingsLanguageSelect.value || "en";
   });
   ui.settingsClearVram.addEventListener("change", () => {
     const config = state.settings[state.menuAction];
@@ -974,6 +989,10 @@ function refreshSettingsOptions() {
   );
   ui.settingsSkillField.__label.textContent = "Skill";
   ui.settingsServiceField.__label.textContent = text("服务", "Service");
+  ui.settingsLanguageField.__label.textContent = text(
+    "反推语言",
+    "Inversion language",
+  );
   setCheckCaption(
     ui.settingsClearLabel,
     "任务后清理显存",
@@ -1008,6 +1027,17 @@ function refreshSettingsOptions() {
     ui.settingsServiceSelect.append(option);
   }
   ui.settingsServiceSelect.value = serviceValue;
+  const isInvert = action === "invert";
+  ui.settingsLanguageField.hidden = !isInvert;
+  if (isInvert) {
+    ui.settingsLanguageSelect.replaceChildren();
+    for (const item of TARGET_LANGUAGES) {
+      const option = createElement("option", "", text(item.zh, item.en));
+      option.value = item.value;
+      ui.settingsLanguageSelect.append(option);
+    }
+    ui.settingsLanguageSelect.value = config.language || "en";
+  }
   ui.settingsClearLabel.hidden = serviceValue !== "local";
   ui.settingsClearVram.checked =
     serviceValue === "local" && Boolean(config.clearVram);
@@ -1017,6 +1047,7 @@ function refreshSettingsOptions() {
   ui.settingsRuleSelect.disabled = state.running || skillSelected;
   ui.settingsSkillSelect.disabled = state.running || ruleSelected;
   ui.settingsServiceSelect.disabled = state.running;
+  ui.settingsLanguageSelect.disabled = state.running;
   ui.settingsClearVram.disabled = state.running;
   ui.settingsManageButton.disabled = state.running;
   ui.settingsRefreshButton.disabled = state.running;
@@ -1719,7 +1750,9 @@ async function runTask(action = state.action, isRetry = false) {
       ? ui.languageSelect.value ||
         state.translationTarget ||
         "en"
-      : "en";
+      : action === "invert"
+        ? config?.language || "en"
+        : "en";
   state.action = action;
   if (action === "translate") {
     state.translationTarget = targetLanguage;
@@ -1784,8 +1817,7 @@ async function runTask(action = state.action, isRetry = false) {
         skillIds: skillId ? [skillId] : [],
         attachments: attachment ? [attachment] : [],
         clearVram,
-        targetLanguage:
-          action === "translate" ? targetLanguage : "en",
+        targetLanguage,
         sourceLanguage: "auto",
       }),
     });

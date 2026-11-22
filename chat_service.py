@@ -2464,6 +2464,21 @@ def _prompt_task_rule(
   }
 
 
+PROMPT_TASK_LANGUAGE_NAMES = {
+  "en": "English",
+  "zh": "Simplified Chinese",
+  "ja": "Japanese",
+  "ko": "Korean",
+  "fr": "French",
+  "de": "German",
+  "es": "Spanish",
+  "ru": "Russian",
+  "pt": "Portuguese",
+  "it": "Italian",
+  "ar": "Arabic",
+}
+
+
 def _prompt_task_messages(
   config: dict[str, Any],
   *,
@@ -2500,6 +2515,15 @@ def _prompt_task_messages(
       "引号或 Markdown。"
     ),
   }[task]
+  if task == "invert":
+    language_name = PROMPT_TASK_LANGUAGE_NAMES.get(
+      str(target_language or "").strip().casefold()
+    )
+    if language_name:
+      instructions = (
+        f"{instructions}\nOutput language: {language_name}. "
+        f"Write the final prompt only in {language_name}."
+      )
   system_parts = [
     str(config.get("systemPrompt") or "").strip(),
     rule_context.strip(),
