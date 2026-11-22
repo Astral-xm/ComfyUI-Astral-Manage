@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "comfyui-astral-manage"
 version = "0.9.0"
 description = "ComfyUI node pack for LoRA stacks, prompt handling, media and model management, and workflow utilities."

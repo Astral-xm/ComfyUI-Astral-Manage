@@ -1,4 +1,4 @@
-﻿# ComfyUI-Astral-Manage
+# ComfyUI-Astral-Manage
 
 作者：**Astral星芒** · 许可证：**AGPL-3.0** · 节点与界面中的原作者信息不得删除或替换
 
