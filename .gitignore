@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.idea/
+.vscode/
+*.log
+.cache/
+.tmp-cdp*/
+.codex-runtime/
+.deploy-backups/
+.asset-library-tests/
+tests/.tmp_*
+assets-astral/
+api-config.json

@@ -1,0 +1,4294 @@
+.astral-am-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  pointer-events: none;
+  background: transparent;
+  color: #e9edf3;
+  font: 13px/1.45 Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+.astral-am-backdrop[hidden] {
+  display: none;
+}
+
+.astral-am-menu-button-group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 3px;
+}
+
+.astral-am-menu-button {
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(157, 126, 255, 0.34);
+  border-radius: 7px;
+  background: rgba(113, 91, 203, 0.14);
+  color: #dfe7f1;
+  font: 650 13px/1 Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.astral-am-menu-button:hover,
+.astral-am-menu-button:focus-visible {
+  border-color: rgba(157, 126, 255, 0.46);
+  outline: none;
+  background: rgba(113, 91, 203, 0.18);
+}
+
+.astral-am-window {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  width: min(1220px, calc(100vw - 120px));
+  height: min(860px, calc(100vh - 104px));
+  overflow: hidden;
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 12% -20%, rgba(70, 115, 160, 0.24), transparent 38%),
+    #171a20;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.56);
+  will-change: transform;
+}
+
+.astral-am-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 17px 20px 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: grab;
+  touch-action: none;
+}
+
+.astral-am-window.is-dragging {
+  box-shadow: 0 30px 96px rgba(0, 0, 0, 0.68);
+  user-select: none;
+}
+
+.astral-am-window.is-dragging .astral-am-header {
+  cursor: grabbing;
+}
+
+.astral-am-heading {
+  display: grid;
+  gap: 1px;
+}
+
+.astral-am-heading-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.astral-am-heading-link {
+  color: #fff;
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+
+.astral-am-heading-link:hover,
+.astral-am-heading-link:focus-visible {
+  color: #9dccf0;
+  outline: none;
+  text-decoration: underline;
+}
+
+.astral-am-heading-star {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #80baf0;
+}
+
+.astral-am-heading-star-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.astral-am-heading-star-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.astral-am-language-toggle {
+  position: relative;
+  top: -5px;
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: center;
+  height: 18px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(128, 186, 240, 0.36);
+  border-radius: 999px;
+  color: #8295a8;
+  background: rgba(15, 22, 31, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.astral-am-language-toggle:hover,
+.astral-am-language-toggle:focus-visible {
+  border-color: rgba(128, 186, 240, 0.72);
+  color: #d8efff;
+  outline: none;
+}
+
+.astral-am-language-option {
+  display: grid;
+  min-width: 22px;
+  height: 100%;
+  place-items: center;
+  padding: 0 4px;
+  transition:
+    color 120ms ease,
+    background 120ms ease;
+}
+
+.astral-am-language-option[data-language="zh"] {
+  color: #d9eeff;
+  background: rgba(80, 151, 211, 0.24);
+}
+
+.astral-am-language-toggle.is-en .astral-am-language-option[data-language="zh"] {
+  color: #718397;
+  background: transparent;
+}
+
+.astral-am-language-toggle.is-en .astral-am-language-option[data-language="en"] {
+  color: #d9eeff;
+  background: rgba(80, 151, 211, 0.24);
+}
+
+.astral-am-heading-divider {
+  color: #536476;
+  font-weight: 500;
+}
+
+.astral-am-header-actions {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.astral-am-directory-prompt {
+  flex: 0 0 auto;
+  padding-right: 2px;
+  color: #c4d2df;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.astral-am-header-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(61, 73, 87, 0.96),
+    rgba(38, 47, 58, 0.96)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 7px rgba(0, 0, 0, 0.2);
+  color: #e0e9f2;
+  font: 700 13px/1.15 ui-monospace, SFMono-Regular, Consolas, monospace;
+  cursor: pointer;
+}
+
+.astral-am-directory-label::before {
+  content: attr(data-path-label);
+}
+
+.astral-am-header-button:hover,
+.astral-am-header-button:focus-visible {
+  border-color: rgba(119, 185, 237, 0.72);
+  outline: none;
+  background: linear-gradient(
+    180deg,
+    rgba(66, 103, 133, 0.98),
+    rgba(41, 67, 91, 0.98)
+  );
+  color: #fff;
+}
+
+.astral-am-header-button.is-primary {
+  border-color: rgba(119, 185, 237, 0.68);
+  background: linear-gradient(180deg, #3d7cac, #2c5d86);
+  color: #f4faff;
+}
+
+.astral-am-header-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.astral-am-shortcut-button {
+  padding-inline: 12px;
+  white-space: nowrap;
+}
+
+.astral-am-shortcut-button-label {
+  color: inherit;
+}
+
+.astral-am-kicker {
+  color: #7fb5e5;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.astral-am-icon-button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #dfe7f1;
+  font: 22px/1 sans-serif;
+  cursor: pointer;
+}
+
+.astral-am-icon-button:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.astral-am-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 20px 0;
+}
+
+.astral-am-tab {
+  padding: 8px 14px 9px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #9da8b7;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.astral-am-tab:hover {
+  color: #d7e2ef;
+}
+
+.astral-am-tab.is-active {
+  border-bottom-color: #69a8dc;
+  color: #fff;
+}
+
+.astral-am-subtabs {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.astral-am-subtab {
+  padding: 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #95a4b5;
+  font: inherit;
+  font-weight: 640;
+  cursor: pointer;
+}
+
+.astral-am-subtab:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #dce7f3;
+}
+
+.astral-am-subtab.is-active {
+  border-color: rgba(104, 169, 220, 0.52);
+  background: rgba(61, 119, 166, 0.2);
+  color: #f3f8fc;
+}
+
+.astral-am-main {
+  min-height: 0;
+}
+
+.astral-am-pane-host {
+  height: 100%;
+  min-height: 0;
+}
+
+.astral-am-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  padding: 14px 20px 18px;
+  overflow: auto;
+}
+
+.astral-am-toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.astral-am-file-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.astral-am-directory-nav {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(260px, 1.2fr);
+  gap: 9px;
+  min-height: 90px;
+}
+
+.astral-am-breadcrumb,
+.astral-am-directory-tree {
+  min-width: 0;
+  padding: 9px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(8, 11, 15, 0.24);
+}
+
+.astral-am-breadcrumb-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.astral-am-tree-children {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.astral-am-tree-root {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 7px;
+}
+
+.astral-am-tree-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.astral-am-tree-root-button,
+.astral-am-tree-item,
+.astral-am-tree-open,
+.astral-am-crumb {
+  min-height: 27px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  background: #20262e;
+  color: #cbd8e5;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.astral-am-tree-root-button,
+.astral-am-tree-item {
+  min-width: 0;
+  padding: 4px 8px;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-tree-open {
+  width: 29px;
+  padding: 0;
+  color: #96bedc;
+}
+
+.astral-am-tree-root-button:hover,
+.astral-am-tree-item:hover,
+.astral-am-tree-open:hover,
+.astral-am-crumb:hover {
+  border-color: rgba(112, 171, 219, 0.48);
+  background: #2b3742;
+}
+
+.astral-am-search {
+  flex: 1 1 300px;
+  min-width: 180px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  outline: none;
+  background: #0f1217;
+  color: #edf3fa;
+  font: inherit;
+}
+
+.astral-am-search:focus {
+  border-color: #5b9cd2;
+  box-shadow: 0 0 0 3px rgba(91, 156, 210, 0.18);
+}
+
+.astral-am-search::placeholder {
+  color: #6f7b8a;
+}
+
+.astral-am-select {
+  height: 36px;
+  padding: 0 30px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  background: #11151b;
+  color: #e4ebf4;
+  font: inherit;
+}
+
+.astral-am-button {
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  background: #2a3039;
+  color: #e9eff7;
+  font: inherit;
+  font-weight: 620;
+  cursor: pointer;
+}
+
+.astral-am-button:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #353d48;
+}
+
+.astral-am-button.is-primary {
+  border-color: #4e8dbe;
+  background: #316d9d;
+}
+
+.astral-am-button.is-primary:hover:not(:disabled) {
+  background: #3b7daf;
+}
+
+.astral-am-button.is-small {
+  min-height: 29px;
+  padding: 4px 9px;
+  font-size: 12px;
+}
+
+.astral-am-button:disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+}
+
+.astral-am-summary {
+  flex: 0 0 auto;
+  color: #a7b4c3;
+  font-size: 12px;
+}
+
+.astral-am-note {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(103, 166, 218, 0.2);
+  border-radius: 7px;
+  background: rgba(63, 122, 171, 0.1);
+  color: #aabed1;
+  font-size: 12px;
+}
+
+.astral-am-status {
+  display: block;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  height: 37px;
+  overflow: hidden;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #bdc8d5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-status[hidden] {
+  display: none;
+}
+
+.astral-am-status.is-loading {
+  border-color: rgba(93, 155, 210, 0.35);
+  color: #b7d8f4;
+}
+
+.astral-am-status.is-error {
+  border-color: rgba(238, 105, 105, 0.42);
+  background: rgba(130, 43, 43, 0.22);
+  color: #ffd1d1;
+}
+
+.astral-am-status.is-warning {
+  border-color: rgba(224, 175, 87, 0.4);
+  background: rgba(126, 91, 32, 0.2);
+  color: #f4dfb7;
+}
+
+.astral-am-status.is-success {
+  border-color: rgba(91, 181, 117, 0.38);
+  background: rgba(50, 119, 70, 0.2);
+  color: #c8f0d2;
+}
+
+.astral-am-lora-browser-list,
+.astral-am-assets-pane .astral-am-model-content > .astral-am-grid,
+.astral-am-prompts-pane,
+.astral-am-template-list,
+.astral-am-skill-list,
+.astral-am-skill-tag-list,
+.astral-am-duplicate-groups,
+.astral-am-missing-list,
+.astral-am-workspace-list {
+  overflow-anchor: none;
+  scrollbar-gutter: stable;
+}
+
+.astral-am-duplicate-progress {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(93, 155, 210, 0.3);
+  border-radius: 8px;
+  background: rgba(44, 88, 123, 0.12);
+}
+
+.astral-am-duplicate-progress[hidden] {
+  display: none;
+}
+
+.astral-am-duplicate-progress progress {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(115, 169, 209, 0.3);
+  border-radius: 999px;
+  background: #10151b;
+  color: #65a9dd;
+  accent-color: #65a9dd;
+}
+
+.astral-am-duplicate-progress progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: #10151b;
+}
+
+.astral-am-duplicate-progress progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #467eaa, #6eb7e8);
+}
+
+.astral-am-duplicate-progress progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #467eaa, #6eb7e8);
+}
+
+.astral-am-duplicate-progress-text {
+  color: #c7dced;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.astral-am-duplicate-current-file {
+  min-height: 16px;
+  overflow: hidden;
+  color: #879caf;
+  font: 11px/1.45 Consolas, "SFMono-Regular", monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 4px;
+  color: #bdc9d6;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.astral-am-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #4e91c8;
+}
+
+.astral-am-missing-autofill {
+  white-space: nowrap;
+}
+
+.astral-am-prompt-list {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.astral-am-prompt-card {
+  display: grid;
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.astral-am-prompt-header,
+.astral-am-prompt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.astral-am-prompt-heading {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+}
+
+.astral-am-prompt-heading strong,
+.astral-am-prompt-source {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-prompt-heading strong {
+  color: #eef4fa;
+}
+
+.astral-am-prompt-source {
+  color: #8999aa;
+  font-size: 11px;
+}
+
+.astral-am-prompt-card-text {
+  max-height: 150px;
+  margin: 0;
+  padding: 9px 10px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  background: #101318;
+  color: #d7e2ed;
+  font: 11px/1.55 Consolas, "SFMono-Regular", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-prompt-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.astral-am-grid {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.astral-am-card {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: #20252d;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  transition:
+    transform 130ms ease,
+    border-color 130ms ease,
+    box-shadow 130ms ease;
+}
+
+.astral-am-card.is-selected {
+  border-color: #65b8ee;
+  box-shadow: 0 0 0 2px rgba(75, 156, 213, 0.2);
+}
+
+.astral-am-card:hover {
+  z-index: 1;
+  border-color: rgba(120, 178, 225, 0.6);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.astral-am-card-main {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.astral-am-card-select {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  background: rgba(5, 8, 12, 0.78);
+  place-items: center;
+  cursor: pointer;
+}
+
+.astral-am-card-select input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #55a4df;
+  cursor: pointer;
+}
+
+.astral-am-card-actions {
+  display: flex;
+  gap: 5px;
+  padding: 7px 8px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.astral-am-card-action {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 26px;
+  padding: 3px 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  background: #252c35;
+  color: #b8c8d7;
+  font: inherit;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.astral-am-card-action:hover {
+  border-color: rgba(112, 171, 219, 0.46);
+  background: #303b47;
+  color: #e4f1fb;
+}
+
+.astral-am-card-media {
+  position: relative;
+  display: grid;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  place-items: center;
+  background:
+    linear-gradient(45deg, #242a32 25%, transparent 25%),
+    linear-gradient(-45deg, #242a32 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #242a32 75%),
+    linear-gradient(-45deg, transparent 75%, #242a32 75%),
+    #1b2027;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+}
+
+.astral-am-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.astral-am-play {
+  position: absolute;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(5, 8, 12, 0.68);
+  color: #fff;
+  font-size: 17px;
+  text-indent: 2px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.4);
+}
+
+.astral-am-card-badges {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  display: flex;
+  gap: 4px;
+}
+
+.astral-am-badge {
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  background: rgba(7, 11, 16, 0.72);
+  color: #d7e5f2;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.astral-am-badge.is-kind {
+  color: #b8dbf6;
+}
+
+.astral-am-card-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 10px 10px;
+}
+
+.astral-am-card-title,
+.astral-am-card-path,
+.astral-am-card-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-card-title {
+  color: #f3f7fb;
+  font-size: 13px;
+}
+
+.astral-am-card-path {
+  color: #91a3b7;
+  font-size: 11px;
+}
+
+.astral-am-card-meta {
+  color: #69798a;
+  font-size: 10px;
+}
+
+.astral-am-lora-list {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.astral-am-lora-browser .astral-am-model-content {
+  overflow: hidden;
+}
+
+.astral-am-lora-browser-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-right: 4px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.astral-am-lora-row {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.astral-am-lora-row.has-thumbnail {
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.astral-am-lora-row.is-selected {
+  border-color: rgba(101, 168, 224, 0.42);
+  background: rgba(58, 112, 157, 0.12);
+}
+
+.astral-am-lora-content {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.astral-am-lora-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.astral-am-lora-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.astral-am-lora-header input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4e91c8;
+}
+
+.astral-am-lora-title {
+  display: grid;
+  min-width: 0;
+}
+
+.astral-am-lora-title strong,
+.astral-am-lora-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-lora-title strong {
+  color: #f2f6fb;
+}
+
+.astral-am-lora-title span {
+  color: #8192a5;
+  font-size: 11px;
+}
+
+.astral-am-lora-thumbnail {
+  width: 92px;
+  min-height: 88px;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
+  background: #11151a;
+}
+
+.astral-am-lora-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.astral-am-workspace-pane {
+  overflow: hidden;
+}
+
+.astral-am-workspace-location {
+  min-width: 0;
+  overflow: hidden;
+  color: #9fb0c0;
+  font: 600 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-workspace-list {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  align-content: start;
+  gap: 8px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.astral-am-workspace-item {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 3px 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.028);
+  color: #dfe8f1;
+  text-align: left;
+}
+
+button.astral-am-workspace-item {
+  font: inherit;
+  cursor: pointer;
+}
+
+button.astral-am-workspace-item:hover {
+  border-color: rgba(104, 169, 220, 0.4);
+  background: rgba(61, 119, 166, 0.14);
+}
+
+.astral-am-workspace-icon {
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 17px;
+}
+
+.astral-am-workspace-item strong,
+.astral-am-workspace-item .astral-am-muted {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-workspace-item .astral-am-muted {
+  font-size: 10px;
+}
+
+.astral-am-models-pane {
+  overflow: hidden;
+}
+
+.astral-am-model-tool {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 0;
+}
+
+.astral-am-model-tool[hidden] {
+  display: none;
+}
+
+.astral-am-root-select {
+  max-width: min(430px, 42vw);
+}
+
+.astral-am-model-location {
+  flex: 0 0 auto;
+  min-height: 22px;
+  color: #9cabb9;
+  font-size: 11px;
+}
+
+.astral-am-model-header {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.astral-am-model-header .astral-am-model-location {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.astral-am-model-header .astral-am-file-actions {
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.astral-am-model-browser {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(190px, 0.28fr) minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(8, 11, 15, 0.28);
+}
+
+.astral-am-model-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  padding: 9px;
+  overflow: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.astral-am-model-tree .astral-am-tree-item {
+  text-align: left;
+}
+
+.astral-am-model-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
+}
+
+.astral-am-assets-pane .astral-am-model-content {
+  overflow: hidden;
+}
+
+.astral-am-assets-pane .astral-am-model-content > .astral-am-grid {
+  flex: 1 1 auto;
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
+  min-height: 0;
+  padding-right: 4px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.astral-am-assets-pane .astral-am-card {
+  align-self: start;
+  height: auto;
+  box-sizing: border-box;
+  padding: 0 0 42px;
+}
+
+.astral-am-assets-pane .astral-am-card-actions {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.astral-am-model-list {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 7px;
+}
+
+.astral-am-model-row,
+.astral-am-duplicate-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  background: #1b2027;
+}
+
+.astral-am-model-row-main {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.astral-am-model-row-main strong,
+.astral-am-model-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-model-row-main strong {
+  color: #edf3f9;
+}
+
+.astral-am-model-path {
+  color: #8496a9;
+  font-size: 11px;
+}
+
+.astral-am-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.astral-am-button.is-danger {
+  border-color: rgba(205, 92, 92, 0.42);
+  background: rgba(133, 49, 49, 0.32);
+  color: #ffd2d2;
+}
+
+.astral-am-button.is-danger:hover:not(:disabled) {
+  background: rgba(160, 54, 54, 0.46);
+}
+
+.astral-am-duplicate-groups {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.astral-am-duplicate-group {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid rgba(224, 176, 88, 0.24);
+  border-radius: 8px;
+  background: rgba(108, 78, 28, 0.08);
+}
+
+.astral-am-duplicate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.astral-am-duplicate-heading {
+  display: grid;
+  gap: 1px;
+}
+
+.astral-am-duplicate-heading strong {
+  color: #f1e3c4;
+}
+
+.astral-am-duplicate-size {
+  color: #d9bd86;
+  font-size: 11px;
+}
+
+.astral-am-missing-list {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 9px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.astral-am-missing-row {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid rgba(126, 145, 162, 0.7);
+  border-radius: 8px;
+  background: #191e25;
+}
+
+.astral-am-missing-row.is-match {
+  border-left-color: rgba(91, 181, 117, 0.9);
+  background: rgba(39, 90, 55, 0.13);
+}
+
+.astral-am-missing-row.is-candidate,
+.astral-am-missing-row.is-ambiguous {
+  border-left-color: rgba(224, 176, 88, 0.9);
+  background: rgba(108, 78, 28, 0.1);
+}
+
+.astral-am-missing-row.is-conflict {
+  border-left-color: rgba(235, 112, 112, 0.92);
+  background: rgba(111, 41, 41, 0.13);
+}
+
+.astral-am-missing-row.is-filled {
+  border-left-color: rgba(91, 181, 117, 0.9);
+  background: rgba(39, 90, 55, 0.17);
+}
+
+.astral-am-missing-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.astral-am-missing-heading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.astral-am-missing-heading strong {
+  overflow: hidden;
+  color: #edf3f9;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-missing-badge {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd7e2;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.astral-am-missing-row.is-match .astral-am-missing-badge,
+.astral-am-missing-row.is-filled .astral-am-missing-badge {
+  border-color: rgba(91, 181, 117, 0.4);
+  background: rgba(50, 119, 70, 0.22);
+  color: #c8f0d2;
+}
+
+.astral-am-missing-row.is-candidate .astral-am-missing-badge,
+.astral-am-missing-row.is-ambiguous .astral-am-missing-badge {
+  border-color: rgba(224, 175, 87, 0.4);
+  background: rgba(126, 91, 32, 0.2);
+  color: #f4dfb7;
+}
+
+.astral-am-missing-row.is-conflict .astral-am-missing-badge {
+  border-color: rgba(238, 105, 105, 0.42);
+  background: rgba(130, 43, 43, 0.22);
+  color: #ffd1d1;
+}
+
+.astral-am-missing-reference {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  color: #8797a8;
+  font-size: 11px;
+}
+
+.astral-am-missing-reference code,
+.astral-am-missing-target {
+  min-width: 0;
+  padding: 4px 6px;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  background: rgba(5, 8, 12, 0.35);
+  color: #d7e2ed;
+  font: 11px/1.45 Consolas, "SFMono-Regular", monospace;
+}
+
+.astral-am-missing-description {
+  margin: 0;
+  color: #aebdca;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.astral-am-missing-candidates {
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  background: rgba(6, 9, 13, 0.2);
+}
+
+.astral-am-missing-candidate {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  color: #95a8ba;
+  font-size: 11px;
+}
+
+.astral-am-missing-candidate-path {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #c5d4e1;
+  font-family: Consolas, "SFMono-Regular", monospace;
+}
+
+.astral-am-missing-row.is-conflict .astral-am-missing-candidate-path {
+  color: #e6b5b5;
+  text-decoration: line-through;
+}
+
+.astral-am-missing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.astral-am-missing-actions .astral-am-missing-target {
+  flex: 1 1 260px;
+}
+
+.astral-am-missing-candidate-dropdown {
+  flex: 1 1 340px;
+  min-width: min(100%, 240px);
+}
+
+.astral-am-source-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.astral-am-source-card {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  min-height: 120px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  background: #161b21;
+}
+
+.astral-am-source-card.is-civitai {
+  border-top-color: rgba(91, 160, 218, 0.6);
+}
+
+.astral-am-source-card.is-huggingface {
+  border-top-color: rgba(231, 194, 88, 0.65);
+}
+
+.astral-am-source-card.is-modelscope {
+  border-top-color: rgba(123, 182, 148, 0.62);
+}
+
+.astral-am-source-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: #edf4fb;
+}
+
+.astral-am-source-mode {
+  padding: 1px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 4px;
+  color: #9cabb9;
+  font-size: 9px;
+}
+
+.astral-am-source-link {
+  max-width: 100%;
+  overflow: hidden;
+  color: #84c1f0;
+  font-size: 12px;
+  text-decoration: underline;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-source-link:hover {
+  color: #b9ddf8;
+}
+
+.astral-am-source-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.astral-am-source-label {
+  color: #8f9eae;
+  font-size: 10px;
+}
+
+.astral-am-trigger-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.astral-am-trigger {
+  max-width: 100%;
+  padding: 2px 5px;
+  border: 1px solid rgba(117, 168, 210, 0.25);
+  border-radius: 4px;
+  background: rgba(70, 123, 169, 0.15);
+  color: #c8dff0;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-muted {
+  color: #7f8d9c;
+  font-size: 11px;
+}
+
+.astral-am-source-error {
+  color: #f0a9a9;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-source-match {
+  color: #a7e3b6;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-candidates {
+  display: grid;
+  gap: 4px;
+  color: #9aa8b7;
+  font-size: 11px;
+}
+
+.astral-am-candidates summary {
+  cursor: pointer;
+}
+
+.astral-am-candidates .astral-am-source-link {
+  margin-left: 8px;
+}
+
+.astral-am-viewer {
+  width: min(1240px, 96vw);
+  max-width: 1240px;
+  height: min(850px, 92vh);
+  max-height: 92vh;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 11px;
+  background: #14181e;
+  color: #e8eef5;
+  font: 13px/1.5 Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.72);
+}
+
+.astral-am-viewer::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.astral-am-viewer-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+.astral-am-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+  background: #1b2027;
+}
+
+.astral-am-viewer-title {
+  display: grid;
+  min-width: 0;
+}
+
+.astral-am-viewer-title strong,
+.astral-am-viewer-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-viewer-title strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+.astral-am-viewer-title span {
+  color: #8393a4;
+  font-size: 11px;
+}
+
+.astral-am-viewer-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(330px, 0.72fr);
+  min-height: 0;
+}
+
+.astral-am-viewer-preview {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  place-items: center;
+  background:
+    radial-gradient(circle at center, rgba(55, 68, 84, 0.35), transparent 65%),
+    #090c10;
+}
+
+.astral-am-preview-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: calc(92vh - 61px);
+  object-fit: contain;
+}
+
+.astral-am-loading,
+.astral-am-error-box {
+  max-width: 500px;
+  padding: 16px;
+  color: #aebac7;
+  text-align: center;
+}
+
+.astral-am-error-box {
+  border: 1px solid rgba(235, 104, 104, 0.45);
+  border-radius: 7px;
+  background: rgba(127, 43, 43, 0.22);
+  color: #ffd2d2;
+}
+
+.astral-am-viewer-sidebar {
+  min-width: 0;
+  overflow: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  background: #181d24;
+}
+
+.astral-am-view-section {
+  display: grid;
+  gap: 9px;
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.astral-am-view-section h3 {
+  margin: 0;
+  color: #f1f5f9;
+  font-size: 13px;
+}
+
+.astral-am-definition {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 8px;
+  color: #8c9aa9;
+  font-size: 11px;
+}
+
+.astral-am-definition strong {
+  color: #dce5ee;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.astral-am-prompt {
+  max-height: 230px;
+  margin: 0;
+  padding: 9px 10px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 6px;
+  background: #0f1217;
+  color: #d6e3ef;
+  font: 11px/1.55 Consolas, "SFMono-Regular", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.astral-am-detail-badge {
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: #788696;
+  font-size: 10px;
+}
+
+.astral-am-detail-badge.is-active {
+  border-color: rgba(95, 172, 113, 0.4);
+  background: rgba(53, 126, 70, 0.2);
+  color: #bfe7ca;
+}
+
+.astral-am-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.astral-am-actions .astral-am-button {
+  width: 100%;
+}
+
+.astral-am-action-status {
+  min-height: 18px;
+  color: #9dabb9;
+  font-size: 11px;
+}
+
+.astral-am-action-status.is-success {
+  color: #a9dfb7;
+}
+
+.astral-am-action-status.is-error {
+  color: #f0aaaa;
+}
+
+.astral-am-input,
+.astral-am-textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  outline: none;
+  background: #0f1217;
+  color: #edf3fa;
+  font: inherit;
+}
+
+.astral-am-input {
+  height: 36px;
+}
+
+.astral-am-textarea {
+  min-height: 78px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.astral-am-input:focus,
+.astral-am-textarea:focus {
+  border-color: #5b9cd2;
+  box-shadow: 0 0 0 3px rgba(91, 156, 210, 0.18);
+}
+
+.astral-am-input::placeholder,
+.astral-am-textarea::placeholder {
+  color: #687483;
+}
+
+.astral-am-dropdown {
+  position: relative;
+  min-width: 180px;
+}
+
+.astral-am-dropdown-trigger {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px 0 11px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  background: #11151b;
+  color: #e4ebf4;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.astral-am-dropdown-trigger:hover,
+.astral-am-dropdown-trigger[aria-expanded="true"] {
+  border-color: rgba(102, 164, 214, 0.62);
+  background: #18212a;
+}
+
+.astral-am-dropdown-trigger:focus-visible {
+  outline: none;
+  border-color: #5b9cd2;
+  box-shadow: 0 0 0 3px rgba(91, 156, 210, 0.18);
+}
+
+.astral-am-dropdown-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-dropdown-chevron {
+  flex: 0 0 auto;
+  color: #8fa4b8;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.astral-am-dropdown-menu {
+  position: absolute;
+  z-index: 32050;
+  top: calc(100% + 5px);
+  left: 0;
+  display: grid;
+  width: max-content;
+  min-width: 100%;
+  max-width: min(560px, 82vw);
+  max-height: min(430px, 62vh);
+  padding: 5px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #171c23;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.55);
+}
+
+.astral-am-dropdown-menu[hidden] {
+  display: none;
+}
+
+.astral-am-dropdown-option {
+  min-width: 0;
+  padding: 8px 10px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #d7e1eb;
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.astral-am-dropdown-option:hover:not(:disabled) {
+  background: rgba(93, 146, 190, 0.2);
+  color: #fff;
+}
+
+.astral-am-dropdown-option.is-selected {
+  background: rgba(72, 133, 183, 0.32);
+  color: #dff0ff;
+}
+
+.astral-am-dropdown-option:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.astral-am-category-dropdown {
+  flex: 0 1 230px;
+  min-width: 190px;
+}
+
+.astral-am-prompts-pane {
+  overflow: hidden;
+}
+
+.astral-am-prompt-tool {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.astral-am-prompt-tool[hidden] {
+  display: none;
+}
+
+.astral-am-template-list {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.astral-am-template-list.is-loading {
+  opacity: 0.64;
+}
+
+.astral-am-template-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  background:
+    linear-gradient(135deg, rgba(80, 121, 158, 0.08), transparent 48%),
+    #1c2229;
+}
+
+.astral-am-template-header,
+.astral-am-template-heading,
+.astral-am-template-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.astral-am-template-header {
+  justify-content: space-between;
+}
+
+.astral-am-template-heading {
+  flex: 1 1 auto;
+}
+
+.astral-am-template-heading strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #f0f5fa;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-template-text {
+  min-height: 88px;
+  max-height: 260px;
+  margin: 0;
+  padding: 9px 10px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: #10141a;
+  color: #cad7e3;
+  font: 11px/1.55 Consolas, "SFMono-Regular", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-template-actions {
+  flex-wrap: wrap;
+}
+
+.astral-am-category-badge {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid rgba(112, 168, 211, 0.3);
+  border-radius: 4px;
+  background: rgba(66, 119, 163, 0.15);
+  color: #b8d9f0;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.astral-am-category-badge.is-image {
+  border-color: rgba(106, 185, 138, 0.32);
+  background: rgba(57, 126, 82, 0.17);
+  color: #c4ead0;
+}
+
+.astral-am-category-badge.is-audio {
+  border-color: rgba(202, 157, 91, 0.34);
+  background: rgba(133, 91, 40, 0.18);
+  color: #efd5ad;
+}
+
+.astral-am-category-badge.is-video {
+  border-color: rgba(172, 119, 209, 0.35);
+  background: rgba(106, 63, 139, 0.2);
+  color: #dec5f2;
+}
+
+.astral-am-category-badge.is-expand {
+  border-color: rgba(91, 177, 127, 0.34);
+  background: rgba(54, 128, 84, 0.18);
+  color: #c4ead0;
+}
+
+.astral-am-category-badge.is-invert {
+  border-color: rgba(207, 148, 86, 0.36);
+  background: rgba(145, 91, 38, 0.2);
+  color: #f0cfaa;
+}
+
+.astral-am-chat-config-hint {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(103, 157, 199, 0.18);
+  border-radius: 7px;
+  background: rgba(51, 91, 123, 0.1);
+  color: #9fb1c2;
+  font-size: 11px;
+}
+
+.astral-am-chat-config-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.astral-am-chat-config-buttons {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.astral-am-chat-mode-buttons {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.astral-am-chat-mode-button {
+  white-space: nowrap;
+}
+
+.astral-am-chat-mode-button.is-active {
+  border-color: rgba(105, 174, 225, 0.82);
+  background: rgba(53, 119, 169, 0.52);
+  color: #f2f9ff;
+  box-shadow: inset 0 0 0 1px rgba(150, 206, 246, 0.12);
+}
+
+.astral-am-chat-current-model {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  color: #8295a8;
+}
+
+.astral-am-chat-current-model strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #c9d8e6;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-api-config-pane {
+  overflow: hidden;
+}
+
+.astral-am-api-config-stack {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding-right: 2px;
+  overflow: auto;
+}
+
+.astral-am-api-config-stack > .astral-am-api-config-panel {
+  flex: 0 0 auto;
+  padding-right: 0;
+  overflow: visible;
+}
+
+.astral-am-local-llm-pane {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 9px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(105, 169, 218, 0.22);
+  overflow: visible;
+}
+
+.astral-am-local-llm-panel {
+  flex: 0 0 auto;
+  gap: 12px;
+  padding-right: 0;
+  overflow: visible;
+}
+
+.astral-am-local-llm-model-section {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid rgba(103, 157, 199, 0.2);
+  border-radius: 9px;
+  background:
+    linear-gradient(135deg, rgba(54, 108, 151, 0.15), transparent 58%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.astral-am-local-llm-model-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.astral-am-local-llm-model-toolbar > .astral-am-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.astral-am-local-llm-model-select {
+  flex: 1 1 auto;
+  min-width: 180px;
+}
+
+.astral-am-local-llm-model-hint {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.astral-am-local-llm-grid {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.astral-am-local-llm-grid .astral-am-textarea {
+  min-height: 120px;
+}
+
+.astral-am-local-llm-toggle {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #c9d8e6;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.astral-am-local-llm-toggle input {
+  margin: 0;
+  accent-color: #69a8dc;
+}
+
+.astral-am-api-config-heading {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0;
+}
+
+.astral-am-api-config-heading strong {
+  color: #edf5fb;
+  font-size: 13px;
+}
+
+.astral-am-api-config-heading span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-api-config-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 0;
+  padding-right: 2px;
+  overflow: auto;
+}
+
+.astral-am-api-provider-panel,
+.astral-am-api-runtime-panel,
+.astral-am-api-task-section {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.astral-am-api-provider-panel {
+  background:
+    linear-gradient(135deg, rgba(54, 108, 151, 0.12), transparent 54%),
+    rgba(255, 255, 255, 0.018);
+}
+
+.astral-am-api-runtime-panel {
+  background:
+    linear-gradient(135deg, rgba(74, 132, 93, 0.1), transparent 58%),
+    rgba(255, 255, 255, 0.018);
+}
+
+.astral-am-api-runtime-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  gap: 9px;
+}
+
+.astral-am-api-runtime-grid .astral-am-textarea {
+  min-height: 64px;
+}
+
+.astral-am-api-provider-toolbar,
+.astral-am-input-with-action,
+.astral-am-api-task-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.astral-am-api-provider-toolbar {
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.astral-am-api-provider-tabs {
+  display: flex;
+  flex: 1 1 420px;
+  gap: 5px;
+  min-width: 0;
+  padding: 2px;
+  overflow-x: auto;
+}
+
+.astral-am-api-provider-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.astral-am-api-provider-tab {
+  position: relative;
+  flex: 0 0 auto;
+  max-width: 220px;
+  min-height: 30px;
+  padding: 5px 11px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #aebdca;
+  font: inherit;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: grab;
+}
+
+.astral-am-api-provider-tab:hover {
+  border-color: rgba(102, 163, 211, 0.4);
+  background: rgba(75, 130, 174, 0.16);
+  color: #e8f4fc;
+}
+
+.astral-am-api-provider-tab.is-active {
+  border-color: rgba(98, 171, 229, 0.72);
+  background: #2c6d9f;
+  color: #fff;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.astral-am-api-provider-tab:active {
+  cursor: grabbing;
+}
+
+.astral-am-api-provider-tab.is-dragging {
+  opacity: 0.42;
+}
+
+.astral-am-api-provider-tab.is-drop-before::before,
+.astral-am-api-provider-tab.is-drop-after::after {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
+  border-radius: 3px;
+  background: #76c6ff;
+  box-shadow: 0 0 7px rgba(118, 198, 255, 0.72);
+  content: "";
+}
+
+.astral-am-api-provider-tab.is-drop-before::before {
+  left: 0;
+}
+
+.astral-am-api-provider-tab.is-drop-after::after {
+  right: 0;
+}
+
+.astral-am-input-with-action {
+  min-width: 0;
+}
+
+.astral-am-input-with-action > .astral-am-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.astral-am-input-with-action > .astral-am-button {
+  flex: 0 0 auto;
+}
+
+.astral-am-api-task-heading,
+.astral-am-api-task-title {
+  min-width: 0;
+}
+
+.astral-am-api-task-heading {
+  display: grid;
+  gap: 2px;
+}
+
+.astral-am-api-task-title {
+  justify-content: space-between;
+}
+
+.astral-am-api-task-title span {
+  text-align: right;
+}
+
+.astral-am-api-task-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 9px;
+}
+
+.astral-am-api-task-card {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.astral-am-chat-config-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  gap: 9px;
+  padding: 11px;
+}
+
+.astral-am-field {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  color: #9caaba;
+  font-size: 11px;
+}
+
+.astral-am-field.has-help > span:first-child {
+  width: fit-content;
+  cursor: help;
+  text-decoration: underline dotted rgba(156, 170, 186, 0.55);
+  text-underline-offset: 3px;
+}
+
+.astral-am-field.api-config-grid-wide {
+  grid-column: 1 / -1;
+}
+
+.astral-am-chat-config-actions,
+.astral-am-chat-controls,
+.astral-am-chat-composer-actions,
+.astral-am-chat-sidebar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.astral-am-chat-config-actions {
+  justify-content: space-between;
+  padding: 0 11px 10px;
+}
+
+.astral-am-chat-workspace {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  background: rgba(7, 10, 14, 0.26);
+}
+
+.astral-am-chat-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 9px;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.astral-am-conversation-list {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.astral-am-conversation-item {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 9px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #c3d0dd;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.astral-am-conversation-item strong,
+.astral-am-conversation-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-conversation-item:hover {
+  border-color: rgba(116, 166, 205, 0.25);
+  background: rgba(87, 135, 174, 0.12);
+}
+
+.astral-am-conversation-item.is-active {
+  border-color: rgba(95, 157, 207, 0.44);
+  background: rgba(57, 114, 160, 0.23);
+  color: #f0f7fd;
+}
+
+.astral-am-chat-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.astral-am-chat-messages {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 160px;
+  padding: 12px;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 80% 0, rgba(57, 91, 124, 0.12), transparent 42%),
+    #12171d;
+}
+
+.astral-am-chat-empty {
+  align-self: center;
+  margin: auto;
+  color: #788797;
+  text-align: center;
+}
+
+.astral-am-chat-message {
+  display: grid;
+  align-self: flex-start;
+  width: min(82%, 760px);
+  gap: 5px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px 9px 9px 3px;
+  background: #20272f;
+  color: #d7e2ec;
+}
+
+.astral-am-chat-message.is-user {
+  align-self: flex-end;
+  border-color: rgba(83, 146, 194, 0.3);
+  border-radius: 9px 9px 3px 9px;
+  background: #20384b;
+}
+
+.astral-am-chat-message.is-sending {
+  border-style: dashed;
+}
+
+.astral-am-chat-message.is-stopped {
+  border-color: rgba(214, 164, 86, 0.38);
+  background: #353024;
+}
+
+.astral-am-chat-message.is-typing {
+  opacity: 0.76;
+}
+
+.astral-am-chat-message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.astral-am-chat-role {
+  color: #81b8df;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.astral-am-chat-message-time {
+  color: #8fa4b8;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.astral-am-chat-message-content {
+  line-height: 1.58;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-chat-message-attachments,
+.astral-am-selection-tray,
+.astral-am-skill-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.astral-am-chat-message-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 7px;
+}
+
+.astral-am-chat-message-image {
+  display: grid;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 7px;
+  background: rgba(5, 8, 11, 0.42);
+}
+
+.astral-am-chat-message-image a {
+  display: block;
+  min-width: 0;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.025) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.025) 25%, transparent 25%),
+    #101419;
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+.astral-am-chat-message-image img {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+}
+
+.astral-am-chat-message-image figcaption {
+  padding: 4px 7px;
+  overflow: hidden;
+  color: #91a5b9;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-chat-message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding-top: 2px;
+}
+
+.astral-am-chat-message-action {
+  min-height: 23px;
+  padding: 2px 7px;
+  border: 1px solid rgba(129, 174, 208, 0.22);
+  border-radius: 4px;
+  background: rgba(74, 119, 153, 0.12);
+  color: #aec8dc;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.astral-am-chat-message-action:hover:not(:disabled) {
+  border-color: rgba(129, 184, 225, 0.46);
+  background: rgba(75, 137, 182, 0.23);
+  color: #e2f2ff;
+}
+
+.astral-am-chat-message-action.is-danger {
+  border-color: rgba(205, 101, 101, 0.25);
+  background: rgba(138, 51, 51, 0.12);
+  color: #dfaaaa;
+}
+
+.astral-am-chat-message-action.is-danger:hover:not(:disabled) {
+  border-color: rgba(222, 116, 116, 0.48);
+  background: rgba(151, 51, 51, 0.24);
+  color: #ffd7d7;
+}
+
+.astral-am-chat-message-action:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.astral-am-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(120, 166, 202, 0.24);
+  border-radius: 4px;
+  background: rgba(66, 112, 149, 0.15);
+  color: #bfd5e5;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-chip.has-thumbnail {
+  gap: 6px;
+  padding: 2px 6px 2px 2px;
+}
+
+.astral-am-chip.is-mentionable {
+  cursor: pointer;
+}
+
+.astral-am-chip.is-mentionable:hover,
+.astral-am-chip.is-mentionable:focus-visible {
+  border-color: rgba(109, 181, 233, 0.55);
+  background: rgba(66, 137, 189, 0.26);
+  color: #e2f3ff;
+  outline: none;
+}
+
+.astral-am-chip-thumbnail {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  object-fit: cover;
+}
+
+.astral-am-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-chip.is-skill {
+  border-color: rgba(169, 135, 205, 0.3);
+  background: rgba(102, 71, 132, 0.18);
+  color: #dfccf0;
+}
+
+.astral-am-chip-remove {
+  display: grid;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  color: inherit;
+  font: 12px/1 sans-serif;
+  cursor: pointer;
+}
+
+.astral-am-chip-remove:hover {
+  background: rgba(221, 98, 98, 0.25);
+}
+
+.astral-am-chat-controls {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.astral-am-chat-composer {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 7px;
+  padding: 0 11px 11px;
+}
+
+.astral-am-chat-composer .astral-am-textarea {
+  min-height: 88px;
+}
+
+.astral-am-chat-composer-actions {
+  justify-content: flex-end;
+}
+
+.astral-am-chat-composer-actions .astral-am-action-status {
+  flex: 1 1 220px;
+  margin-right: auto;
+}
+
+.astral-am-chat-translation-controls {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.astral-am-chat-translation-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #9eafbf;
+  font-size: 11px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.astral-am-chat-translation-toggle.is-active {
+  border-color: rgba(99, 184, 229, 0.58);
+  background: rgba(51, 129, 174, 0.2);
+  color: #e8f6ff;
+}
+
+.astral-am-chat-translation-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.astral-am-chat-translation-switch {
+  position: relative;
+  width: 27px;
+  height: 15px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition: background 120ms ease;
+}
+
+.astral-am-chat-translation-switch::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #c2ced9;
+  content: "";
+  transition:
+    transform 120ms ease,
+    background 120ms ease;
+}
+
+.astral-am-chat-translation-toggle.is-active
+  .astral-am-chat-translation-switch {
+  background: #3c90c4;
+}
+
+.astral-am-chat-translation-toggle.is-active
+  .astral-am-chat-translation-switch::after {
+  background: #f1f9ff;
+  transform: translateX(12px);
+}
+
+.astral-am-chat-translation-toggle:focus-within {
+  outline: 2px solid rgba(102, 181, 228, 0.58);
+  outline-offset: 1px;
+}
+
+.astral-am-chat-translation-language {
+  width: auto;
+  min-width: 132px;
+}
+
+.astral-am-location-path {
+  min-height: 18px;
+  color: #8192a3;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-skill-list {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.astral-am-skill-search-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(15, 18, 23, 0.6);
+  color: #9aa9b8;
+  text-align: center;
+}
+
+.astral-am-skill-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: #1b2128;
+}
+
+.astral-am-skill-card.is-current {
+  border-color: rgba(91, 155, 211, 0.58);
+  background: linear-gradient(180deg, rgba(52, 105, 149, 0.18), #1b2128 62%);
+}
+
+.astral-am-skill-header,
+.astral-am-skill-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.astral-am-skill-header {
+  justify-content: space-between;
+}
+
+.astral-am-skill-heading {
+  align-items: baseline;
+}
+
+.astral-am-skill-heading strong,
+.astral-am-skill-id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-skill-heading strong {
+  color: #f1f6fb;
+}
+
+.astral-am-skill-id {
+  color: #788b9c;
+  font: 10px Consolas, "SFMono-Regular", monospace;
+}
+
+.astral-am-skill-description {
+  margin: 0;
+  color: #aab8c6;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.astral-am-tag-color-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--tag-color, #69a8dc);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tag-color, #69a8dc) 18%, transparent);
+}
+
+.astral-am-inspiration-panel {
+  display: grid;
+  flex: 0 0 auto;
+  min-height: 0;
+  gap: 10px;
+  padding: 11px;
+  overflow: auto;
+  border: 1px solid rgba(100, 164, 215, 0.28);
+  border-radius: 9px;
+  background:
+    linear-gradient(135deg, rgba(63, 119, 163, 0.13), transparent 58%),
+    rgba(19, 25, 32, 0.78);
+}
+
+.astral-am-inspiration-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+}
+
+.astral-am-inspiration-heading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.astral-am-inspiration-heading strong {
+  color: #eef6fd;
+  font-size: 13px;
+}
+
+.astral-am-inspiration-heading > .astral-am-muted {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.astral-am-inspiration-header-actions,
+.astral-am-inspiration-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.astral-am-inspiration-selected-chips {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 82px;
+  padding-top: 1px;
+  overflow: auto;
+}
+
+.astral-am-inspiration-chip {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--tag-color) 48%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tag-color) 14%, #1b222a);
+  color: #dce8f2;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.astral-am-inspiration-chip:hover,
+.astral-am-inspiration-chip:focus-visible {
+  border-color: var(--tag-color);
+  outline: none;
+  color: #fff;
+}
+
+.astral-am-inspiration-chip-remove {
+  margin-left: 1px;
+  color: #91a6b8;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.astral-am-inspiration-empty {
+  padding: 4px 0;
+  color: #748696;
+  font-size: 11px;
+}
+
+.astral-am-inspiration-form {
+  display: grid;
+  gap: 9px;
+}
+
+.astral-am-inspiration-controls {
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1fr)
+    minmax(92px, 0.22fr)
+    minmax(92px, 0.22fr)
+    auto
+    auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.astral-am-inspiration-controls > .astral-am-button {
+  min-height: 36px;
+}
+
+.astral-am-inspiration-result-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.astral-am-inspiration-result-heading strong {
+  color: #dceaf5;
+}
+
+.astral-am-inspiration-result-heading .astral-am-muted {
+  font-size: 10px;
+  text-align: right;
+}
+
+.astral-am-inspiration-result {
+  min-height: 108px;
+  max-height: 190px;
+}
+
+.astral-am-skill-tag-workspace {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(210px, 0.7fr) minmax(0, 2.3fr);
+  gap: 10px;
+  min-height: 0;
+}
+
+.astral-am-skill-tag-sidebar,
+.astral-am-skill-tag-content {
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: rgba(12, 16, 21, 0.26);
+}
+
+.astral-am-skill-tag-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.astral-am-skill-tag-sidebar-heading,
+.astral-am-skill-tag-content-heading,
+.astral-am-skill-tag-card-header,
+.astral-am-skill-tag-card-meta,
+.astral-am-skill-tag-card-actions,
+.astral-am-skill-tag-editor-heading,
+.astral-am-skill-tag-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.astral-am-skill-tag-sidebar-heading,
+.astral-am-skill-tag-content-heading,
+.astral-am-skill-tag-card-header {
+  justify-content: space-between;
+}
+
+.astral-am-skill-tag-content {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  overflow: hidden;
+}
+
+.astral-am-skill-tag-content-heading {
+  flex: 0 0 auto;
+}
+
+.astral-am-skill-tag-content-heading strong {
+  color: #eef5fb;
+}
+
+.astral-am-tag-browser-layout {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 370px);
+  gap: 10px;
+  min-height: 0;
+}
+
+.astral-am-tag-library {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.astral-am-skill-tag-batch-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  background: rgba(24, 31, 39, 0.72);
+}
+
+.astral-am-skill-tag-batch-bar.has-selection {
+  border-color: rgba(91, 164, 220, 0.38);
+  background: rgba(38, 74, 103, 0.24);
+}
+
+.astral-am-skill-tag-batch-count {
+  flex: 0 0 auto;
+  color: #aec0cf;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.astral-am-skill-tag-batch-bar.has-selection
+  .astral-am-skill-tag-batch-count {
+  color: #cfe8fa;
+}
+
+.astral-am-skill-tag-batch-actions {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.astral-am-skill-tag-batch-actions .astral-am-button {
+  white-space: nowrap;
+}
+
+.astral-am-skill-tag-batch-actions .astral-am-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.astral-am-tag-browser-layout .astral-am-inspiration-controls {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.astral-am-tag-browser-layout
+  .astral-am-inspiration-controls
+  > .astral-am-field:first-child {
+  grid-column: 1 / -1;
+}
+
+.astral-am-tag-browser-layout
+  .astral-am-inspiration-controls
+  > .astral-am-button {
+  width: 100%;
+}
+
+.astral-am-icon-button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  background: #252c35;
+  color: #cbe1f2;
+  font: 17px/1 sans-serif;
+  cursor: pointer;
+}
+
+.astral-am-icon-button:hover {
+  border-color: rgba(108, 171, 220, 0.58);
+  background: #303b47;
+  color: #fff;
+}
+
+.astral-am-skill-tag-category-list {
+  display: grid;
+  gap: 4px;
+}
+
+.astral-am-skill-tag-category-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 3px;
+}
+
+.astral-am-skill-tag-tree-toggle,
+.astral-am-skill-tag-subcategory-add {
+  display: grid;
+  width: 20px;
+  height: 28px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #8ea3b5;
+  font: 12px/1 sans-serif;
+  cursor: pointer;
+}
+
+.astral-am-skill-tag-subcategory-add {
+  width: 24px;
+  font-size: 16px;
+}
+
+.astral-am-skill-tag-tree-toggle:hover,
+.astral-am-skill-tag-subcategory-add:hover {
+  border-color: rgba(108, 171, 220, 0.36);
+  background: rgba(255, 255, 255, 0.055);
+  color: #eef5fb;
+}
+
+.astral-am-skill-tag-category {
+  display: flex;
+  min-height: 31px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  padding: 4px 8px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #aebdca;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.astral-am-skill-tag-category-row > .astral-am-skill-tag-category {
+  min-width: 0;
+}
+
+.astral-am-skill-tag-subcategory-list {
+  display: grid;
+  gap: 3px;
+  margin-left: 21px;
+  padding-left: 7px;
+  border-left: 1px solid rgba(126, 163, 194, 0.22);
+}
+
+.astral-am-skill-tag-subcategory-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.astral-am-skill-tag-subcategory-row
+  > .astral-am-skill-tag-subcategory {
+  min-width: 0;
+}
+
+.astral-am-skill-tag-category.astral-am-skill-tag-subcategory {
+  min-height: 27px;
+  padding: 3px 7px;
+  color: #96a9b9;
+  font-size: 11px;
+}
+
+.astral-am-skill-tag-category.astral-am-skill-tag-subcategory::before {
+  width: 4px;
+  height: 4px;
+  flex: 0 0 4px;
+  border-radius: 50%;
+  background: #61798c;
+  content: "";
+}
+
+.astral-am-skill-tag-category.astral-am-skill-tag-subcategory.is-active::before {
+  background: #78b5e3;
+}
+
+.astral-am-skill-tag-category.astral-am-skill-tag-subcategory.is-unclassified {
+  color: #8291a0;
+  font-style: italic;
+}
+
+.astral-am-skill-tag-category:hover {
+  background: rgba(255, 255, 255, 0.055);
+  color: #eef5fb;
+}
+
+.astral-am-skill-tag-category.is-active {
+  border-color: rgba(92, 154, 205, 0.34);
+  background: rgba(56, 112, 157, 0.22);
+  color: #f0f7fd;
+}
+
+.astral-am-tag-category-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-tag-category-count {
+  flex: 0 0 auto;
+  min-width: 20px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.075);
+  color: #8496a7;
+  font-size: 10px;
+  text-align: center;
+}
+
+.astral-am-skill-tag-list {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  align-content: start;
+  gap: 8px;
+  min-height: 240px;
+  overflow: auto;
+}
+
+.astral-am-skill-tag-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  color: #94a4b3;
+  text-align: center;
+}
+
+.astral-am-skill-tag-card {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--tag-color);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--tag-color) 7%, transparent), transparent 58%),
+    #1b2128;
+  cursor: grab;
+}
+
+.astral-am-skill-tag-card:hover,
+.astral-am-skill-tag-card:focus-visible {
+  border-color: color-mix(in srgb, var(--tag-color) 62%, rgba(255, 255, 255, 0.2));
+  outline: none;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--tag-color) 12%, transparent), transparent 58%),
+    #1d242c;
+}
+
+.astral-am-skill-tag-card.is-selected {
+  border-color: color-mix(in srgb, var(--tag-color) 78%, #dceaf5);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--tag-color) 20%, transparent), transparent 64%),
+    #202a34;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--tag-color) 28%, transparent),
+    0 5px 18px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.astral-am-skill-tag-card.is-batch-selected {
+  outline: 2px solid rgba(104, 185, 245, 0.78);
+  outline-offset: 1px;
+}
+
+.astral-am-skill-tag-card.is-selected.is-batch-selected {
+  outline-color: rgba(140, 216, 255, 0.92);
+}
+
+.astral-am-skill-tag-card.is-favorite {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tag-color) 22%, transparent);
+}
+
+.astral-am-skill-tag-card.is-dragging,
+.astral-am-skill-tag-category.is-dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+.astral-am-skill-tag-card.is-drop-target,
+.astral-am-skill-tag-category.is-drop-target {
+  outline: 2px solid rgba(110, 180, 233, 0.72);
+  outline-offset: 1px;
+}
+
+.astral-am-skill-tag-card-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.astral-am-skill-tag-card-title strong {
+  flex: 1 1 auto;
+}
+
+.astral-am-skill-tag-batch-checkbox {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  margin: 0;
+  accent-color: #4f9dd5;
+  cursor: pointer;
+}
+
+.astral-am-skill-tag-card-title strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #edf5fb;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-tag-color-bar {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 2px;
+  background: var(--tag-color);
+}
+
+.astral-am-tag-favorite-button {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #6d7c8b;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.astral-am-tag-favorite-button:hover,
+.astral-am-skill-tag-card.is-favorite .astral-am-tag-favorite-button {
+  color: #e6c66d;
+}
+
+.astral-am-skill-tag-card-meta {
+  justify-content: space-between;
+}
+
+.astral-am-skill-tag-card-meta-labels {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.astral-am-chip.astral-am-chip-subcategory {
+  color: #a9cce5;
+}
+
+.astral-am-skill-tag-card-actions {
+  justify-content: flex-end;
+}
+
+.astral-am-skill-tag-editor {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid rgba(93, 157, 208, 0.36);
+  border-radius: 8px;
+  background: rgba(35, 64, 88, 0.18);
+}
+
+.astral-am-skill-tag-editor-heading {
+  justify-content: space-between;
+}
+
+.astral-am-skill-tag-editor-heading strong {
+  color: #eaf4fc;
+}
+
+.astral-am-skill-tag-editor-heading span {
+  overflow: hidden;
+  font: 10px Consolas, "SFMono-Regular", monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-skill-tag-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(135px, 100%), 1fr)
+  );
+  align-items: end;
+  gap: 8px;
+}
+
+.astral-am-skill-tag-editor-grid > * {
+  min-width: 0;
+}
+
+.astral-am-skill-tag-editor-grid .astral-am-select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.astral-am-skill-tag-favorite-field {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  color: #c5d3df;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.astral-am-skill-tag-editor-actions {
+  justify-content: flex-end;
+}
+
+.astral-am-skill-tag-context-menu {
+  position: fixed;
+  z-index: 35000;
+  display: grid;
+  min-width: 150px;
+  padding: 4px;
+  border: 1px solid rgba(135, 171, 200, 0.35);
+  border-radius: 7px;
+  background: rgba(20, 26, 33, 0.98);
+  color: #dce8f2;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.52);
+}
+
+.astral-am-skill-tag-context-item {
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.astral-am-skill-tag-context-item:hover {
+  background: rgba(77, 132, 176, 0.28);
+  color: #fff;
+}
+
+.astral-am-skill-tag-context-item.is-danger {
+  color: #f1b9b9;
+}
+
+.astral-am-skill-tag-context-item.is-danger:hover {
+  background: rgba(157, 65, 65, 0.27);
+  color: #ffdede;
+}
+
+.astral-am-skill-hover-preview {
+  position: fixed;
+  z-index: 33000;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(520px, calc(100vw - 24px));
+  max-height: min(360px, calc(100vh - 24px));
+  overflow: hidden;
+  pointer-events: none;
+  border: 1px solid rgba(117, 167, 209, 0.42);
+  border-radius: 9px;
+  background: rgba(15, 20, 26, 0.97);
+  color: #d6e2ed;
+  font: 12px/1.5 Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.62);
+}
+
+.astral-am-skill-hover-preview[hidden] {
+  display: none;
+}
+
+.astral-am-skill-preview-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(45, 72, 96, 0.24);
+}
+
+.astral-am-skill-preview-header strong,
+.astral-am-skill-preview-header span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-skill-preview-header strong {
+  color: #f0f6fc;
+  font-size: 12px;
+}
+
+.astral-am-skill-preview-header span {
+  flex: 0 0 auto;
+  color: #8fa5b8;
+  font-size: 10px;
+}
+
+.astral-am-skill-preview-body {
+  max-height: 312px;
+  padding: 10px 11px 12px;
+  overflow: hidden;
+  color: #c3d1dd;
+  font: 10.5px/1.55 Consolas, "SFMono-Regular", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-skill-preview-body.is-loading {
+  color: #9fc3df;
+}
+
+.astral-am-skill-preview-body.is-error {
+  color: #ffc7c7;
+}
+
+.astral-am-editor-dialog,
+.astral-am-skill-dialog,
+.astral-am-picker-dialog {
+  width: min(880px, 94vw);
+  max-width: 94vw;
+  max-height: 90vh;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 11px;
+  background: #171c23;
+  color: #e7eef5;
+  font: 13px/1.45 Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.72);
+}
+
+.astral-am-picker-dialog {
+  width: min(760px, 94vw);
+}
+
+.astral-am-skill-dialog {
+  width: min(980px, 95vw);
+}
+
+.astral-am-editor-dialog::backdrop,
+.astral-am-skill-dialog::backdrop,
+.astral-am-picker-dialog::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.astral-am-editor-shell,
+.astral-am-skill-dialog-shell,
+.astral-am-picker-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: 90vh;
+}
+
+.astral-am-skill-dialog-shell {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.astral-am-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1d242c;
+}
+
+.astral-am-skill-dialog-heading {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.astral-am-skill-dialog-heading strong,
+.astral-am-skill-dialog-heading span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-editor-body {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+}
+
+.astral-am-editor-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1b2128;
+}
+
+.astral-am-editor-footer .astral-am-action-status {
+  flex: 1 1 220px;
+  margin-right: auto;
+}
+
+.astral-am-picker-shell {
+  grid-template-rows: auto auto auto minmax(120px, 1fr) auto;
+}
+
+.astral-am-picker-shell > .astral-am-toolbar,
+.astral-am-picker-shell > .astral-am-status {
+  margin: 8px 10px 0;
+}
+
+.astral-am-picker-list {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 120px;
+  margin: 8px 10px;
+  padding: 7px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  background: #11161c;
+}
+
+.astral-am-picker-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.astral-am-picker-row:hover {
+  border-color: rgba(111, 161, 201, 0.22);
+  background: rgba(74, 119, 155, 0.1);
+}
+
+.astral-am-picker-row input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #4e91c8;
+}
+
+.astral-am-picker-row-text {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.astral-am-picker-row-text strong,
+.astral-am-picker-row-text span,
+.astral-am-picker-id {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-am-picker-row-text strong {
+  color: #e9f1f8;
+}
+
+.astral-am-picker-id {
+  max-width: 180px;
+  color: #667788;
+  font: 9px Consolas, "SFMono-Regular", monospace;
+}
+
+.astral-am-skill-content {
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  background: #0f1318;
+  color: #cad7e3;
+  font: 11px/1.6 Consolas, "SFMono-Regular", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.astral-am-breadcrumb-current {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid rgba(102, 159, 204, 0.28);
+  border-radius: 5px;
+  background: rgba(62, 112, 151, 0.14);
+  color: #e1edf6;
+  font-size: 11px;
+}
+
+.astral-am-crumb-separator {
+  align-self: center;
+  color: #607181;
+}
+
+.astral-am-tree-empty {
+  padding: 7px;
+}
+
+.astral-am-assets-pane .astral-am-card-title,
+.astral-am-assets-pane .astral-am-card-path,
+.astral-am-picker-row-text {
+  translate: no;
+}
+
+.astral-am-audio-card-icon {
+  display: grid;
+  width: 100%;
+  min-height: 110px;
+  place-items: center;
+  color: #8db9d7;
+  font-size: 34px;
+  text-shadow: 0 0 18px rgba(106, 172, 220, 0.32);
+}
+
+.astral-am-preview-audio {
+  width: min(680px, 88%);
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .astral-am-backdrop {
+    padding: 0;
+  }
+
+  .astral-am-window {
+    width: calc(100vw - 24px);
+    height: calc(100vh - 32px);
+  }
+
+  .astral-am-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .astral-am-header-actions {
+    flex: 1 0 100%;
+    order: 3;
+    justify-content: flex-start;
+  }
+
+  .astral-am-source-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-local-llm-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .astral-am-api-runtime-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .astral-am-model-browser {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(100px, 0.28fr) minmax(0, 1fr);
+  }
+
+  .astral-am-directory-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-model-tree {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  .astral-am-viewer {
+    width: 98vw;
+    height: 96vh;
+    max-height: 96vh;
+  }
+
+  .astral-am-viewer-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(260px, 52%) minmax(0, 1fr);
+  }
+
+  .astral-am-viewer-sidebar {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 0;
+  }
+
+  .astral-am-preview-media {
+    max-height: 100%;
+  }
+
+  .astral-am-chat-config-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .astral-am-api-config-heading,
+  .astral-am-api-provider-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .astral-am-api-config-heading {
+    gap: 2px;
+  }
+
+  .astral-am-api-config-heading span {
+    white-space: normal;
+  }
+
+  .astral-am-api-provider-tabs {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .astral-am-api-provider-actions {
+    justify-content: flex-start;
+  }
+
+  .astral-am-api-task-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-chat-workspace {
+    grid-template-columns: minmax(145px, 190px) minmax(0, 1fr);
+  }
+
+  .astral-am-skill-tag-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(104px, 0.3fr) minmax(0, 1fr);
+  }
+
+  .astral-am-skill-tag-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  .astral-am-skill-tag-content {
+    overflow: auto;
+  }
+
+  .astral-am-tag-browser-layout {
+    flex: 0 0 auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    overflow: visible;
+  }
+
+  .astral-am-tag-library {
+    min-height: 0;
+  }
+
+  .astral-am-skill-tag-batch-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .astral-am-skill-tag-batch-actions {
+    justify-content: flex-start;
+  }
+
+  .astral-am-skill-tag-list {
+    height: clamp(480px, 62vh, 760px);
+    min-height: 480px;
+    overflow: auto;
+  }
+
+  .astral-am-inspiration-panel {
+    overflow: visible;
+  }
+
+  .astral-am-inspiration-controls {
+    grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(88px, 0.28fr));
+  }
+
+  .astral-am-inspiration-controls > .astral-am-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .astral-am-header,
+  .astral-am-pane {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .astral-am-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .astral-am-card-body {
+    padding: 7px;
+  }
+
+  .astral-am-lora-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .astral-am-lora-row-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .astral-am-lora-row.has-thumbnail {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+
+  .astral-am-lora-thumbnail {
+    width: 68px;
+  }
+
+  .astral-am-lora-header .astral-am-button {
+    grid-column: 1 / -1;
+  }
+
+  .astral-am-prompt-header,
+  .astral-am-prompt-footer,
+  .astral-am-duplicate-header,
+  .astral-am-missing-header,
+  .astral-am-missing-candidate {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .astral-am-model-row,
+  .astral-am-duplicate-row {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-model-actions {
+    justify-content: flex-start;
+  }
+
+  .astral-am-missing-actions {
+    justify-content: stretch;
+  }
+
+  .astral-am-missing-actions .astral-am-button,
+  .astral-am-missing-candidate-dropdown {
+    flex-basis: 100%;
+  }
+
+  .astral-am-chat-config-grid,
+  .astral-am-local-llm-grid,
+  .astral-am-api-runtime-grid,
+  .astral-am-template-list,
+  .astral-am-skill-list {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-skill-tag-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-skill-tag-card-meta,
+  .astral-am-skill-tag-card-actions,
+  .astral-am-skill-tag-editor-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .astral-am-skill-tag-card-actions .astral-am-button,
+  .astral-am-skill-tag-editor-actions .astral-am-button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .astral-am-inspiration-header {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-inspiration-header-actions,
+  .astral-am-inspiration-result-actions {
+    justify-content: stretch;
+  }
+
+  .astral-am-inspiration-header-actions .astral-am-button,
+  .astral-am-inspiration-result-actions .astral-am-button {
+    flex: 1 1 140px;
+  }
+
+  .astral-am-inspiration-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-inspiration-result-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .astral-am-inspiration-result-heading .astral-am-muted {
+    text-align: left;
+  }
+
+  .astral-am-input-with-action,
+  .astral-am-local-llm-model-toolbar,
+  .astral-am-api-task-title {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .astral-am-chat-translation-controls {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+
+  .astral-am-chat-composer-actions .astral-am-button.is-primary {
+    min-width: 90px;
+  }
+
+  .astral-am-chat-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(120px, 0.28fr) minmax(0, 1fr);
+  }
+
+  .astral-am-chat-config-hint {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .astral-am-chat-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  .astral-am-conversation-list {
+    grid-auto-columns: minmax(180px, 1fr);
+    grid-auto-flow: column;
+    overflow-x: auto;
+  }
+
+  .astral-am-chat-message {
+    width: 92%;
+  }
+
+  .astral-am-chat-message-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .astral-am-chat-message-time {
+    text-align: left;
+  }
+
+  .astral-am-chat-message-images {
+    grid-template-columns: 1fr;
+  }
+
+  .astral-am-dropdown {
+    flex: 1 1 100%;
+  }
+
+  .astral-am-category-dropdown {
+    min-width: 0;
+  }
+}

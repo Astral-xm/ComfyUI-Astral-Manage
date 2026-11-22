@@ -1,0 +1,273 @@
+.astral-lora-info-dialog {
+  width: min(720px, calc(100vw - 32px));
+  max-width: 720px;
+}
+
+.astral-lora-info-dialog::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+body.rgthree-dialog-open:has(> .astral-lora-info-dialog)
+  > *:not(.rgthree-dialog):not(.rgthree-top-messages-container) {
+  filter: none;
+}
+
+.astral-lora-info-dialog .rgthree-dialog-container-content {
+  min-width: 0;
+}
+
+.astral-lora-trigger-editor {
+  position: fixed;
+  z-index: 10000;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 6px;
+  border: 1px solid rgba(120, 175, 235, 0.95);
+  border-radius: 4px;
+  outline: none;
+  background: #292d32;
+  color: #f1f3f5;
+  font-family: inherit;
+  line-height: normal;
+  caret-color: #fff;
+  cursor: text;
+}
+
+.astral-lora-trigger-editor::placeholder {
+  color: #929aa3;
+}
+
+.astral-info-content {
+  color: #eee;
+  font-size: 13px;
+}
+
+.astral-info-table {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.astral-info-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.astral-info-row:last-child {
+  border-bottom: 0;
+}
+
+.astral-info-label,
+.astral-info-value {
+  min-width: 0;
+  padding: 9px 11px;
+}
+
+.astral-info-label {
+  background: rgba(255, 255, 255, 0.07);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.astral-info-value {
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.astral-info-fetch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.astral-info-source-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.astral-info-fetch a,
+.astral-info-source a {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #8ec5ff;
+  text-decoration: underline;
+}
+
+.astral-info-fetch a:hover,
+.astral-info-source a:hover {
+  color: #c5e2ff;
+}
+
+.astral-info-match {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.astral-info-match.is-sha256 {
+  color: #9fe0b0;
+}
+
+.astral-info-match.is-metadata,
+.astral-info-match.is-civitai-name {
+  color: #b9d7ff;
+}
+
+.astral-info-match.is-name-candidate {
+  color: #f0d28c;
+}
+
+.astral-info-source-error {
+  color: #ffb7b7;
+}
+
+.astral-info-source-warning {
+  color: #e8ce93;
+}
+
+.astral-info-candidates {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.astral-info-candidates > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.astral-info-fetch-button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 5px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background: #3c6f9b;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.astral-info-fetch-button:hover:not(:disabled) {
+  background: #4d84b4;
+}
+
+.astral-info-fetch-button:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
+.astral-info-strength {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.astral-info-strength strong {
+  font-size: 14px;
+}
+
+.astral-info-strength small,
+.astral-info-muted {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.astral-info-thumbnail {
+  display: grid;
+  justify-items: start;
+  gap: 7px;
+}
+
+.astral-info-thumbnail label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+}
+
+.astral-info-thumbnail img {
+  display: block;
+  max-width: min(320px, 100%);
+  max-height: 240px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+  object-fit: contain;
+}
+
+.astral-info-thumbnail img[hidden] {
+  display: none;
+}
+
+.astral-info-triggers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.astral-info-trigger {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow-wrap: anywhere;
+}
+
+.astral-info-trigger.is-filled {
+  border-color: rgba(130, 190, 255, 0.55);
+  background: rgba(78, 135, 190, 0.35);
+}
+
+.astral-info-triggers > small {
+  flex-basis: 100%;
+  margin-top: 3px;
+}
+
+.astral-info-status {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  line-height: 1.45;
+}
+
+.astral-info-status.is-success {
+  border-color: rgba(100, 190, 120, 0.45);
+  background: rgba(56, 130, 72, 0.22);
+}
+
+.astral-info-status.is-warning {
+  border-color: rgba(224, 182, 92, 0.5);
+  background: rgba(132, 102, 35, 0.25);
+  color: #ffe4ae;
+}
+
+.astral-info-status.is-error {
+  border-color: rgba(240, 110, 110, 0.55);
+  background: rgba(145, 48, 48, 0.24);
+  color: #ffd4d4;
+}
+
+@media (max-width: 560px) {
+  .astral-info-row {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .astral-info-fetch {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .astral-info-fetch-button {
+    align-self: flex-start;
+  }
+}

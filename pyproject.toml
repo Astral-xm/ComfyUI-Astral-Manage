@@ -1,0 +1,50 @@
+﻿[project]
+name = "comfyui-astral-manage"
+version = "0.9.0"
+description = "ComfyUI node pack for LoRA stacks, prompt handling, media and model management, and workflow utilities."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Astral星芒" }]
+keywords = ["comfyui", "comfyui-nodes", "lora", "prompt", "asset-manager"]
+classifiers = [
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/Astral-xm/ComfyUI-Astral-Manage"
+Repository = "https://github.com/Astral-xm/ComfyUI-Astral-Manage"
+Issues = "https://github.com/Astral-xm/ComfyUI-Astral-Manage/issues"
+
+[project.optional-dependencies]
+local-llm = ["llama-cpp-python>=0.3.0"]
+
+[tool.comfy]
+PublisherId = "astral"
+DisplayName = "ComfyUI-Astral-Manage"
+Icon = ""
+includes = []
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = [
+  "nodes",
+  "routes",
+  "asset_library",
+  "chat_service",
+  "civitai_info",
+  "duplicate_scan",
+  "local_llm_service",
+  "lora_source_cache",
+  "model_card_info",
+  "model_library",
+  "prompt_library",
+  "skill_library",
+  "skill_tags",
+  "source_resolver",
+  "thumbnail_proxy",
+]
