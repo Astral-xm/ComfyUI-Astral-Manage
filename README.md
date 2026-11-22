@@ -24,7 +24,7 @@ ComfyUI 自定义节点与资产管理合集，包含 `Anything Everywhere`、`L
 
 在 ComfyUI-Manager 中搜索 **ComfyUI-Astral-Manage**，即可安装或更新。
 
-本包使用 Comfy Registry 标准元数据发布，ComfyUI-Manager 会检测新版本并提供更新。
+本包已提供 Comfy Registry 标准元数据。发布到 Comfy Registry 后，ComfyUI-Manager 会检测新版本并提供更新；在此之前可使用下方的 Git URL 安装。
 
 ### 通过 Git URL 安装
 
@@ -468,6 +468,14 @@ GET  /assets-astral/thumbnails/proxy
 - 浮动提示词工具和 `Prompt Processor` 都是无历史的一次性处理，不提供多轮对话、消息撤回或重新编辑。
 - 视频附件抽帧需要系统可用的 `ffmpeg`；音频附件受所配置 API 的音频格式支持情况限制。
 - Skill、模板和会话属于本机数据，不会自动同步到其他 ComfyUI 实例。
+
+## 发布新版本（维护者）
+
+1. 修改 `pyproject.toml` 中的 `version`；确认 `PublisherId` 与 registry.comfy.org 上的发布者 ID 一致。
+2. 在 registry.comfy.org 创建发布者并生成 API Key。
+3. 安装 comfy-cli：`python -m pip install comfy-cli`
+4. 在仓库根目录运行 `comfy node publish`，按提示输入 API Key。
+5. 发布成功后，ComfyUI-Manager 会通过 Comfy Registry 检测新版本并提供更新。
 
 ## 许可与署名
 
