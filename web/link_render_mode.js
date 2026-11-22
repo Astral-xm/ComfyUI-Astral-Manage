@@ -3,7 +3,7 @@ import { app } from "../../scripts/app.js";
 const MODE = 1001;
 const MODE_TEXT = "直角曲线";
 const STUB = 12;
-const LANE_PITCH = 7;
+const LANE_PITCH = 10;
 const RADIUS = 10;
 
 const frameLanes = new Map();
@@ -44,15 +44,13 @@ function dedupe(pts) {
   return out;
 }
 
-function laneFor(linkData) {
+function laneFor(linkData, orientation) {
   const s = linkData.startPoint;
   const e = linkData.endPoint;
-  const key = [
-    Math.round(s.x / 8),
-    Math.round(s.y / 8),
-    Math.round(e.x / 8),
-    Math.round(e.y / 8),
-  ].join("|");
+  const key =
+    orientation === "horizontal"
+      ? `H|${Math.round(s.y / 8)}`
+      : `V|${Math.round(s.x / 8)}|${Math.round(e.x / 8)}`;
   let group = frameLanes.get(key);
   if (!group) {
     group = new Map();
@@ -72,28 +70,45 @@ function buildRoute(linkData) {
 
   const s = linkData.startPoint;
   const e = linkData.endPoint;
-  const lane = laneFor(linkData);
   const ax = s.x + STUB;
   const bx = e.x - STUB;
 
-  let midX;
-  if (bx - ax >= 16) {
-    midX = (ax + bx) / 2 + lane;
-    const low = Math.min(ax, bx) + 4;
-    const high = Math.max(ax, bx) - 4;
-    if (low < high) midX = Math.max(low, Math.min(high, midX));
-  } else {
-    midX = Math.max(ax, bx) + STUB + Math.abs(lane);
-  }
+  const horizontal =
+    e.x - s.x > 0 &&
+    Math.abs(e.x - s.x) >= Math.abs(e.y - s.y) * 1.5;
 
-  const pts = dedupe([
-    [s.x, s.y],
-    [ax, s.y],
-    [midX, s.y],
-    [midX, e.y],
-    [bx, e.y],
-    [e.x, e.y],
-  ]);
+  let pts;
+  if (horizontal) {
+    const lane = laneFor(linkData, "horizontal");
+    const laneY = s.y + lane;
+    pts = dedupe([
+      [s.x, s.y],
+      [ax, s.y],
+      [ax, laneY],
+      [bx, laneY],
+      [bx, e.y],
+      [e.x, e.y],
+    ]);
+  } else {
+    const lane = laneFor(linkData, "vertical");
+    let midX;
+    if (bx - ax >= 16) {
+      midX = (ax + bx) / 2 + lane;
+      const low = Math.min(ax, bx) + 4;
+      const high = Math.max(ax, bx) - 4;
+      if (low < high) midX = Math.max(low, Math.min(high, midX));
+    } else {
+      midX = Math.max(ax, bx) + STUB + Math.abs(lane);
+    }
+    pts = dedupe([
+      [s.x, s.y],
+      [ax, s.y],
+      [midX, s.y],
+      [midX, e.y],
+      [bx, e.y],
+      [e.x, e.y],
+    ]);
+  }
   if (pts.length < 2) return null;
   return { pts, measure: measure(pts) };
 }
