@@ -1,9 +1,9 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import {
-  getLanguage,
   onLanguageChange,
   registerLocalizationRoot,
+  translateUiText,
   unregisterLocalizationRoot,
 } from "./astral_i18n.js";
 import {
@@ -45,23 +45,23 @@ const MEDIA_INPUT_KIND_ORDER = Object.freeze({
 const OPERATIONS = [
   {
     value: "auto",
-    zh: "自动判断",
+    zh: "Auto",
     en: "Auto",
-    hintZh: "无媒体时扩写；有媒体时反推",
+    hintZh: "Expand text, or invert connected media",
     hintEn: "Expand text, or invert connected media",
   },
   {
     value: "expand",
-    zh: "提示词扩写",
+    zh: "Expand Prompt",
     en: "Expand prompt",
-    hintZh: "仅扩写用户提示词",
+    hintZh: "Expand only the user prompt",
     hintEn: "Expand only the user prompt",
   },
   {
     value: "invert",
-    zh: "图像反推",
+    zh: "Image Inversion",
     en: "Invert media",
-    hintZh: "从图片、视频或音频反推提示词",
+    hintZh: "Reverse-engineer a prompt from image, video, or audio",
     hintEn: "Reverse-engineer a prompt from image, video, or audio",
   },
 ];
@@ -69,12 +69,12 @@ const OPERATIONS = [
 const SERVICES = [
   {
     value: "api",
-    zh: "API纯文本模式",
+    zh: "API Text-only Mode",
     en: "API Text-only Mode",
   },
   {
     value: "local",
-    zh: "本地模式",
+    zh: "Local Mode",
     en: "Local Mode",
   },
 ];
@@ -90,11 +90,11 @@ function normalizeOperationValue(value) {
   const normalized = String(value || "auto").trim().toLowerCase();
   return {
     "自动": "auto",
-    "自动判断": "auto",
+    "Auto": "auto",
     "扩写": "expand",
-    "提示词扩写": "expand",
+    "Expand Prompt": "expand",
     "反推": "invert",
-    "图像反推": "invert",
+    "Image Inversion": "invert",
   }[normalized] || (
     ["auto", "expand", "invert"].includes(normalized)
       ? normalized
@@ -104,12 +104,12 @@ function normalizeOperationValue(value) {
 
 function normalizeModeValue(value) {
   const normalized = String(value || "api").trim().toLowerCase();
-  if (["local", "本地", "本地模式"].includes(normalized)) return "local";
+  if (["local", "本地", "Local Mode"].includes(normalized)) return "local";
   return "api";
 }
 
-function ui(zh, en) {
-  return getLanguage() === "en" ? en : zh;
+function ui(english) {
+  return translateUiText(english);
 }
 
 function isPromptProcessorNode(node) {
@@ -261,7 +261,7 @@ function fillSelect(select, items, selectedValue, emptyLabel) {
     const missing = createElement(
       "option",
       "",
-      `${ui("已失效", "Missing")}: ${requested}`,
+      `${ui("Missing", "Missing")}: ${requested}`,
     );
     missing.value = requested;
     missing.dataset.astralI18nSkip = "true";
@@ -477,7 +477,7 @@ function setupPromptProcessor(node) {
     "↻",
   );
   refresh.type = "button";
-  refresh.title = ui("刷新规则与 Skill", "Refresh rules and Skills");
+  refresh.title = ui("Refresh rules and Skills", "Refresh rules and Skills");
   refresh.setAttribute("aria-label", refresh.title);
   header.append(heading, hint, refresh);
 
@@ -495,36 +495,36 @@ function setupPromptProcessor(node) {
   const clearText = createElement(
     "span",
     "astral-pp-check-label",
-    "清理显存",
+    "Clear VRAM",
   );
   clearLabel.append(clearVram, clearSwitch, clearText);
 
   const manageExpand = createElement(
     "button",
     "astral-pp-link-button",
-    "规则管理",
+    "Manage rules",
   );
   const manageInvert = createElement(
     "button",
     "astral-pp-link-button",
-    "规则管理",
+    "Manage rules",
   );
   manageExpand.type = "button";
   manageInvert.type = "button";
   const apiConfig = createElement(
     "button",
     "astral-pp-link-button astral-pp-api-config-button",
-    "API配置",
+    "API Configuration",
   );
   apiConfig.type = "button";
 
-  const expandField = addField("扩写规则", expandRule, "astral-pp-rule-field");
+  const expandField = addField("Expansion rule", expandRule, "astral-pp-rule-field");
   expandField.append(manageExpand);
-  const invertField = addField("反推规则", invertRule, "astral-pp-rule-field");
+  const invertField = addField("Inversion rule", invertRule, "astral-pp-rule-field");
   invertField.append(manageInvert);
-  const operationField = addField("操作", operation);
+  const operationField = addField("Operation", operation);
   const serviceField = addField(
-    "服务",
+    "Service",
     service,
     "astral-pp-service-field",
   );
@@ -534,7 +534,7 @@ function setupPromptProcessor(node) {
   );
   apiConfigRow.append(apiConfig);
   const skillField = addField(
-    "Skill（与规则互斥）",
+    "Skill (exclusive with rules)",
     skill,
     "astral-pp-skill-field",
   );
@@ -588,10 +588,10 @@ function setupPromptProcessor(node) {
     const usesExpand =
       currentOperation === "expand" ||
       (currentOperation === "auto" && !hasMediaConnected());
-    let zh = "API纯文本模式";
+    let zh = "API Text-only Mode";
     let en = "API Text-only Mode";
     if (usesInvert) {
-      zh = "API图片模式";
+      zh = "API Image Mode";
       en = "API Image Mode";
     }
     return SERVICES.map((item) =>
@@ -717,20 +717,20 @@ function setupPromptProcessor(node) {
 
   const refreshUi = () => {
     updateMediaInputLabels(node);
-    heading.textContent = ui("提示词处理", "Prompt Processing");
+    heading.textContent = ui("Prompt Processing", "Prompt Processing");
     hint.textContent = ui(operationInfo().hintZh, operationInfo().hintEn);
-    refresh.title = ui("刷新规则与 Skill", "Refresh rules and Skills");
+    refresh.title = ui("Refresh rules and Skills", "Refresh rules and Skills");
     refresh.setAttribute("aria-label", refresh.title);
     clearText.textContent = ui(
-      "清理显存",
+      "Clear VRAM",
       "Clear VRAM",
     );
-    apiConfig.textContent = ui("API配置", "API Configuration");
-    apiConfig.title = ui("打开 API配置", "Open API Configuration");
+    apiConfig.textContent = ui("API Configuration", "API Configuration");
+    apiConfig.title = ui("Open API Configuration", "Open API Configuration");
     apiConfig.setAttribute("aria-label", apiConfig.title);
-    manageExpand.textContent = ui("规则管理", "Manage rules");
-    manageInvert.textContent = ui("规则管理", "Manage rules");
-    widgets.userPrompt && (widgets.userPrompt.label = ui("用户提示词", "User Prompt"));
+    manageExpand.textContent = ui("Manage rules", "Manage rules");
+    manageInvert.textContent = ui("Manage rules", "Manage rules");
+    widgets.userPrompt && (widgets.userPrompt.label = ui("User Prompt", "User Prompt"));
 
     const operationValue = normalizeOperationValue(
       widgets.operation.value,
@@ -751,19 +751,19 @@ function setupPromptProcessor(node) {
       expandRule,
       catalogs.expand,
       widgets.expandRule.value,
-      ui("不使用扩写规则", "No expansion rule"),
+      ui("No expansion rule", "No expansion rule"),
     );
     fillSelect(
       invertRule,
       catalogs.invert,
       widgets.invertRule.value,
-      ui("不使用反推规则", "No inversion rule"),
+      ui("No inversion rule", "No inversion rule"),
     );
     fillSelect(
       skill,
       catalogs.skills,
       widgets.skill.value,
-      ui("不使用 Skill", "No Skill"),
+      ui("No Skill", "No Skill"),
     );
     clearVram.checked = widgets.clearVram.value === true;
     syncVisibility();
@@ -793,26 +793,26 @@ function setupPromptProcessor(node) {
       expandRule,
       catalogs.expand,
       widgets.expandRule.value,
-      ui("不使用扩写规则", "No expansion rule"),
+      ui("No expansion rule", "No expansion rule"),
     );
     fillSelect(
       invertRule,
       catalogs.invert,
       widgets.invertRule.value,
-      ui("不使用反推规则", "No inversion rule"),
+      ui("No inversion rule", "No inversion rule"),
     );
     fillSelect(
       skill,
       catalogs.skills,
       widgets.skill.value,
-      ui("不使用 Skill", "No Skill"),
+      ui("No Skill", "No Skill"),
     );
   };
 
   const loadCatalog = async (force = false) => {
     if (catalogLoaded && !force) return;
     if (catalogLoading && !force) return catalogLoading;
-    setStatus(ui("正在读取规则与 Skill…", "Loading rules and Skills..."), "loading");
+    setStatus(ui("Loading rules and Skills...", "Loading rules and Skills..."), "loading");
     catalogLoading = Promise.all([
       fetchJson("/assets-astral/prompt-templates?category=expand"),
       fetchJson("/assets-astral/prompt-templates?category=invert"),
@@ -826,7 +826,7 @@ function setupPromptProcessor(node) {
         syncCatalogValues();
         setStatus(
           ui(
-            `已读取 ${catalogs.expand.length} 个扩写规则、${catalogs.invert.length} 个反推规则和 ${catalogs.skills.length} 个 Skill。`,
+            `Loaded ${catalogs.expand.length} expansion rules, ${catalogs.invert.length} inversion rules, and ${catalogs.skills.length} Skills.`,
             `Loaded ${catalogs.expand.length} expansion rules, ${catalogs.invert.length} inversion rules, and ${catalogs.skills.length} Skills.`,
           ),
           "success",
@@ -836,7 +836,7 @@ function setupPromptProcessor(node) {
       .catch((error) => {
         catalogLoading = null;
         setStatus(
-          `${ui("读取配置失败", "Failed to load configuration")}：${error.message || error}`,
+          `${ui("Failed to load configuration", "Failed to load configuration")}: ${error.message || error}`,
           "error",
         );
       })

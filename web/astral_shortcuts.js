@@ -219,22 +219,22 @@ export function formatShortcut(value) {
 
 export function validateAssetManagerShortcut(value) {
   const shortcut = normalizeShortcut(value);
-  if (!shortcut) return "请按下一个有效的组合键。";
+  if (!shortcut) return "Press a valid shortcut combination.";
   if (!SUPPORTED_CODE_PATTERN.test(shortcut.code) || LOCK_CODES.has(shortcut.code)) {
-    return "请使用字母、数字或功能键，不要使用 Tab、Enter、Esc 或系统锁定键。";
+    return "Use a letter, number, or function key instead of Tab, Enter, Esc, or a system lock key.";
   }
   if (shortcut.meta) {
-    return "Windows 键组合会与系统快捷键冲突，请改用 Ctrl 或 Alt。";
+    return "Windows-key combinations conflict with system shortcuts. Use Ctrl or Alt instead.";
   }
   if (!shortcut.ctrl && !shortcut.alt) {
-    return "快捷键必须至少包含 Ctrl 或 Alt。";
+    return "The shortcut must include Ctrl or Alt.";
   }
   if (
     COMFYUI_RESERVED_SHORTCUTS.some((reserved) =>
       shortcutsEqual(shortcut, reserved),
     )
   ) {
-    return "该组合会被 ComfyUI 快捷键占用，请换一组。";
+    return "This combination is already used by a ComfyUI shortcut. Choose another one.";
   }
   if (
     ["F5", "F11", "F12"].includes(shortcut.code) ||
@@ -250,7 +250,7 @@ export function validateAssetManagerShortcut(value) {
       shortcut.alt &&
       shortcut.code === "Delete")
   ) {
-    return "该组合会与浏览器或操作系统快捷键冲突，请换一组。";
+    return "This combination conflicts with a browser or operating-system shortcut. Choose another one.";
   }
   if (
     shortcut.ctrl &&
@@ -259,7 +259,7 @@ export function validateAssetManagerShortcut(value) {
     !shortcut.shift &&
     BROWSER_CTRL_CODES.has(shortcut.code)
   ) {
-    return "该组合会被浏览器或编辑器占用，请换一组。";
+    return "This combination is used by the browser or editor. Choose another one.";
   }
   if (
     shortcut.ctrl &&
@@ -268,14 +268,14 @@ export function validateAssetManagerShortcut(value) {
     !shortcut.meta &&
     BROWSER_CTRL_SHIFT_CODES.has(shortcut.code)
   ) {
-    return "该组合会被浏览器或编辑器占用，请换一组。";
+    return "This combination is used by the browser or editor. Choose another one.";
   }
   if (
     shortcut.alt &&
     !shortcut.ctrl &&
     ["ArrowLeft", "ArrowRight", "Home"].includes(shortcut.code)
   ) {
-    return "该组合会被浏览器导航占用，请换一组。";
+    return "This combination is used for browser navigation. Choose another one.";
   }
   return "";
 }

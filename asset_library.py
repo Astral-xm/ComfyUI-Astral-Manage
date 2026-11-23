@@ -80,12 +80,12 @@ def _path_inside(directory: str, target: str) -> bool:
 def normalize_relative_path(value: str) -> str:
   value = str(value or "").replace("\\", "/").strip()
   if not value or value.startswith("/") or "\x00" in value:
-    raise AssetPathError("素材路径为空或不是相对路径")
+    raise AssetPathError("Asset path is empty or not a relative path")
   if re.match(r"^[A-Za-z]:", value):
-    raise AssetPathError("素材路径必须是 input/output 内的相对路径")
+    raise AssetPathError("Asset path must be a relative path inside input/output")
   parts = [part for part in value.split("/") if part not in ("", ".")]
   if not parts or any(part == ".." for part in parts):
-    raise AssetPathError("素材路径不能越过 input/output 目录")
+    raise AssetPathError("Asset path must not escape the input/output directory")
   return "/".join(parts)
 
 
@@ -97,16 +97,16 @@ def resolve_asset_path(
 ) -> str:
   roots = {"input": input_root, "output": output_root}
   if root not in roots:
-    raise AssetPathError("素材根目录必须是 input 或 output")
+    raise AssetPathError("Asset root must be input or output")
   base = os.path.realpath(roots[root])
   relative_path = normalize_relative_path(relative_path)
   target = os.path.realpath(os.path.join(base, *relative_path.split("/")))
   if not _path_inside(base, target):
-    raise AssetPathError("素材路径不在允许的目录内")
+    raise AssetPathError("Asset path is outside the allowed directory")
   if not os.path.isfile(target):
-    raise FileNotFoundError("素材文件不存在")
+    raise FileNotFoundError("Asset file does not exist")
   if media_kind(target) is None:
-    raise AssetPathError("只允许访问图片或视频素材")
+    raise AssetPathError("Only image or video assets are allowed")
   return target
 
 
@@ -118,7 +118,7 @@ def resolve_asset_directory(
 ) -> str:
   roots = {"input": input_root, "output": output_root}
   if root not in roots:
-    raise AssetPathError("素材根目录必须是 input 或 output")
+    raise AssetPathError("Asset root must be input or output")
   base = os.path.realpath(roots[root])
   normalized = str(relative_path or "").replace("\\", "/").strip()
   if normalized:
@@ -127,9 +127,9 @@ def resolve_asset_directory(
   else:
     target = os.path.realpath(base)
   if not _path_inside(base, target):
-    raise AssetPathError("素材目录不在允许的目录内")
+    raise AssetPathError("Asset directory is outside the allowed directory")
   if not os.path.isdir(target):
-    raise FileNotFoundError("素材目录不存在")
+    raise FileNotFoundError("Asset directory does not exist")
   return target
 
 
@@ -139,7 +139,7 @@ def resolve_workspace_directory(
   roots: dict[str, str],
 ) -> str:
   if root not in roots:
-    raise AssetPathError("工作区目录不在允许范围内")
+    raise AssetPathError("Workspace directory is outside the allowed range")
   base = os.path.abspath(roots[root])
   normalized = str(relative_path or "").replace("\\", "/").strip()
   if normalized:
@@ -152,9 +152,9 @@ def resolve_workspace_directory(
   except ValueError:
     inside = False
   if not inside:
-    raise AssetPathError("工作区目录路径越界")
+    raise AssetPathError("Workspace directory path escapes the allowed range")
   if not os.path.isdir(target):
-    raise FileNotFoundError("工作区目录不存在")
+    raise FileNotFoundError("Workspace directory does not exist")
   return target
 
 
@@ -249,7 +249,7 @@ def create_thumbnail(path: str, cache_directory: str, cache_token: str) -> str:
   elif kind == "video":
     ffmpeg = _find_ffmpeg()
     if not ffmpeg:
-      raise OSError("未找到 ffmpeg，无法生成视频缩略图")
+      raise OSError("ffmpeg not found; unable to generate video thumbnail")
     process = subprocess.run(
       [
         ffmpeg,
@@ -272,9 +272,9 @@ def create_thumbnail(path: str, cache_directory: str, cache_token: str) -> str:
       creationflags=_WINDOWS_NO_WINDOW,
     )
     if process.returncode != 0 or not os.path.isfile(thumbnail_path):
-      raise OSError("ffmpeg 无法生成视频缩略图")
+      raise OSError("ffmpeg could not generate the video thumbnail")
   else:
-    raise AssetPathError("只允许生成图片或视频缩略图")
+    raise AssetPathError("Only image or video thumbnails can be generated")
   return thumbnail_path
 
 
@@ -330,9 +330,9 @@ def list_assets(
   limit: int = 80,
 ) -> dict[str, Any]:
   if root_filter not in {"all", "input", "output"}:
-    raise AssetPathError("root 必须是 all、input 或 output")
+    raise AssetPathError("root must be all, input or output")
   if kind_filter not in {"all", "image", "video", "audio"}:
-    raise AssetPathError("kind 必须是 all、image、video 或 audio")
+    raise AssetPathError("kind must be all, image, video or audio")
   offset = max(0, int(offset))
   limit = min(500, max(1, int(limit)))
   query = " ".join(str(query or "").split()).casefold()
@@ -387,7 +387,7 @@ def list_asset_tree(
   relative_path: str = "",
 ) -> dict[str, Any]:
   if root not in {"input", "output"}:
-    raise AssetPathError("素材根目录必须是 input 或 output")
+    raise AssetPathError("Asset root must be input or output")
   roots = {"input": input_root, "output": output_root}
   root_path = os.path.realpath(roots[root])
   target = resolve_asset_directory(
@@ -434,7 +434,7 @@ def list_asset_tree(
         except OSError:
           continue
   except OSError as error:
-    raise AssetPathError(f"无法读取素材目录：{error}") from error
+    raise AssetPathError(f"Unable to read asset directory: {error}") from error
   directories.sort(key=lambda item: item["name"].casefold())
   files.sort(key=lambda item: item["name"].casefold())
   return {
@@ -461,16 +461,16 @@ def _asset_selection(
   output_root: str,
 ) -> list[dict[str, Any]]:
   if not isinstance(items, list) or not items:
-    raise AssetPathError("请至少选择一个素材")
+    raise AssetPathError("Select at least one asset")
   if len(items) > MAX_ASSET_BATCH_ITEMS:
-    raise AssetPathError(f"一次最多操作 {MAX_ASSET_BATCH_ITEMS} 个素材")
+    raise AssetPathError(f"At most {MAX_ASSET_BATCH_ITEMS} assets can be processed at once")
 
   roots = _asset_root_paths(input_root, output_root)
   selected: list[dict[str, Any]] = []
   seen: set[tuple[str, str]] = set()
   for raw_item in items:
     if not isinstance(raw_item, dict):
-      raise AssetPathError("素材选择项格式错误")
+      raise AssetPathError("Invalid asset selection item format")
     root = str(raw_item.get("root", "")).strip()
     raw_path = str(raw_item.get("path", ""))
     relative_path = normalize_relative_path(raw_path)
@@ -496,38 +496,38 @@ def _asset_selection(
       }
     )
   if not selected:
-    raise AssetPathError("请至少选择一个素材")
+    raise AssetPathError("Select at least one asset")
   return selected
 
 
-def _validate_file_name(value: Any, *, label: str = "文件名") -> str:
+def _validate_file_name(value: Any, *, label: str = "File name") -> str:
   name = str(value or "").strip()
   if not name or name in {".", ".."}:
-    raise AssetPathError(f"{label}不能为空")
+    raise AssetPathError(f"{label} cannot be empty")
   if "/" in name or "\\" in name:
-    raise AssetPathError(f"{label}不能包含路径分隔符")
+    raise AssetPathError(f"{label} cannot contain path separators")
   if any(ord(character) < 32 for character in name):
-    raise AssetPathError(f"{label}不能包含控制字符")
+    raise AssetPathError(f"{label} cannot contain control characters")
   if any(character in '<>:"|?*' for character in name):
-    raise AssetPathError(f'{label}不能包含 < > : " | ? *')
+    raise AssetPathError(f'{label} cannot contain < > : " | ? *')
   if name.endswith((" ", ".")):
-    raise AssetPathError(f"{label}不能以空格或句点结尾")
+    raise AssetPathError(f"{label} cannot end with a space or period")
   stem = os.path.splitext(name)[0]
   if stem.upper() in WINDOWS_RESERVED_NAMES:
-    raise AssetPathError(f"{label}不能使用 Windows 保留名称")
+    raise AssetPathError(f"{label} cannot use a Windows reserved name")
   return name
 
 
 def _renamed_file_name(original_name: str, requested_name: Any) -> str:
-  new_name = _validate_file_name(requested_name, label="新文件名")
+  new_name = _validate_file_name(requested_name, label="New file name")
   original_extension = os.path.splitext(original_name)[1]
   requested_extension = os.path.splitext(new_name)[1]
   if requested_extension:
     if requested_extension.casefold() != original_extension.casefold():
-      raise AssetPathError("重命名不能修改文件扩展名")
+      raise AssetPathError("Renaming cannot change the file extension")
   else:
     new_name = f"{new_name}{original_extension}"
-  return _validate_file_name(new_name, label="新文件名")
+  return _validate_file_name(new_name, label="New file name")
 
 
 def _temporary_sibling_path(path: str) -> str:
@@ -586,21 +586,21 @@ def rename_asset_files(
 ) -> dict[str, Any]:
   selected = _asset_selection(items, input_root, output_root)
   if mode == "single" and len(selected) != 1:
-    raise AssetPathError("单个重命名只能选择一个素材")
+    raise AssetPathError("Single rename can only select one asset")
   if mode == "prefix" and not selected:
-    raise AssetPathError("请至少选择一个图片")
+    raise AssetPathError("Select at least one image")
   if mode not in {"single", "prefix"}:
-    raise AssetPathError("不支持的批量重命名模式")
+    raise AssetPathError("Unsupported batch rename mode")
 
   try:
     sequence = int(start)
   except (TypeError, ValueError) as error:
-    raise AssetPathError("批量重命名起始序号无效") from error
+    raise AssetPathError("Invalid batch rename start index") from error
   if sequence < 1:
-    raise AssetPathError("批量重命名起始序号必须大于 0")
+    raise AssetPathError("Batch rename start index must be greater than 0")
 
   normalized_prefix = (
-    _validate_file_name(prefix, label="文件名前缀")
+    _validate_file_name(prefix, label="File name prefix")
     if mode == "prefix"
     else ""
   )
@@ -615,7 +615,7 @@ def rename_asset_files(
     if mode == "prefix":
       extension = os.path.splitext(item["name"])[1]
       requested_name = f"{normalized_prefix}{sequence + index}{extension}"
-      requested_name = _validate_file_name(requested_name, label="新文件名")
+      requested_name = _validate_file_name(requested_name, label="New file name")
     else:
       requested_name = _renamed_file_name(item["name"], new_name)
     relative_path = (
@@ -627,16 +627,16 @@ def rename_asset_files(
       os.path.join(item["rootPath"], *relative_path.split("/"))
     )
     if not _path_inside(item["rootPath"], destination):
-      raise AssetPathError("重命名目标不在允许的目录内")
+      raise AssetPathError("Rename target is outside the allowed directory")
     destination_key = os.path.normcase(destination)
     if destination_key in destination_keys:
-      raise AssetPathError("批量重命名产生了重复文件名")
+      raise AssetPathError("Batch rename produced duplicate file names")
     destination_keys.add(destination_key)
     if (
       os.path.lexists(destination)
       and destination_key not in source_keys
     ):
-      raise FileExistsError(f"目标文件已存在：{requested_name}")
+      raise FileExistsError(f"Target file already exists: {requested_name}")
     operations.append((item, item["absolutePath"], destination))
     results.append(
       {
@@ -666,11 +666,11 @@ def recycle_asset_files(
   recycle_function: Any = None,
 ) -> dict[str, Any]:
   if confirm is not True:
-    raise PermissionError("删除素材前必须明确确认")
+    raise PermissionError("Deleting assets requires explicit confirmation")
   selected = _asset_selection(items, input_root, output_root)
   recycle = recycle_function
   if recycle is None:
-    raise RuntimeError("未配置系统回收站操作")
+    raise RuntimeError("System recycle bin operation is not configured")
   recycle([item["absolutePath"] for item in selected])
   return {
     "ok": True,
@@ -1092,7 +1092,7 @@ def _open_linux_directory(target: str) -> None:
   opener = shutil.which("xdg-open")
   if not opener:
     raise FileNotFoundError(
-      "系统缺少 xdg-open，无法打开文件管理器；请安装 xdg-utils"
+      "System is missing xdg-open; unable to open the file manager. Please install xdg-utils"
     )
   subprocess.Popen(
     [opener, os.path.abspath(target)],
@@ -1119,7 +1119,7 @@ def open_asset_target(target: str, kind: str) -> str:
     opener = shutil.which("open")
     if not opener:
       raise FileNotFoundError(
-        "系统缺少 open 命令，无法打开 Finder"
+        "System is missing the open command; unable to open Finder"
       )
     arguments = ["-R", absolute_target] if kind == "file" else [absolute_target]
     subprocess.Popen(
@@ -1571,7 +1571,7 @@ def read_asset_detail(
   stat = os.stat(absolute_path)
   kind = media_kind(absolute_path)
   if kind is None:
-    raise AssetPathError("只允许读取图片、视频或音频素材")
+    raise AssetPathError("Only image, video or audio assets can be read")
   if kind == "audio":
     return {
       "asset": asset_entry(root, relative_path, absolute_path, stat),
@@ -1649,7 +1649,7 @@ def list_prompt_entries(
   limit: int = 80,
 ) -> dict[str, Any]:
   if root_filter not in {"all", "input", "output"}:
-    raise AssetPathError("root 必须是 all、input 或 output")
+    raise AssetPathError("root must be all, input or output")
   query = " ".join(str(query or "").split()).casefold()
   offset = max(0, int(offset))
   limit = min(300, max(1, int(limit)))

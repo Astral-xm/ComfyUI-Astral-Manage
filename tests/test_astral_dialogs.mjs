@@ -204,7 +204,7 @@ assert.match(dialog.className, /astral-am-dialog/);
 const promptInput = findAll(dialog, (element) => element.tagName === "INPUT")[0];
 assert.ok(promptInput);
 promptInput.value = "新名称";
-click(buttonByText(dialog, "确定"));
+click(buttonByText(dialog, "OK"));
 assert.equal(await promptResult, "新名称");
 assert.equal(fakeDocument.body.children.length, 0);
 
@@ -221,7 +221,7 @@ assert.ok(promptTextarea);
 promptTextarea.value = "标签一\n标签二";
 promptTextarea.dispatch("keydown", { key: "Enter", isComposing: false });
 assert.equal(fakeDocument.body.children.length, 1);
-click(buttonByText(dialog, "确定"));
+click(buttonByText(dialog, "OK"));
 assert.equal(await batchPromptResult, "标签一\n标签二");
 
 let selectResult = showAstralSelect({
@@ -242,7 +242,7 @@ const dialogSelect = findAll(
 assert.ok(dialogSelect);
 assert.equal(dialogSelect.value, "scene-hair");
 dialogSelect.value = "character";
-click(buttonByText(dialog, "确定"));
+click(buttonByText(dialog, "OK"));
 assert.equal(await selectResult, "character");
 
 const defaultShortcut = {
@@ -293,7 +293,7 @@ shortcutRecorder.dispatch("keydown", {
   isComposing: false,
 });
 assert.equal(shortcutPreview.textContent, "Ctrl + Alt + K");
-const saveShortcutButton = buttonByText(dialog, "保存");
+const saveShortcutButton = buttonByText(dialog, "Save");
 assert.equal(saveShortcutButton.disabled, false);
 click(saveShortcutButton);
 assert.deepEqual(await shortcutResult, capturedShortcut);
@@ -305,7 +305,7 @@ shortcutResult = showAstralShortcutRecorder({
   validateShortcut: () => "",
 });
 dialog = fakeDocument.body.children[0];
-click(buttonByText(dialog, "取消"));
+click(buttonByText(dialog, "Cancel"));
 assert.equal(await shortcutResult, null);
 
 let confirmResult = showAstralConfirm({
@@ -317,12 +317,12 @@ assert.equal(dialog.tagName, "DIV");
 assert.equal(dialog.attributes.role, "alertdialog");
 assert.equal(dialog.showCalls, 0);
 assert.equal(dialog.showModalCalls, 0);
-click(buttonByText(dialog, "确认"));
+click(buttonByText(dialog, "Confirm"));
 assert.equal(await confirmResult, true);
 
 confirmResult = showAstralConfirm({ title: "删除会话" });
 dialog = fakeDocument.body.children[0];
-click(buttonByText(dialog, "取消"));
+click(buttonByText(dialog, "Cancel"));
 assert.equal(await confirmResult, false);
 
 const alertResult = showAstralAlert({
@@ -330,7 +330,7 @@ const alertResult = showAstralAlert({
   message: "测试提示信息。",
 });
 dialog = fakeDocument.body.children[0];
-click(buttonByText(dialog, "知道了"));
+click(buttonByText(dialog, "Got it"));
 assert.equal(await alertResult, true);
 
 promptResult = showAstralPrompt({ title: "点击外部关闭" });

@@ -124,7 +124,7 @@ class PromptLibraryTests(unittest.TestCase):
 
     self.assertEqual(public["apiKey"], "••••••••")
     self.assertTrue(public["hasApiKey"])
-    self.assertEqual(public["apiKeyHint"], "已保存")
+    self.assertEqual(public["apiKeyHint"], "Saved")
     self.assertNotIn("1234", public["apiKeyHint"])
     self.assertNotIn("sk-test-1234", str(public))
 

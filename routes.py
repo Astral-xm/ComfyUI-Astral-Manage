@@ -168,7 +168,9 @@ async def _resolve_lora_sources_cached(
       "[ComfyUI-Astral-Manage] Unable to persist LoRA source cache for "
       f"{file}: {error}"
     )
-    result["cacheWarning"] = "查询成功，但无法写入本地缓存文件"
+    result["cacheWarning"] = (
+      "Query succeeded, but the local cache file could not be written"
+    )
     return result
 
 
@@ -176,7 +178,7 @@ async def _resolve_lora_sources_cached(
 async def get_lora_info(request: web.Request) -> web.Response:
   file = str(request.query.get("file", "")).strip()
   if not file:
-    return _error("缺少 LoRA 文件参数", 400)
+    return _error("Missing LoRA file parameter", 400)
 
   try:
     available_files = await asyncio.to_thread(
@@ -185,7 +187,7 @@ async def get_lora_info(request: web.Request) -> web.Response:
     )
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to list LoRAs: {error}")
-    return _error("无法读取本地 LoRA 列表", 500)
+    return _error("Unable to read the local LoRA list", 500)
   try:
     normalized_file = normalize_relative_path(file)
   except ModelPathError as error:
@@ -194,7 +196,7 @@ async def get_lora_info(request: web.Request) -> web.Response:
     normalized_file
   )
   if not registered_file:
-    return _error("本地未找到此 LoRA 文件", 404)
+    return _error("This LoRA file was not found locally", 404)
 
   file_path = await asyncio.to_thread(
     folder_paths.get_full_path,
@@ -202,7 +204,7 @@ async def get_lora_info(request: web.Request) -> web.Response:
     registered_file,
   )
   if not file_path or not os.path.isfile(file_path):
-    return _error("本地 LoRA 文件不存在或无法访问", 404)
+    return _error("The local LoRA file does not exist or cannot be accessed", 404)
 
   refresh_value = str(request.query.get("refresh", "")).strip().lower()
   refresh = bool(refresh_value) and refresh_value not in {"0", "false", "no"}
@@ -215,7 +217,7 @@ async def get_lora_info(request: web.Request) -> web.Response:
     )
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unexpected LoRA detail error: {error}")
-    return _error("拉取 LoRA 模型详情时发生内部错误", 500)
+    return _error("Internal error while fetching LoRA model details", 500)
 
   sources = result.get("sources", {})
   civitai = sources.get("civitai", {}) if isinstance(sources, dict) else {}
@@ -249,7 +251,7 @@ async def get_lora_info(request: web.Request) -> web.Response:
 async def get_lora_thumbnail(request: web.Request) -> web.StreamResponse:
   file = str(request.query.get("file", "")).strip()
   if not file:
-    return _error("缺少 LoRA 文件参数", 400)
+    return _error("Missing LoRA file parameter", 400)
   try:
     available_files = await asyncio.to_thread(
       folder_paths.get_filename_list,
@@ -260,22 +262,22 @@ async def get_lora_thumbnail(request: web.Request) -> web.StreamResponse:
       normalized_file
     )
     if not registered_file:
-      return _error("本地未找到此 LoRA 文件", 404)
+      return _error("This LoRA file was not found locally", 404)
     full_path = await asyncio.to_thread(
       folder_paths.get_full_path,
       "loras",
       registered_file,
     )
     if not full_path or not os.path.isfile(full_path):
-      return _error("本地 LoRA 文件不存在或无法访问", 404)
+      return _error("The local LoRA file does not exist or cannot be accessed", 404)
     preview = await asyncio.to_thread(find_lora_preview, full_path)
   except ModelPathError as error:
     return _error(str(error), 400)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to read LoRA thumbnail: {error}")
-    return _error("无法读取 LoRA 缩略图", 500)
+    return _error("Unable to read the LoRA thumbnail", 500)
   if not preview:
-    return _error("此 LoRA 没有本地缩略图", 404)
+    return _error("This LoRA has no local thumbnail", 404)
   content_type = mimetypes.guess_type(preview)[0] or "application/octet-stream"
   return web.FileResponse(
     preview,
@@ -313,7 +315,7 @@ def _lora_categories() -> list[dict[str, Any]]:
 
 def _lora_category(categories: list[dict[str, Any]]) -> dict[str, Any]:
   if not categories:
-    raise ModelPathError("ComfyUI 没有配置 LoRA 目录")
+    raise ModelPathError("ComfyUI has no LoRA directory configured")
   return categories[0]
 
 
@@ -326,9 +328,9 @@ def _lora_root_index(
     try:
       root_index = int(requested)
     except (TypeError, ValueError) as error:
-      raise ModelPathError("LoRA 根目录索引无效") from error
+      raise ModelPathError("Invalid LoRA root directory index") from error
     if root_index < 0 or root_index >= len(roots):
-      raise ModelPathError("LoRA 根目录索引超出范围")
+      raise ModelPathError("LoRA root directory index is out of range")
     return root_index
   for root in roots:
     if root.get("exists"):
@@ -469,7 +471,7 @@ async def post_lora_move(request: web.Request) -> web.Response:
     category = _lora_category(categories)
     target = payload.get("target")
     if not isinstance(target, dict):
-      raise ValueError("缺少 LoRA 移动目标目录")
+      raise ValueError("Missing LoRA move destination directory")
     result = await asyncio.to_thread(
       move_model_files,
       categories,
@@ -510,19 +512,22 @@ async def get_lora_sources(request: web.Request) -> web.Response:
   try:
     payload = await request.json()
   except (json.JSONDecodeError, UnicodeDecodeError):
-    return _error("请求体必须是 JSON", 400)
+    return _error("Request body must be JSON", 400)
   if not isinstance(payload, dict):
-    return _error("请求体格式错误", 400)
+    return _error("Invalid request body format", 400)
   requested_files = payload.get("files")
   if not isinstance(requested_files, list) or not requested_files:
-    return _error("请至少选择一个 LoRA", 400)
+    return _error("Please select at least one LoRA", 400)
   files = list(
     dict.fromkeys(
       str(file).strip() for file in requested_files if str(file).strip()
     )
   )
   if len(files) > MAX_BATCH_SOURCE_FILES:
-    return _error(f"一次最多查询 {MAX_BATCH_SOURCE_FILES} 个 LoRA", 400)
+    return _error(
+      f"At most {MAX_BATCH_SOURCE_FILES} LoRAs can be queried at once",
+      400,
+    )
   refresh = bool(payload.get("refresh", False))
 
   try:
@@ -531,7 +536,7 @@ async def get_lora_sources(request: web.Request) -> web.Response:
     )
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to list LoRAs: {error}")
-    return _error("无法读取本地 LoRA 列表", 500)
+    return _error("Unable to read the local LoRA list", 500)
 
   semaphore = asyncio.Semaphore(3)
 
@@ -545,14 +550,14 @@ async def get_lora_sources(request: web.Request) -> web.Response:
       }
     registered_file = available_files.get(normalized_file)
     if not registered_file:
-      return {"file": file, "error": "本地未找到此 LoRA 文件"}
+      return {"file": file, "error": "This LoRA file was not found locally"}
     full_path = await asyncio.to_thread(
       folder_paths.get_full_path,
       "loras",
       registered_file,
     )
     if not full_path or not os.path.isfile(full_path):
-      return {"file": file, "error": "本地 LoRA 文件不存在或无法访问"}
+      return {"file": file, "error": "The local LoRA file does not exist or cannot be accessed"}
     async with semaphore:
       try:
         return await _resolve_lora_sources_cached(
@@ -562,7 +567,7 @@ async def get_lora_sources(request: web.Request) -> web.Response:
         )
       except Exception as error:
         print(f"[ComfyUI-Astral-Manage] Source lookup failed for {file}: {error}")
-        return {"file": file, "error": "查询 LoRA 来源时发生内部错误"}
+        return {"file": file, "error": "Internal error while querying LoRA sources"}
 
   items = await asyncio.gather(*(resolve_file(file) for file in files))
   return web.json_response(
@@ -580,12 +585,12 @@ async def get_cached_lora_sources(request: web.Request) -> web.Response:
   try:
     payload = await request.json()
   except (json.JSONDecodeError, UnicodeDecodeError):
-    return _error("请求体必须是 JSON", 400)
+    return _error("Request body must be JSON", 400)
   if not isinstance(payload, dict):
-    return _error("请求体格式错误", 400)
+    return _error("Invalid request body format", 400)
   requested_files = payload.get("files")
   if not isinstance(requested_files, list) or not requested_files:
-    return _error("请至少选择一个 LoRA", 400)
+    return _error("Please select at least one LoRA", 400)
   files = list(
     dict.fromkeys(
       str(file).strip() for file in requested_files if str(file).strip()
@@ -593,7 +598,7 @@ async def get_cached_lora_sources(request: web.Request) -> web.Response:
   )
   if len(files) > MAX_CACHED_SOURCE_FILES:
     return _error(
-      f"一次最多读取 {MAX_CACHED_SOURCE_FILES} 个 LoRA 的本地缓存",
+      f"At most {MAX_CACHED_SOURCE_FILES} LoRA local caches can be read at once",
       400,
     )
 
@@ -603,7 +608,7 @@ async def get_cached_lora_sources(request: web.Request) -> web.Response:
     )
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to list LoRAs: {error}")
-    return _error("无法读取本地 LoRA 列表", 500)
+    return _error("Unable to read the local LoRA list", 500)
 
   async def load_cached(file: str) -> dict[str, Any] | None:
     try:
@@ -695,10 +700,10 @@ def _asset_error(error: Exception) -> web.Response:
   if isinstance(error, AssetPathError):
     return _error(str(error), 400)
   if isinstance(error, PermissionError):
-    return _error("没有权限访问此素材", 403)
+    return _error("No permission to access this asset", 403)
   if isinstance(error, RecycleBinError):
     return _error(str(error), 500)
-  return _error("读取素材时发生内部错误", 500)
+  return _error("Internal error while reading assets", 500)
 
 
 @ROUTES.get("/assets-astral/assets")
@@ -790,7 +795,7 @@ async def get_asset_thumbnail(request: web.Request) -> web.StreamResponse:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to create thumbnail: {error}")
-    return _error("无法生成素材缩略图", 404)
+    return _error("Unable to generate asset thumbnail", 404)
   return web.FileResponse(
     thumbnail,
     headers={
@@ -816,7 +821,7 @@ async def get_asset_tree(request: web.Request) -> web.Response:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to read asset tree: {error}")
-    return _error("无法读取素材目录结构", 500)
+    return _error("Unable to read the asset directory structure", 500)
   return web.json_response(result, headers=NO_STORE_HEADERS)
 
 
@@ -841,7 +846,7 @@ async def post_asset_open(request: web.Request) -> web.Response:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to open asset in file manager: {error}")
-    return _error("无法在系统文件管理器中打开素材", 500)
+    return _error("Unable to open the asset in the system file manager", 500)
   return web.json_response(
     {
       "ok": True,
@@ -870,7 +875,7 @@ async def get_workspace_entries(request: web.Request) -> web.Response:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to browse workspace: {error}")
-    return _error("读取工作区目录失败", 500)
+    return _error("Failed to read the workspace directory", 500)
   return web.json_response(result, headers=NO_STORE_HEADERS)
 
 
@@ -895,7 +900,10 @@ async def post_workspace_open(request: web.Request) -> web.Response:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to open workspace directory: {error}")
-    return _error("无法在系统文件管理器中打开工作区目录", 500)
+    return _error(
+      "Unable to open the workspace directory in the system file manager",
+      500,
+    )
   return web.json_response(
     {
       "ok": True,
@@ -933,7 +941,7 @@ async def post_asset_rename(request: web.Request) -> web.Response:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Asset rename failed: {error}")
-    return _error("批量重命名素材失败", 500)
+    return _error("Failed to batch rename assets", 500)
   return web.json_response(result, headers=NO_STORE_HEADERS)
 
 
@@ -961,7 +969,7 @@ async def post_asset_recycle(request: web.Request) -> web.Response:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Asset recycle failed: {error}")
-    return _error("将素材移至回收站失败", 500)
+    return _error("Failed to move assets to the recycle bin", 500)
   return web.json_response(result, headers=NO_STORE_HEADERS)
 
 
@@ -982,7 +990,7 @@ async def get_prompts(request: web.Request) -> web.Response:
     return _asset_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to list prompts: {error}")
-    return _error("读取提示词时发生内部错误", 500)
+    return _error("Internal error while reading prompts", 500)
   return web.json_response(result, headers=NO_STORE_HEADERS)
 
 
@@ -993,7 +1001,7 @@ def _prompt_error(error: Exception) -> web.Response:
     return _error(str(error), 400)
   if isinstance(error, PermissionError):
     return _error(str(error), 403)
-  return _error("提示词管理操作发生内部错误", 500)
+  return _error("Internal error in prompt management operation", 500)
 
 
 def _chat_error(error: Exception) -> web.Response:
@@ -1014,7 +1022,7 @@ def _chat_error(error: Exception) -> web.Response:
     ),
   ):
     return _error(str(error), 400)
-  return _error("AI 对话请求失败", 500)
+  return _error("AI chat request failed", 500)
 
 
 @ROUTES.get("/assets-astral/prompt-templates")
@@ -2029,16 +2037,16 @@ def _model_error(error: Exception) -> web.Response:
     return _error(str(error), 403)
   if isinstance(error, RecycleBinError):
     return _error(str(error), 500)
-  return _error("模型操作发生内部错误", 500)
+  return _error("Internal error in model operation", 500)
 
 
 async def _json_body(request: web.Request) -> dict[str, Any]:
   try:
     payload = await request.json()
   except (json.JSONDecodeError, UnicodeDecodeError) as error:
-    raise ValueError("请求体必须是 JSON") from error
+    raise ValueError("Request body must be JSON") from error
   if not isinstance(payload, dict):
-    raise ValueError("请求体格式错误")
+    raise ValueError("Invalid request body format")
   return payload
 
 
@@ -2080,7 +2088,7 @@ async def get_model_categories(_request: web.Request) -> web.Response:
     categories = await asyncio.to_thread(_model_categories)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to list model categories: {error}")
-    return _error("读取模型分类时发生内部错误", 500)
+    return _error("Internal error while reading model categories", 500)
   return web.json_response(
     {"categories": categories},
     headers=NO_STORE_HEADERS,
@@ -2199,9 +2207,9 @@ async def get_model_duplicates_status(request: web.Request) -> web.Response:
     task = DUPLICATE_SCAN_MANAGER.snapshot(task_id)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to read duplicate scan status: {error}")
-    return _error("读取重复模型扫描进度失败", 500)
+    return _error("Failed to read duplicate model scan progress", 500)
   if task_id and task is None:
-    return _error("扫描任务不存在，ComfyUI 可能已重启", 404)
+    return _error("Scan task not found; ComfyUI may have restarted", 404)
   return web.json_response({"task": task}, headers=NO_STORE_HEADERS)
 
 
@@ -2215,9 +2223,9 @@ async def post_model_duplicates_cancel(request: web.Request) -> web.Response:
     return _model_error(error)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Unable to cancel duplicate model scan: {error}")
-    return _error("取消重复模型扫描失败", 500)
+    return _error("Failed to cancel duplicate model scan", 500)
   if task is None:
-    return _error("没有可取消的重复模型扫描", 404)
+    return _error("No duplicate model scan to cancel", 404)
   return web.json_response({"task": task}, headers=NO_STORE_HEADERS)
 
 
@@ -2262,7 +2270,7 @@ async def post_model_recycle(request: web.Request) -> web.Response:
 async def get_source_thumbnail(request: web.Request) -> web.StreamResponse:
   url = str(request.query.get("url", "")).strip()
   if not url:
-    return _error("缺少缩略图地址", 400)
+    return _error("Missing thumbnail URL", 400)
   cache_directory = os.path.join(
     folder_paths.get_temp_directory(),
     "assets_astral_source_thumbnails",
@@ -2277,7 +2285,7 @@ async def get_source_thumbnail(request: web.Request) -> web.StreamResponse:
     return _error(str(error), 400)
   except Exception as error:
     print(f"[ComfyUI-Astral-Manage] Thumbnail proxy failed: {error}")
-    return _error("无法获取模型缩略图", 502)
+    return _error("Unable to fetch model thumbnail", 502)
   content_type = mimetypes.guess_type(thumbnail)[0] or "application/octet-stream"
   return web.FileResponse(
     thumbnail,

@@ -337,7 +337,7 @@ class AstralLoraInfoDialog {
         ok: true,
         url: this.info.url,
         match: "sha256",
-        matchLabel: "SHA256 精确匹配",
+        matchLabel: "Exact SHA256 match",
       };
     }
     return null;
@@ -365,13 +365,13 @@ class AstralLoraInfoDialog {
       ),
     ];
     if (hashErrors.length) {
-      warnings.push(`候选文件哈希核对失败：${hashErrors.join("；")}`);
+      warnings.push(`Candidate file hash verification failed: ${hashErrors.join("; ")}`);
     }
     if (!warnings.length) return;
 
     const warning = document.createElement("small");
     warning.className = "astral-info-source-warning";
-    warning.textContent = `部分查询失败：${warnings.join("；")}`;
+    warning.textContent = `Some queries failed: ${warnings.join("; ")}`;
     container.append(warning);
   }
 
@@ -383,25 +383,25 @@ class AstralLoraInfoDialog {
     const source = this.getSource(sourceName);
 
     if (!this.info) {
-      sourceWrap.append(this.createMuted("尚未拉取"));
+      sourceWrap.append(this.createMuted("Not fetched yet"));
     } else if (!source) {
-      sourceWrap.append(this.createMuted("没有返回此来源的数据"));
+      sourceWrap.append(this.createMuted("This source returned no data."));
     } else if (!source.ok) {
       const error = document.createElement("span");
       error.className = "astral-info-source-error";
-      error.textContent = source.error || "查询失败";
+      error.textContent = source.error || "Query failed";
       sourceWrap.append(error);
     } else if (!source.url) {
-      sourceWrap.append(this.createMuted("未找到公开模型页"));
+      sourceWrap.append(this.createMuted("No public model page found"));
       this.appendSourceWarnings(sourceWrap, source);
     } else {
       const sourceLabels = {
-        civitai: "在 C站打开此 LoRA",
-        huggingface: "在 Hugging Face 打开模型页",
-        modelscope: "在魔搭社区打开模型页",
+        civitai: "Open this LoRA on Civitai",
+        huggingface: "Open the model page on Hugging Face",
+        modelscope: "Open the model page on ModelScope",
       };
       sourceWrap.append(
-        this.createSourceLink(source, sourceLabels[sourceName] || "打开模型详情页"),
+        this.createSourceLink(source, sourceLabels[sourceName] || "Open the model detail page"),
       );
 
       const candidates = Array.isArray(source.candidates) ? source.candidates : [];
@@ -409,11 +409,11 @@ class AstralLoraInfoDialog {
       const matchLabel =
         source.matchLabel ||
         primary?.matchLabel ||
-        (sourceName === "civitai" ? "SHA256 精确匹配" : "名称候选");
+        (sourceName === "civitai" ? "Exact SHA256 match" : "Name candidate");
       const detail = document.createElement("small");
       detail.className = `astral-info-match is-${source.matchType || primary?.matchType || "name"}`;
       const matchedFile = source.matchedFile || primary?.matchedFile;
-      detail.textContent = matchedFile ? `${matchLabel}：${matchedFile}` : matchLabel;
+      detail.textContent = matchedFile ? `${matchLabel}: ${matchedFile}` : matchLabel;
       sourceWrap.append(detail);
 
       if (candidates.length > 1) {
@@ -422,14 +422,14 @@ class AstralLoraInfoDialog {
         more.append(
           document.createElement("summary")
         );
-        more.firstElementChild.textContent = `其他候选（${candidates.length - 1}）`;
+        more.firstElementChild.textContent = `Other candidates (${candidates.length - 1})`;
         const list = document.createElement("div");
         for (const candidate of candidates.slice(1, 6)) {
           if (!candidate?.url) continue;
           list.append(
             this.createSourceLink(
               candidate,
-              `打开候选：${candidate.name || candidate.id || candidate.url}`,
+              `Open candidate: ${candidate.name || candidate.id || candidate.url}`,
             ),
           );
         }
@@ -446,8 +446,8 @@ class AstralLoraInfoDialog {
       button.type = "button";
       button.className = "astral-info-fetch-button";
       button.disabled = this.fetching;
-      button.textContent = this.fetching ? "正在拉取..." : "Fetch model details";
-      button.title = "同时拉取 C站、Hugging Face 和魔搭社区模型详情";
+      button.textContent = this.fetching ? "Fetching..." : "Fetch model details";
+      button.title = "Fetch model details from Civitai, Hugging Face, and ModelScope at once";
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -459,10 +459,10 @@ class AstralLoraInfoDialog {
   }
 
   createStrengthValue() {
-    if (!this.info) return this.createMuted("尚未拉取");
+    if (!this.info) return this.createMuted("Not fetched yet");
     const recommendation = this.info.recommendedStrength;
     if (!recommendation?.text) {
-      return this.createMuted("未找到可靠推荐强度（未修改节点）");
+      return this.createMuted("No reliable recommended strength found (node unchanged)");
     }
 
     const wrapper = document.createElement("div");
@@ -470,16 +470,16 @@ class AstralLoraInfoDialog {
     const value = document.createElement("strong");
     value.textContent = recommendation.text;
     const source = document.createElement("small");
-    source.textContent = recommendation.source || "C站";
+    source.textContent = recommendation.source || "Civitai";
     wrapper.append(value, source);
     return wrapper;
   }
 
   createTriggersValue() {
-    if (!this.info) return this.createMuted("尚未拉取");
+    if (!this.info) return this.createMuted("Not fetched yet");
     const triggers = Array.isArray(this.info.triggers) ? this.info.triggers : [];
     if (!triggers.length) {
-      return this.createMuted("未找到可靠触发词（未修改节点）");
+      return this.createMuted("No reliable trigger words found (node unchanged)");
     }
 
     const wrapper = document.createElement("div");
@@ -489,29 +489,29 @@ class AstralLoraInfoDialog {
       chip.className = "astral-info-trigger";
       if (index < MAX_TRIGGERS) chip.classList.add("is-filled");
       chip.textContent = trigger;
-      chip.title = index < MAX_TRIGGERS ? "已填入节点" : "超出节点上限，未填入";
+      chip.title = index < MAX_TRIGGERS ? "Added to node" : "Beyond the node limit; not added";
       wrapper.append(chip);
     });
     if (triggers.length > MAX_TRIGGERS) {
       const note = document.createElement("small");
       note.className = "astral-info-muted";
-      note.textContent = `节点上限 ${MAX_TRIGGERS} 个，仅填入前 ${MAX_TRIGGERS} 个。`;
+      note.textContent = `The node limit is ${MAX_TRIGGERS}; only the first ${MAX_TRIGGERS} were added.`;
       wrapper.append(note);
     }
     if (this.info.triggersSource) {
       const source = document.createElement("small");
       source.className = "astral-info-muted";
-      source.textContent = `来源：${this.info.triggersSource}`;
+      source.textContent = `Source: ${this.info.triggersSource}`;
       wrapper.append(source);
     }
     return wrapper;
   }
 
   createThumbnailValue() {
-    if (!this.info) return this.createMuted("尚未拉取");
+    if (!this.info) return this.createMuted("Not fetched yet");
     const thumbnailSource =
       this.info.thumbnailLocalUrl || this.info.thumbnailUrl;
-    if (!thumbnailSource) return this.createMuted("没有可用的模型缩略图");
+    if (!thumbnailSource) return this.createMuted("No model thumbnail available");
 
     const wrapper = document.createElement("div");
     wrapper.className = "astral-info-thumbnail";
@@ -523,11 +523,11 @@ class AstralLoraInfoDialog {
       setShowLoraThumbnails(checkbox.checked);
       image.hidden = !checkbox.checked;
     });
-    toggle.append(checkbox, document.createTextNode("显示缩略图"));
+    toggle.append(checkbox, document.createTextNode("Show thumbnails"));
 
     const image = document.createElement("img");
     image.src = thumbnailProxyUrl(thumbnailSource);
-    image.alt = `${this.getTitle()} 缩略图`;
+    image.alt = `${this.getTitle()} thumbnail`;
     image.loading = "lazy";
     image.hidden = !checkbox.checked;
     image.addEventListener("error", () => {
@@ -535,7 +535,7 @@ class AstralLoraInfoDialog {
     });
     wrapper.append(toggle, image);
     if (this.info.thumbnailSource) {
-      wrapper.append(this.createMuted(`来源：${this.info.thumbnailSource}`));
+      wrapper.append(this.createMuted(`Source: ${this.info.thumbnailSource}`));
     }
     return wrapper;
   }
@@ -544,7 +544,7 @@ class AstralLoraInfoDialog {
     if (this.error) {
       const error = document.createElement("div");
       error.className = "astral-info-status is-error";
-      error.textContent = `拉取失败：${this.error}`;
+      error.textContent = `Fetch failed: ${this.error}`;
       return error;
     }
     if (!this.notice) return null;
@@ -561,13 +561,13 @@ class AstralLoraInfoDialog {
     const table = document.createElement("div");
     table.className = "astral-info-table";
     table.append(
-      this.createRow("文件", this.lora),
-      this.createRow("C站", this.createSourceValue("civitai", true)),
+      this.createRow("File", this.lora),
+      this.createRow("Civitai", this.createSourceValue("civitai", true)),
       this.createRow("Hugging Face", this.createSourceValue("huggingface")),
-      this.createRow("魔搭", this.createSourceValue("modelscope")),
-      this.createRow("缩略图", this.createThumbnailValue()),
-      this.createRow("推荐强度", this.createStrengthValue()),
-      this.createRow("触发词", this.createTriggersValue()),
+      this.createRow("ModelScope", this.createSourceValue("modelscope")),
+      this.createRow("Thumbnail", this.createThumbnailValue()),
+      this.createRow("Recommended strength", this.createStrengthValue()),
+      this.createRow("Trigger words", this.createTriggersValue()),
     );
     content.append(table);
 
@@ -579,17 +579,17 @@ class AstralLoraInfoDialog {
 
   applyToWidget() {
     const notes = [];
-    if (!this.widget?.value || !this.node) return "节点数据已不可用。";
+    if (!this.widget?.value || !this.node) return "The node data is no longer available.";
 
     const recommendation = this.info?.recommendedStrength;
     const currentStrength = normalizeStrength(this.widget.value.strength).toFixed(2);
     if (recommendation?.text) {
       notes.push(
-        `推荐强度 ${recommendation.text}（${recommendation.source || "C站"}）仅展示，当前强度 ${currentStrength} 保持不变。`,
+        `Recommended strength ${recommendation.text} (${recommendation.source || "Civitai"}) is shown for reference only; the current strength ${currentStrength} is unchanged.`,
       );
     } else {
       notes.push(
-        `未找到可靠推荐强度，当前强度 ${currentStrength} 保持不变。`,
+        `No reliable recommended strength found; the current strength ${currentStrength} is unchanged.`,
       );
     }
 
@@ -600,14 +600,14 @@ class AstralLoraInfoDialog {
       const filled = triggers.slice(0, MAX_TRIGGERS);
       this.widget.value.triggers = normalizeTriggers(filled);
       notes.push(
-        `已从${this.info?.triggersSource || "模型详情"}填入 ${filled.length} 个触发词。`,
+        `Added ${filled.length} trigger words from ${this.info?.triggersSource || "model details"}.`,
       );
       if (triggers.length > MAX_TRIGGERS) {
-        notes.push(`模型详情返回 ${triggers.length} 个，超出部分未填入。`);
+        notes.push(`The model details returned ${triggers.length}; the extras were not added.`);
       }
       resizeNodeToContent(this.node);
     } else {
-      notes.push("未找到可靠触发词，保留现有触发词。");
+      notes.push("No reliable trigger words found; the existing triggers were kept.");
     }
 
     redraw(this.node);
@@ -618,7 +618,7 @@ class AstralLoraInfoDialog {
     if (this.fetching) return;
     this.fetching = true;
     this.error = "";
-    this.notice = "正在从 C站、Hugging Face 和魔搭社区拉取模型详情...";
+    this.notice = "Fetching model details from Civitai, Hugging Face, and ModelScope...";
     this.noticeKind = "info";
     this.render();
 
@@ -635,10 +635,10 @@ class AstralLoraInfoDialog {
       try {
         payload = text ? JSON.parse(text) : null;
       } catch {
-        throw new Error("节点后端返回了无法解析的数据");
+        throw new Error("The node backend returned unparseable data");
       }
       if (!response.ok || payload?.error) {
-        throw new Error(payload?.error || `请求失败（HTTP ${response.status}）`);
+        throw new Error(payload?.error || `Request failed (HTTP ${response.status})`);
       }
 
       this.info = payload;
@@ -646,17 +646,17 @@ class AstralLoraInfoDialog {
       const failures = Object.entries(sources)
         .filter(([, source]) => !source?.ok)
         .map(([name]) => {
-          if (name === "civitai") return "C站";
+          if (name === "civitai") return "Civitai";
           if (name === "huggingface") return "Hugging Face";
-          if (name === "modelscope") return "魔搭";
+          if (name === "modelscope") return "ModelScope";
           return name;
         });
       this.noticeKind = failures.length ? "warning" : "success";
       this.notice = failures.length
-        ? `详情拉取完成，${failures.join("、")}未成功，已保留其他来源结果。${this.applyToWidget()}`
-        : `详情拉取成功。${this.applyToWidget()}`;
+        ? `Details fetched; ${failures.join(", ")} did not succeed, and results from the other sources were kept. ${this.applyToWidget()}`
+        : `Details fetched successfully. ${this.applyToWidget()}`;
     } catch (error) {
-      this.error = String(error?.message || error || "未知错误");
+      this.error = String(error?.message || error || "Unknown error");
       this.notice = "";
       this.noticeKind = "";
       console.warn("[Astral Asset Management] LoRA model detail fetch failed.", error);

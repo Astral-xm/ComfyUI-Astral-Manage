@@ -65,7 +65,7 @@ class DuplicateScanManagerTests(unittest.TestCase):
 
     self.assertEqual(completed["category"], "loras")
     self.assertIsNone(completed["result"])
-    self.assertEqual(completed["error"], "扫描已取消")
+    self.assertEqual(completed["error"], "Scan cancelled")
 
   def test_completes_with_result_and_progress(self):
     def scanner(

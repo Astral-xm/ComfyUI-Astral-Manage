@@ -5,7 +5,10 @@ import path from "node:path";
 import vm from "node:vm";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const source = readFileSync(path.join(packageRoot, "web", "asset_manager.js"), "utf8");
+const source = readFileSync(
+  path.join(packageRoot, "web", "asset_manager.js"),
+  "utf8",
+).replace(/\r\n/g, "\n");
 const css = readFileSync(path.join(packageRoot, "web", "asset_manager.css"), "utf8");
 const dialogSource = readFileSync(
   path.join(packageRoot, "web", "astral_dialogs.js"),
@@ -25,7 +28,7 @@ const shortcutSource = readFileSync(
 );
 
 assert.doesNotMatch(source, /const NODE_TYPE = "Asset Manager"/);
-assert.doesNotMatch(source, /"打开素材管理器"/);
+assert.doesNotMatch(source, /Open Asset Manager/);
 assert.doesNotMatch(source, /beforeRegisterNodeDef/);
 assert.doesNotMatch(source, /registerNodeType\(/);
 assert.match(source, /data-assets-astral-menu-button/);
@@ -61,10 +64,10 @@ assert.doesNotMatch(
   source,
   /createElement\(\s*"button",\s*"astral-am-button astral-am-load-more"/,
 );
-assert.match(source, /button\.textContent = "资产管理"/);
+assert.match(source, /button\.textContent = "Assets"/);
 assert.match(
   source,
-  /response\.headers\.get\("content-type"\) \|\| "未知类型"/,
+  /response\.headers\.get\("content-type"\) \|\| "Unknown type"/,
 );
 assert.match(
   source,
@@ -91,10 +94,10 @@ assert.match(
   /close\(\) \{[\s\S]*?this\.backdrop\.hidden = true;[\s\S]*?\n  \}/,
 );
 assert.doesNotMatch(source, /assets\/astral-star\.svg/);
-assert.doesNotMatch(source, /"Astral 资产管理器"\)/);
+assert.doesNotMatch(source, /createElement\([^)]*"Astral Asset Manager"\)/);
 assert.match(source, /"Astral星芒"/);
 assert.match(source, /authorLink\.href = "https:\/\/space\.bilibili\.com\/176339505"/);
-assert.match(source, /"更新下载"/);
+assert.match(source, /"Download updates"/);
 assert.doesNotMatch(source, /astral-am-heading-star-icon/);
 assert.match(source, /starLink\.href = "https:\/\/pan\.quark\.cn\/s\/7626ec1f29c7"/);
 assert.match(
@@ -148,9 +151,9 @@ assert.match(css, /\.astral-am-menu-button\s*\{[\s\S]*?width:\s*auto;/);
 assert.match(css, /\.astral-am-heading-links\s*\{/);
 assert.match(css, /\.astral-am-heading-star\s*\{/);
 assert.match(css, /\.astral-am-heading-star-icon\s*\{/);
-assert.match(source, /"提示词管理"/);
-assert.match(source, /"系统提示词管理"/);
-assert.doesNotMatch(source, /"模板库"/);
+assert.match(source, /"Prompt Management"/);
+assert.match(source, /"System Prompt Management"/);
+assert.doesNotMatch(source, /"Template Library"/);
 assert.match(
   source,
   /modeTabs\.append\(\s*this\.skillTagModeButton,\s*this\.templateModeButton,\s*this\.skillModeButton,\s*this\.chatModeButton,\s*this\.apiConfigModeButton,?\s*\)/,
@@ -158,7 +161,7 @@ assert.match(
 assert.doesNotMatch(source, /localLlmConfigModeButton/);
 assert.match(
   source,
-  /this\.skillTagModeButton = createElement\(\s*"button",\s*"astral-am-subtab",\s*"提示词灵感",?\s*\)/,
+  /this\.skillTagModeButton = createElement\(\s*"button",\s*"astral-am-subtab",\s*"Prompt Inspiration",?\s*\)/,
 );
 assert.match(source, /mode === "skillTags"/);
 assert.match(
@@ -179,7 +182,7 @@ assert.match(source, /\/assets-astral\/skill-tags\/update/);
 assert.match(source, /\/assets-astral\/skill-tags\/delete/);
 assert.match(source, /\/assets-astral\/skill-tags\/reorder/);
 assert.doesNotMatch(source, /\/assets-astral\/skill-tags\/text\//);
-assert.doesNotMatch(source, /"编辑标签文本"|"导入文本标签"/);
+assert.doesNotMatch(source, /"Edit Tag Text"|"Import Text Tags"/);
 assert.doesNotMatch(source, /textImport|inspiration-tags\.txt/);
 assert.match(
   source,
@@ -197,9 +200,9 @@ assert.match(source, /astral-am-skill-tag-tree-toggle/);
 assert.match(source, /astral-am-skill-tag-subcategory-add/);
 assert.match(source, /astral-am-skill-tag-subcategory-list/);
 assert.match(source, /astral-am-skill-tag-subcategory-row/);
-assert.match(source, /label: "新建子分类"/);
-assert.match(source, /label: "批量新增标签"/);
-assert.doesNotMatch(source, /label: "新建子标签"/);
+assert.match(source, /label: "New Subcategory"/);
+assert.match(source, /label: "Bulk Add Tags"/);
+assert.doesNotMatch(source, /label: "New Sub-tag"/);
 assert.match(source, /createSkillTagsBatch\(/);
 assert.match(source, /multiline: true/);
 assert.match(source, /\[\\r\\n,，;；\]\+/);
@@ -215,11 +218,11 @@ assert.doesNotMatch(
   source,
   /const visibleTagIds = new Set\(visibleTags\.map\(\(tag\) => tag\.id\)\);[\s\S]*?this\.batchSelectedSkillTagIds = new Set\(/,
 );
-assert.match(source, /"全选当前结果"/);
-assert.doesNotMatch(source, /"反选当前结果"/);
-assert.match(source, /"清空勾选"/);
-assert.match(source, /"批量删除"/);
-assert.match(source, /"移动分类"/);
+assert.match(source, /"Select All Results"/);
+assert.doesNotMatch(source, /"Invert Current Results"/);
+assert.match(source, /"Clear Selection"/);
+assert.match(source, /"Batch Delete"/);
+assert.match(source, /"Move Category"/);
 assert.match(source, /showAstralSelect,/);
 assert.match(source, /await showAstralSelect\(\{/);
 assert.match(css, /\.astral-am-skill-tag-batch-checkbox\s*\{/);
@@ -227,9 +230,9 @@ assert.match(css, /\.astral-am-skill-tag-card\.is-batch-selected\s*\{/);
 assert.match(css, /\.astral-am-skill-tag-batch-bar\s*\{/);
 assert.match(
   source,
-  /标签是提示词灵感素材。点击分类或二级分类旁的 \+ 可以批量新增标签/,
+  /Tags are prompt-inspiration assets\. Use \+ beside a category or subcategory to add tags in bulk/,
 );
-assert.doesNotMatch(source, /不参与 Skill 归类/);
+assert.doesNotMatch(source, /do not participate in Skill categorization/);
 assert.doesNotMatch(source, /skillTagNewCategoryButton/);
 assert.doesNotMatch(source, /skillTagNewTagButton/);
 assert.doesNotMatch(source, /skillTagRefreshButton/);
@@ -238,7 +241,7 @@ assert.match(
   /replaceChildrenPreservingScroll\(\s*this\.skillTagCategoryList,\s*categoryRows,\s*"data-category-id",\s*\);/,
 );
 assert.match(source, /this\.activeSkillTagSubcategoryId = "__unclassified__";/);
-assert.match(source, /this\.createField\("二级分类", subcategory\)/);
+assert.match(source, /this\.createField\("Subcategory", subcategory\)/);
 assert.match(source, /const syncSubcategoryOptions = \(preferredId = ""\) => \{/);
 assert.match(
   source,
@@ -247,7 +250,7 @@ assert.match(
 assert.match(source, /subcategoryId: subcategory\.value/);
 assert.match(
   source,
-  /标签本身不会删除/,
+  /the tags themselves are not deleted/,
 );
 assert.match(
   source,
@@ -261,7 +264,7 @@ assert.match(
 );
 assert.match(
   source,
-  /\["api", "API纯文本模式"\],\s*\["local", "本地模式"\]/,
+  /\["api", "API Text-only Mode"\],\s*\["local", "Local Mode"\]/,
 );
 assert.match(
   source,
@@ -282,8 +285,8 @@ assert.doesNotMatch(source, /\/assets-astral\/skill-tags\/assign/);
 assert.doesNotMatch(source, /skillMatchesTags\(skill\)/);
 assert.doesNotMatch(source, /buildSkillTagAssignmentEditor\(skill\)/);
 assert.doesNotMatch(source, /activeSkillTagFilters/);
-assert.match(source, /"API配置"/);
-assert.doesNotMatch(source, /"API 与对话参数"/);
+assert.match(source, /"API Configuration"/);
+assert.doesNotMatch(source, /"API and Chat Parameters"/);
 assert.match(source, /this\.apiConfigPane = this\.buildApiConfigPane\(\)/);
 assert.match(source, /buildApiConfigPane\(\) \{/);
 assert.match(source, /this\.apiConfigContent = settings/);
@@ -304,16 +307,16 @@ assert.match(
 );
 assert.doesNotMatch(source, /mode === "localLlmConfig"/);
 assert.match(source, /const CHAT_MODE_DEFINITIONS = \[[\s\S]*?LOCAL_CHAT_MODE_DEFINITION/);
-assert.match(source, /label: "本地模式"/);
-assert.match(source, /label: "英语 \(English\)"[\s\S]*?label: "简体中文"/);
+assert.match(source, /label: "Local Mode"/);
+assert.match(source, /label: "English"[\s\S]*?label: "Simplified Chinese"/);
 assert.match(source, /\/assets-astral\/local-llm\/config/);
 assert.match(source, /\/assets-astral\/local-llm\/models/);
 assert.match(source, /\/assets-astral\/local-llm\/chat/);
 assert.match(source, /astral-am-chat-config-hint/);
-assert.doesNotMatch(source, /API、模型和对话参数已移到独立配置页/);
+assert.doesNotMatch(source, /API, model, and chat parameters have moved to a separate configuration page/);
 assert.match(source, /this\.activeTaskId = "text"/);
 assert.match(source, /this\.chatModeButtons = new Map\(\)/);
-assert.match(source, /this\.chatCurrentModelName = createElement\("strong", "", "尚未配置"\)/);
+assert.match(source, /this\.chatCurrentModelName = createElement\("strong", "", "Not configured"\)/);
 assert.match(source, /this\.chatModeButtons\.set\(task\.id, modeButton\)/);
 assert.match(source, /this\.selectChatTask\(task\.id\)/);
 assert.match(
@@ -331,7 +334,7 @@ assert.match(source, /astral-am-api-provider-tab/);
 assert.match(source, /button\.draggable = true/);
 assert.match(source, /reorderApiProviders\(sourceId, targetId, placeAfter\)/);
 assert.match(source, /addEventListener\("dragstart"/);
-assert.match(source, /"API 标签顺序已保存。"/);
+assert.match(source, /"API task order saved\."/);
 assert.match(source, /mode === "apiConfig"/);
 assert.match(css, /\.astral-am-api-config-stack\s*\{/);
 assert.match(
@@ -346,23 +349,23 @@ assert.match(
   css,
   /\.astral-am-local-llm-model-toolbar > \.astral-am-button\s*\{[\s\S]*?white-space:\s*nowrap;/,
 );
-assert.match(source, /"媒体管理"/);
-assert.match(source, /"模型管理"/);
-assert.match(source, /"LoRA 管理"/);
-assert.doesNotMatch(source, /强制刷新选中|refreshSelected/);
+assert.match(source, /"Media Management"/);
+assert.match(source, /"Model Management"/);
+assert.match(source, /"LoRA Management"/);
+assert.doesNotMatch(source, /Force refresh selected|refreshSelected/);
 assert.match(
   source,
   /async querySelectedSources\(\) \{[\s\S]*?\.filter\(Boolean\),\s*false,?\s*\);/,
 );
-assert.match(source, /"重复模型清理"/);
-assert.match(source, /"填充缺失模型"/);
+assert.match(source, /"Duplicate Model Cleanup"/);
+assert.match(source, /"Fill Missing Models"/);
 assert.match(
   source,
   /modeTabs\.append\(\s*this\.missingModeButton,\s*this\.loraModeButton,\s*this\.duplicateModeButton,?\s*\)/,
 );
 assert.doesNotMatch(source, /modeTabs\.append\([\s\S]*?fileModeButton/);
 assert.doesNotMatch(source, /buildFilePane|loadFiles\(true\)|models\/tree\?/);
-assert.match(source, /"快速打开用户目录"/);
+assert.match(source, /"Quick Open User Folders"/);
 assert.match(source, /for \(const root of \[[\s\S]*?"models"[\s\S]*?"custom_nodes"[\s\S]*?"input"[\s\S]*?"output"[\s\S]*?"workflows"[\s\S]*?\]\)/);
 assert.match(source, /button\.dataset\.pathLabel = root/);
 assert.match(css, /\.astral-am-directory-prompt\s*\{/);
@@ -371,7 +374,7 @@ assert.match(css, /\.astral-am-directory-label::before\s*\{[\s\S]*?content:\s*at
 assert.match(source, /"Comfy\.RefreshNodeDefinitions"/);
 assert.match(
   source,
-  /button\.title = `立即在系统文件管理器中显示 \$\{root\} 文件夹`/,
+  /button\.title = `Show the \$\{root\} folder in system file manager now`/,
 );
 const openDirectoryBody =
   source.match(
@@ -393,9 +396,9 @@ assert.match(source, /\/assets-astral\/assets\/rename/);
 assert.doesNotMatch(source, /\/assets-astral\/assets\/move/);
 assert.match(source, /\/assets-astral\/assets\/recycle/);
 assert.match(source, /reloadPreservingLoadedCount\(loadedCount, true\)/);
-assert.doesNotMatch(source, /"打开 input"/);
-assert.doesNotMatch(source, /"打开 output"/);
-assert.doesNotMatch(source, /"打开当前文件夹"/);
+assert.doesNotMatch(source, /"Open input"/);
+assert.doesNotMatch(source, /"Open output"/);
+assert.doesNotMatch(source, /"Open current folder"/);
 assert.match(source, /exact:\s*1/);
 assert.match(source, /toolbar\.append\(root, kind, search, refresh\)/);
 assert.match(source, /toolbar\.append\(root\.element, kind\.element, search, refresh\)/);
@@ -404,7 +407,7 @@ assert.doesNotMatch(
   source,
   /toolbar\.append\(search, kind\.element, root\.element, refresh\)/,
 );
-assert.match(source, /"按前缀改名"/);
+assert.match(source, /"Batch Prefix Rename"/);
 assert.match(
   source,
   /fileActions\.append\(\s*selectAll,\s*invertSelection,\s*clearSelection,\s*renameSelected,\s*renamePrefix,\s*addToChat,\s*deleteSelected,?\s*\)/,
@@ -416,18 +419,18 @@ assert.match(
 assert.match(source, /content\.append\(summary, status, grid\);/);
 assert.match(source, /content\.append\(summary, status, list\);/);
 assert.match(source, /section\.append\(toolbar, locationHeader, browser\);/);
-assert.doesNotMatch(source, /C站按本地文件 SHA256 精确查询/);
-assert.doesNotMatch(source, /"移动选中"/);
-assert.match(source, /"删除选中"/);
+assert.doesNotMatch(source, /Civitai exact lookup by local file SHA256/);
+assert.doesNotMatch(source, /"Move Selected"/);
+assert.match(source, /"Delete Selected"/);
 assert.match(source, /assetSelectionKey/);
-assert.match(source, /"全选"/);
-assert.match(source, /"反选"/);
+assert.match(source, /"Select All"/);
+assert.match(source, /"Invert"/);
 assert.match(source, /selectAllItems\(\)/);
 assert.match(source, /invertSelection\(\)/);
-assert.doesNotMatch(source, /"选择本页"/);
-assert.match(source, /在系统文件管理器中打开 \$\{root\}/);
-assert.doesNotMatch(source, /"在系统文件管理器中显示"/);
-assert.doesNotMatch(source, /↑ 上一级/);
+assert.doesNotMatch(source, /"Select Page"/);
+assert.match(source, /Open \$\{treeLocation\} in system file manager/);
+assert.doesNotMatch(source, /Show in system file manager/);
+assert.doesNotMatch(source, /↑ Up one level/);
 assert.doesNotMatch(source, /astral-am-parent-path/);
 assert.match(
   source,
@@ -444,8 +447,8 @@ assert.match(source, /\/assets-astral\/loras\/directories/);
 assert.match(source, /\/assets-astral\/loras\/open/);
 assert.match(source, /\/assets-astral\/loras\/move/);
 assert.match(source, /\/assets-astral\/loras\/recycle/);
-assert.match(source, /"移到文件夹"/);
-assert.match(source, /"放入画布"/);
+assert.match(source, /"Move to Folder"/);
+assert.match(source, /"Add to Canvas"/);
 assert.match(source, /const MAX_LORA_CANVAS_BATCH = 10;/);
 assert.match(
   source,
@@ -457,7 +460,7 @@ assert.match(
 );
 assert.match(
   source,
-  /放入画布 \(前 \$\{MAX_LORA_CANVAS_BATCH\}\/\$\{count\}\)/,
+  /Add to Canvas \(first \$\{MAX_LORA_CANVAS_BATCH\}\/\$\{count\}\)/,
 );
 assert.match(source, /LiteGraph\.createNode\("LoraLoader"\)/);
 assert.match(
@@ -487,7 +490,7 @@ assert.match(
   /async fetchSelectionScope\(\)[\s\S]*?\/assets-astral\/assets\?[\s\S]*?exact:\s*1,[\s\S]*?limit:\s*500,/,
 );
 assert.match(source, /this\.selectionPool = new Map\(/);
-assert.match(source, /包括尚未加载显示的文件/);
+assert.match(source, /including files not yet loaded/);
 assert.match(source, /\/assets-astral\/models\/categories/);
 assert.match(source, /\/assets-astral\/models\/duplicates/);
 assert.match(source, /\/assets-astral\/models\/duplicates\/status/);
@@ -502,15 +505,15 @@ assert.match(source, /MISSING_MODEL_FILE_PATTERN/);
 assert.match(source, /isModelComboWidget\(widget\)/);
 assert.match(source, /workflowHashRecordForModel\(node, widget, value\)/);
 assert.match(source, /inferMissingModelCategories\(node, widget, value\)/);
-assert.match(source, /"扫描当前工作流缺失模型"/);
-assert.match(source, /document\.createTextNode\("扫描后自动填充"\)/);
+assert.match(source, /"Scan Current Workflow for Missing Models"/);
+assert.match(source, /document\.createTextNode\("Auto-fill after scan"\)/);
 assert.match(source, /autoFillDeterminedMissingModels\(entries\)/);
-assert.doesNotMatch(source, /刷新模型列表并扫描|填充全部可靠项/);
+assert.doesNotMatch(source, /Refresh model list and scan|Fill all reliable items/);
 assert.doesNotMatch(source, /fillAllReliableMissingModels/);
-assert.match(source, /SHA256 只按内容匹配|有 SHA256 时只按内容匹配/);
-assert.match(source, /不会用同名文件替代不同模型/);
-assert.match(source, /多个同名和哈希冲突仍需人工确认/);
-assert.match(source, /只修改当前工作流/);
+assert.match(source, /When SHA256 is available, match by content only/);
+assert.match(source, /never replace a different model by name/);
+assert.match(source, /Multiple same-name matches and hash conflicts still require confirmation/);
+assert.match(source, /Filling only changes the current workflow/);
 assert.match(
   source,
   /autoFillableMissingModelEntries\(entries = \[\]\)[\s\S]*?entry\.result\?\.state === "match"[\s\S]*?entry\.result\?\.state === "candidate"[\s\S]*?entry\.candidateTargets\.length === 1/,
@@ -519,7 +522,7 @@ assert.doesNotMatch(source, /graph\.extra\.anomalous_hashes\s*=/);
 assert.match(source, /monitorDuplicateTask/);
 assert.match(source, /resumeDuplicateScan/);
 assert.match(source, /scanPollGeneration/);
-assert.match(source, /取消扫描/);
+assert.match(source, /"Cancel Scan"/);
 assert.match(source, /\/assets-astral\/models\/recycle/);
 assert.doesNotMatch(source, /window\.confirm\s*\(/);
 assert.doesNotMatch(source, /window\.(?:prompt|alert)\s*\(/);
@@ -530,7 +533,7 @@ assert.match(source, /await showAstralConfirm\(\{/);
 assert.match(dialogSource, /createElement\(\s*"div",\s*`astral-am-dialog/);
 assert.doesNotMatch(dialogSource, /createElement\(\s*"dialog"/);
 assert.doesNotMatch(dialogSource, /dialog\.(?:show|close)\s*\(/);
-assert.match(source, /移至 Windows 回收站/);
+assert.match(source, /Move the following model to the Windows Recycle Bin/);
 assert.match(dialogSource, /export function showAstralConfirm\(/);
 assert.match(dialogSource, /export function showAstralPrompt\(/);
 assert.match(dialogSource, /export function showAstralSelect\(/);
@@ -570,28 +573,28 @@ assert.match(
 assert.match(source, /mode === "missing"/);
 assert.match(source, /this\.missingModelPane/);
 assert.match(source, /THUMBNAIL_PREFERENCE/);
-assert.match(source, /显示缩略图/);
+assert.match(source, /"Show thumbnails"/);
 assert.match(source, /\/assets-astral\/thumbnails\/proxy\?/);
 assert.match(source, /row\.classList\.toggle\("has-thumbnail", Boolean\(thumbnail\)\)/);
 assert.match(source, /row\.append\(thumbnail\);[\s\S]*?row\.append\(content\);/);
-assert.match(source, /batch|批量查询选中/);
+assert.match(source, /batch|Query Selected/);
 assert.match(source, /navigator\.clipboard\.write/);
 assert.match(source, /copyText\(asset\.absolutePath\)/);
 assert.doesNotMatch(
   source,
-  /const copyPath = createElement\("button", "astral-am-card-action", "复制路径"\)/,
+  /const copyPath = createElement\("button", "astral-am-card-action", "Copy Path"\)/,
 );
 assert.match(
   source,
-  /const copyMedia = createElement\(\s*"button",\s*"astral-am-card-action",\s*item\.kind === "video" \? "复制视频" : "复制图片",?\s*\)/,
+  /const copyMedia = createElement\(\s*"button",\s*"astral-am-card-action",\s*item\.kind === "video" \? "Copy Video" : "Copy Image",?\s*\)/,
 );
 assert.match(
   source,
-  /const insertNode = createElement\("button", "astral-am-card-action", "放入画布"\)/,
+  /const insertNode = createElement\("button", "astral-am-card-action", "Add to Canvas"\)/,
 );
 assert.match(
   source,
-  /const addToChat = createElement\("button", "astral-am-card-action", "加入对话"\)/,
+  /const addToChat = createElement\("button", "astral-am-card-action", "Add to Chat"\)/,
 );
 assert.match(
   source,
@@ -612,31 +615,31 @@ assert.match(
 );
 assert.match(source, /const retainedItems = \[\];/);
 assert.match(source, /nextAttachments\.length >= limit/);
-assert.match(source, /当前对话已达到 \$\{limit\} 个素材上限/);
+assert.match(source, /This conversation has reached the limit of \$\{limit\} assets/);
 assert.match(source, /count > chatAttachmentLimit/);
-assert.match(source, /加入对话 \(前 \$\{chatAttachmentLimit\}\/\$\{count\}\)/);
+assert.match(source, /Add to Chat \(first \$\{chatAttachmentLimit\}\/\$\{count\}\)/);
 assert.match(source, /attachments: this\.pendingAttachments\.slice\(/);
 assert.doesNotMatch(
   source,
   /const (?:locate|rename) = createElement\("button", "astral-am-card-action"/,
 );
-assert.match(source, /加载内嵌工作流/);
+assert.match(source, /"Load Embedded Workflow"/);
 assert.match(
   source,
-  /const insertNode = createElement\("button", "astral-am-button is-primary", "放入画布"\)/,
+  /const insertNode = createElement\("button", "astral-am-button is-primary", "Add to Canvas"\)/,
 );
-assert.doesNotMatch(source, /插入官方加载节点/);
+assert.doesNotMatch(source, /Insert official loader node/);
 assert.match(source, /asset\.kind === "video"[\s\S]*?"LoadVideo"[\s\S]*?LoadAudio[\s\S]*?"LoadImage"/);
 assert.match(source, /function isPhysicalModelCategory\(category\)/);
 assert.match(source, /category\.source === "models"/);
 assert.match(source, /setAttribute\("translate", "no"\)/);
 assert.match(source, /mode === "duplicates"[\s\S]*?this\.loadCategories\(\)/);
-assert.doesNotMatch(source, /添加输入节点|添加输出节点|同步输出节点/);
+assert.doesNotMatch(source, /Add input node|Add output node|Sync output nodes/);
 assert.doesNotMatch(
   source,
   /conversationTitle|conversationMeta|renameActiveConversation|placeChatNode|syncChatOutputNodes/,
 );
-assert.match(source, /button\.title = "单击切换会话，双击重命名"/);
+assert.match(source, /button\.title = "Click to switch conversations; double-click to rename\."/);
 assert.match(
   source,
   /button\.addEventListener\("click",[\s\S]*?this\.selectConversation\(conversation\.id\)/,
@@ -662,7 +665,7 @@ assert.doesNotMatch(
 assert.doesNotMatch(source, /chatMentionMenu|aria-autocomplete|astral-am-chat-mention/);
 assert.match(
   source,
-  /输入消息。可点击素材标签插入 image1、video1 等名称。/,
+  /Enter a message\. Click an asset chip to insert names such as image1 or video1\./,
 );
 assert.match(source, /insertChatAttachmentName\(mention\)/);
 assert.match(
@@ -691,12 +694,12 @@ assert.match(
 );
 assert.match(source, /const API_TASK_DEFINITIONS = \[/);
 assert.match(source, /id: "text"[\s\S]*?id: "image"[\s\S]*?id: "multimodal"/);
-assert.match(source, /label: "纯文本模式"[\s\S]*?label: "图片模式"[\s\S]*?label: "多模态模式"/);
-assert.match(source, /"新增 API"/);
-assert.match(source, /"复制 API"/);
-assert.match(source, /"删除 API"/);
+assert.match(source, /label: "Text-only Mode"[\s\S]*?label: "Image Mode"[\s\S]*?label: "Multimodal Mode"/);
+assert.match(source, /"Add API"/);
+assert.match(source, /"Duplicate API"/);
+assert.match(source, /"Delete API"/);
 assert.match(source, /\/assets-astral\/chat\/models/);
-assert.match(source, /"拉取模型"/);
+assert.match(source, /"Fetch Models"/);
 assert.match(source, /this\.taskBindingControls\[task\.id\]/);
 assert.match(source, /this\.taskBindings\[task\.id\]\.model = fallbackProvider\?\.model \|\| ""/);
 assert.match(source, /for \(const legacyId of task\.legacyWriteIds \|\| \[\]\)/);
@@ -708,13 +711,13 @@ const localLlmDefaults =
 assert.match(localLlmDefaults, /visionModelPath: ""/);
 assert.doesNotMatch(localLlmDefaults, /systemPrompt/);
 assert.match(source, /this\.localLlmVisionModelSelect = createElement\(/);
-assert.match(source, /选择本地 LLM 视觉投影模型 mmproj/);
-assert.match(source, /numberField\("nBatch", "批处理 n_batch"/);
-assert.match(source, /numberField\("nUbatch", "微批 n_ubatch"/);
-assert.match(source, /numberField\("maxImageEdge", "图片最大边"/);
-assert.match(source, /numberField\("imageJpegQuality", "JPEG 质量"/);
+assert.match(source, /Select the local LLM vision projection model \(mmproj\)/);
+assert.match(source, /numberField\("nBatch", "Batch size n_batch"/);
+assert.match(source, /numberField\("nUbatch", "Micro-batch n_ubatch"/);
+assert.match(source, /numberField\("maxImageEdge", "Maximum image edge"/);
+assert.match(source, /numberField\("imageJpegQuality", "JPEG quality"/);
 assert.match(source, /choiceField\("kvCacheTypeK", "KV Cache K"/);
-assert.match(source, /choiceField\("reasoningEffort", "Qwen3\.8 推理强度"/);
+assert.match(source, /choiceField\("reasoningEffort", "Qwen3\.8 reasoning effort"/);
 assert.match(source, /toggleField\(\s*"enableThinking"/);
 assert.match(
   source,
@@ -723,7 +726,7 @@ assert.match(
 assert.doesNotMatch(source, /translateButton|optimizeButton|invertButton/);
 assert.doesNotMatch(source, /translationPanel|translationOutput/);
 assert.doesNotMatch(source, /translateInput\(|runPromptTransform\(/);
-assert.doesNotMatch(source, /"一键翻译"|"提示词优化"|"提示词反推"/);
+assert.doesNotMatch(source, /"One-click Translate"|"Prompt Optimization"|"Prompt Inversion"/);
 assert.match(source, /\/assets-astral\/chat\/translate/);
 const sendChatBody =
   source.match(
@@ -749,19 +752,19 @@ assert.match(
 assert.match(source, /\/assets-astral\/chat\/cancel/);
 assert.match(
   source,
-  /this\.chatGenerating\s*\?\s*this\.chatStopping\s*\?\s*"停止中\.\.\."\s*:\s*"停止"\s*:\s*"发送"/,
+  /this\.chatGenerating\s*\?\s*this\.chatStopping\s*\?\s*"Stopping\.\.\."\s*:\s*"Stop"\s*:\s*"Send"/,
 );
 assert.match(
   source,
-  /message\.role === "user" \? "已发送" : "已接收"/,
+  /message\.role === "user" \? "Sent" : "Received"/,
 );
 assert.match(source, /renderChatMessageImages\(/);
-assert.doesNotMatch(source, /"撤回并编辑"/);
+assert.doesNotMatch(source, /"Retract and edit"/);
 assert.doesNotMatch(source, /\/assets-astral\/chat\/retract/);
-assert.match(source, /删除后不可恢复。/);
+assert.match(source, /This cannot be undone\./);
 assert.match(source, /\/assets-astral\/chat\/messages\/delete/);
-assert.match(source, /复制这条消息/);
-assert.match(source, /删除这条消息（不可恢复）/);
+assert.match(source, /"Copy this message"/);
+assert.match(source, /"Delete this message \(cannot be undone\)"/);
 assert.doesNotMatch(source, /restoreChatDraft\(request, false\)/);
 assert.match(
   source,
@@ -773,31 +776,31 @@ assert.match(
 );
 assert.match(
   source,
-  /this\.systemPromptButton = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"加载系统提示词",?\s*\)/,
+  /this\.systemPromptButton = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"Load System Prompt",?\s*\)/,
 );
 assert.match(
   source,
-  /this\.skillButton = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"加载 Skill",?\s*\)/,
+  /this\.skillButton = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"Load Skill",?\s*\)/,
 );
 assert.match(
   source,
-  /this\.attachmentButton = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"上传素材",?\s*\)/,
+  /this\.attachmentButton = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"Attach Assets",?\s*\)/,
 );
 assert.match(
   source,
   /this\.chatControls\.append\(\s*this\.systemPromptButton,\s*this\.skillButton,\s*this\.attachmentButton,\s*this\.chatSelectionTray,?\s*\)/,
 );
-assert.match(source, /`上传素材 \(\$\{this\.pendingAttachments\.length\}\)`/);
-assert.match(source, /"加载 Skill \(1\)"/);
-assert.match(source, /"加载系统提示词 \(1\)"/);
+assert.match(source, /`Attach Assets \(\$\{this\.pendingAttachments\.length\}\)`/);
+assert.match(source, /"Load Skill \(1\)"/);
+assert.match(source, /"Load System Prompt \(1\)"/);
 assert.match(
   source,
-  /const loadToChat = createElement\(\s*"button",\s*"astral-am-button is-small",\s*loaded \? "当前会话提示词" : "加载到会话",?\s*\)/,
+  /const loadToChat = createElement\(\s*"button",\s*"astral-am-button is-small",\s*loaded \? "Current Session Prompt" : "Load to Conversation",?\s*\)/,
 );
 assert.match(source, /void this\.addSystemPromptToChat\(template\)/);
 assert.doesNotMatch(
   source,
-  /"复制模板"|duplicateTemplate|\/assets-astral\/prompt-templates\/duplicate/,
+  /"Copy Template"|duplicateTemplate|\/assets-astral\/prompt-templates\/duplicate/,
 );
 assert.match(
   source,
@@ -821,12 +824,12 @@ assert.match(
 );
 assert.match(
   source,
-  /button\.textContent = joined\s*\?\s*"当前会话 Skill"\s*:\s*hasCurrentContext\s*\?\s*"切换到此 Skill"\s*:\s*"加入会话"/,
+  /button\.textContent = joined\s*\?\s*"Current Session Skill"\s*:\s*hasCurrentContext\s*\?\s*"Switch to this Skill"\s*:\s*"Add to Conversation"/,
 );
 assert.match(source, /async addSkillToChat\(skillId\)/);
 assert.match(source, /this\.pendingSkillIds = \[skill\.id\]/);
 assert.doesNotMatch(source, /this\.pendingSkillIds = \[\.\.\.this\.pendingSkillIds/);
-assert.match(source, /button\.textContent = joined[\s\S]*?"切换到此 Skill"/);
+assert.match(source, /button\.textContent = joined[\s\S]*?"Switch to this Skill"/);
 assert.match(
   source,
   /if \(this\.pendingSystemPromptTemplate && this\.pendingSkillIds\.length\) \{\s*this\.pendingSkillIds = \[\];/,
@@ -843,10 +846,10 @@ assert.match(
   source,
   /async addSystemPromptToChat\(template\)[\s\S]*?const previousSkillId = this\.pendingSkillIds\[0\] \|\| "";[\s\S]*?this\.pendingSkillIds = \[\];[\s\S]*?this\.pendingSystemPromptTemplate = \{/,
 );
-assert.match(source, /切换为 Skill“\$\{skill\.name\}”。/);
+assert.match(source, /to Skill "\$\{skill\.name\}"/);
 assert.match(
   source,
-  /切换为系统提示词“\$\{this\.pendingSystemPromptTemplate\.title\}”。/,
+  /to system prompt "\$\{this\.pendingSystemPromptTemplate\.title\}"/,
 );
 assert.match(
   source,
@@ -870,22 +873,22 @@ assert.match(
 );
 assert.match(
   source,
-  /scheduleSystemPromptPreview\(template, anchor\) \{[\s\S]*?skillPreviewExcerpt\(template\.content\)[\s\S]*?"系统提示词 · 悬停预览"/,
+  /scheduleSystemPromptPreview\(template, anchor\) \{[\s\S]*?skillPreviewExcerpt\(template\.content\)[\s\S]*?"System Prompt · Hover to Preview"/,
 );
-assert.match(source, /aria-label",\s*`已加载系统提示词：/);
+assert.match(source, /aria-label",\s*`Loaded system prompt:/);
 assert.doesNotMatch(source, /card\.addEventListener\("pointerenter"/);
 assert.match(source, /this\.mode !== "chat"/);
 assert.match(source, /skillPreviewExcerpt\(detail\.content\)/);
 assert.match(source, /loadSkillContent\(skillId\)/);
 assert.match(source, /\/assets-astral\/skills\/content\?\$\{queryString/);
-assert.doesNotMatch(source, /"复制 ID"/);
+assert.doesNotMatch(source, /"Copy ID"/);
 assert.match(
   source,
-  /const openDirectory = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"打开目录",?\s*\)/,
+  /const openDirectory = createElement\(\s*"button",\s*"astral-am-button is-small",\s*"Open folder",?\s*\)/,
 );
 assert.match(
   source,
-  /openDirectory\.title = "在系统文件管理器中打开此 Skill 所在目录并选中文件"/,
+  /openDirectory\.title = "Open this Skill's folder in the system file manager and select it\."/,
 );
 assert.match(
   source,
@@ -900,12 +903,12 @@ assert.match(source, /async openSkillDirectory\(skill\) \{/);
 assert.match(source, /\/assets-astral\/skills\/open/);
 assert.match(source, /body: JSON\.stringify\(\{ id: skill\.id \}\)/);
 assert.match(source, /result\?\.revealMode === "selected"/);
-assert.match(source, /当前文件管理器未确认自动选中/);
-assert.match(source, /扫描 ComfyUI custom_nodes/);
-assert.match(source, /扫描 ComfyUI custom_nodes 和 input 目录/);
-assert.match(source, /正在扫描 custom_nodes 与 input 目录/);
+assert.match(source, /did not confirm automatic selection/);
+assert.match(source, /ComfyUI custom_nodes/);
+assert.match(source, /ComfyUI custom_nodes and input/);
+assert.match(source, /Scanning custom_nodes and input\.\.\./);
 assert.match(source, /payload\?\.roots/);
-assert.match(source, /input 中的 Skill 会使用 input\/\.\.\. 命名空间/);
+assert.match(source, /input Skills use the input\/\.\.\. namespace/);
 assert.match(
   source,
   /this\.skillSearch = createElement\("input", "astral-am-search"\)/,
@@ -913,7 +916,7 @@ assert.match(
 assert.match(source, /this\.skillSearch\.type = "search"/);
 assert.match(
   source,
-  /this\.skillSearch\.placeholder = "搜索 Skill 名称、ID、描述或来源"/,
+  /this\.skillSearch\.placeholder = "Search Skill name, ID, description, or source"/,
 );
 assert.match(source, /toolbar\.append\(this\.skillSearch, this\.skillRefreshButton\)/);
 assert.match(
@@ -929,21 +932,21 @@ assert.match(
 assert.match(source, /tokens\.every\(\(token\) => haystack\.includes\(token\)\)/);
 assert.match(
   source,
-  /`找到 \$\{matchingSkills\.length\} \/ 共 \$\{this\.skills\.length\} 个 Skill`/,
+  /`Found \$\{matchingSkills\.length\} \/ \$\{this\.skills\.length\} Skills`/,
 );
-assert.match(source, /没有匹配“\$\{query\}”的 Skill/);
-assert.match(source, /来源：\$\{skill\.source\}/);
-assert.doesNotMatch(source, /扫描节点包 skills 目录/);
+assert.match(source, /No Skills match "\$\{query\}"/);
+assert.match(source, /`Source: \$\{skill\.source\}`/);
+assert.doesNotMatch(source, /Scan node package skills directory/);
 assert.match(source, /asset\.root === "output" \? `\$\{asset\.path\} \[output\]`/);
 assert.match(source, /canvasElement\?\.getBoundingClientRect/);
 assert.match(source, /canvas\.convertEventToCanvasOffset\(\{/);
 assert.match(source, /loader\.pos = \[\s*Number\(graphPosition\[0\]\) - nodeWidth \/ 2/);
-assert.match(source, /名称候选/);
-assert.match(source, /未经文件哈希确认/);
-assert.doesNotMatch(source, /核对模型文件 SHA256/);
+assert.match(source, /Name candidate/);
+assert.match(source, /not confirmed by file hash/);
+assert.doesNotMatch(source, /verify the model file SHA256/);
 assert.match(source, /appendAggregateModelInfo/);
-assert.match(source, /触发词来源：/);
-assert.match(source, /未找到可靠推荐/);
+assert.match(source, /Trigger word source: /);
+assert.match(source, /No reliable recommendation found/);
 assert.match(
   source,
   /this\.selectedItems\(\)\s*\.map\(\(item\) => item\.file\)/,
@@ -1336,13 +1339,13 @@ const statusScrollElement = scrollTestElement(480, [
 ]);
 updateStatusPreservingScroll(
   statusElement,
-  "正在刷新来源...",
+  "Refreshing sources...",
   "loading",
   statusScrollElement,
   "data-lora-key",
 );
-assert.equal(statusElement.textContent, "正在刷新来源...");
-assert.equal(statusElement.title, "正在刷新来源...");
+assert.equal(statusElement.textContent, "Refreshing sources...");
+assert.equal(statusElement.title, "Refreshing sources...");
 assert.equal(statusElement.hidden, false);
 assert.equal(statusScrollElement.scrollTop, 480);
 
@@ -1484,7 +1487,7 @@ assert.match(
 );
 assert.match(
   source,
-  /this\.shortcutButtonLabel = createElement\(\s*"span",\s*"astral-am-shortcut-button-label",\s*"快捷键",?\s*\);/,
+  /this\.shortcutButtonLabel = createElement\(\s*"span",\s*"astral-am-shortcut-button-label",\s*"Shortcut",?\s*\);/,
 );
 assert.doesNotMatch(
   source,
@@ -1516,7 +1519,7 @@ assert.match(
 );
 assert.match(
   source,
-  /if \(!saveAssetManagerShortcut\(nextShortcut\)\) \{[\s\S]*?showAstralAlert\(\{[\s\S]*?title: "无法保存快捷键"/,
+  /if \(!saveAssetManagerShortcut\(nextShortcut\)\) \{[\s\S]*?showAstralAlert\(\{[\s\S]*?title: "Unable to Save Shortcut"/,
 );
 assert.match(
   css,

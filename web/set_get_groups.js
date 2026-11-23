@@ -7,8 +7,8 @@ export const MAX_GET_PORTS = 30;
 export const SET_GROUP_MIN_WIDTH = 80;
 export const GET_GROUP_MIN_WIDTH = 160;
 export const NODE_PACKAGE_MODULE = "custom_nodes.ComfyUI-Astral-Manage";
-const ADD_SET_GROUP_MENU_LABEL = "添加 设置节点组";
-const ADD_GET_GROUP_MENU_LABEL = "获取设置节点组";
+const ADD_SET_GROUP_MENU_LABEL = "Add SetGroup Node";
+const ADD_GET_GROUP_MENU_LABEL = "Add GetGroup Node";
 const PLACEHOLDER_PORT_ID = "__placeholder__";
 const TRANSPARENT_NODE_COLOR = "rgba(0,0,0,0)";
 const DEFAULT_SET_GET_NODE_COLOR = "#ffffff";
@@ -2527,7 +2527,7 @@ class AstralSetGroupNode extends LiteGraph.LGraphNode {
         callback: () => this.disconnectPortAtSlot(inputIndex),
       },
       {
-        content: "重命名接口",
+        content: "Rename Port",
         callback: (_entry, _options, event) => {
           void this.renamePort(inputIndex, event, input);
         },
@@ -2546,10 +2546,10 @@ class AstralSetGroupNode extends LiteGraph.LGraphNode {
     const activePorts = this.getActivePorts();
     if (activePorts.length) {
       options.unshift({
-        content: "重命名 SetGroup 端口",
+        content: "Rename SetGroup Port",
         has_submenu: true,
         submenu: {
-          title: "端口",
+          title: "Ports",
           options: activePorts.map((port) => ({
             content: `${port.name}  [${port.type}]`,
             callback: (_entry, _options, event) => {
@@ -2564,7 +2564,7 @@ class AstralSetGroupNode extends LiteGraph.LGraphNode {
       });
     }
     options.unshift({
-      content: "让所有 GetGroup 刷新",
+      content: "Refresh All GetGroup",
       callback: () => this.notifyGetters(),
     });
   }
@@ -3751,7 +3751,7 @@ class AstralGetGroupNode extends LiteGraph.LGraphNode {
     const options = [];
     if (availablePorts.length) {
       options.push({
-        content: "选择 SetGroup 端口",
+        content: "Select SetGroup Port",
         disabled: true,
       });
       for (const port of availablePorts) {
@@ -3760,14 +3760,14 @@ class AstralGetGroupNode extends LiteGraph.LGraphNode {
         );
         const usedElsewhere = selectedIndex >= 0 && selectedIndex !== outputIndex;
         options.push({
-          content: `${selectedIndex === outputIndex ? "✓ " : ""}${port.name}  [${port.type}]${usedElsewhere ? "  (已使用)" : ""}`,
+          content: `${selectedIndex === outputIndex ? "✓ " : ""}${port.name}  [${port.type}]${usedElsewhere ? "  (used)" : ""}`,
           disabled: usedElsewhere || !this.isPortCompatibleWithOutput(port, outputIndex),
           callback: () => this.bindPortAtSlot(outputIndex, port),
         });
       }
     } else {
       options.push({
-        content: "没有可用于 GetGroup 的 SetGroup 端口",
+        content: "No SetGroup ports available for GetGroup",
         disabled: true,
       });
     }
@@ -3786,7 +3786,7 @@ class AstralGetGroupNode extends LiteGraph.LGraphNode {
       this.getPortChoiceOptions(outputIndex),
       {
         event,
-        title: "GetGroup 端口",
+        title: "GetGroup Ports",
         className: "dark",
         scale: Math.max(1, Number(app.canvas?.ds?.scale) || 1),
       },
@@ -3811,12 +3811,12 @@ class AstralGetGroupNode extends LiteGraph.LGraphNode {
     const portChoices = this.getPortChoiceOptions(outputIndex);
     return [
       {
-        content: "跳转到对应 SetGroup",
+        content: "Go to Matching SetGroup",
         disabled: !port?.setNode,
         callback: () => this.goToSetGroup(outputIndex),
       },
       ...portChoices.filter(
-        (option) => option?.content !== "选择 SetGroup 端口",
+        (option) => option?.content !== "Select SetGroup Port",
       ),
     ];
   }
@@ -3831,10 +3831,10 @@ class AstralGetGroupNode extends LiteGraph.LGraphNode {
     );
     if (availablePorts.length) {
       options.unshift({
-        content: "添加 GetGroup 端口",
+        content: "Add GetGroup Port",
         has_submenu: true,
         submenu: {
-          title: "SetGroup 端口",
+          title: "SetGroup Ports",
           options: availablePorts.map((port) => ({
             content: `${port.name}  [${port.type}]`,
             callback: () => this.appendPortName(port.name),
@@ -3845,10 +3845,10 @@ class AstralGetGroupNode extends LiteGraph.LGraphNode {
     const activeNames = this.getRequestedNames();
     if (activeNames.length) {
       options.unshift({
-        content: "移除 GetGroup 端口",
+        content: "Remove GetGroup Port",
         has_submenu: true,
         submenu: {
-          title: "当前端口",
+          title: "Current Port",
           options: activeNames.map((name) => ({
             content: name,
             callback: () => this.removePortName(name),
@@ -3858,13 +3858,13 @@ class AstralGetGroupNode extends LiteGraph.LGraphNode {
     }
     options.unshift(
       {
-        content: "编辑 GetGroup 端口名",
+        content: "Edit GetGroup Port Name",
         callback: (_entry, _options, event) => {
           void this.editPortNames(event);
         },
       },
       {
-        content: "刷新端口",
+        content: "Refresh Ports",
         callback: () => {
           this.setRequestedNames(this.getRequestedNames());
         },

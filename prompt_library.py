@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import copy
+import ipaddress
 import json
 import os
 import re
 import shutil
 import time
+import urllib.parse
 import uuid
 from typing import Any
 
@@ -35,7 +37,10 @@ DEFAULT_API_CONFIG = {
   "stop": [],
   "responseFormat": "default",
   "reasoningEffort": "default",
-  "systemPrompt": "你是一个严谨、有帮助的 AI 助手。",
+  "systemPrompt": (
+    "You are a rigorous and helpful AI assistant. "
+    "Always answer in the language the user writes in."
+  ),
   "targetLanguage": "zh",
   "sourceLanguage": "auto",
 }
@@ -49,10 +54,95 @@ API_TASK_MIGRATION_SOURCES = {
 }
 MAX_API_PROVIDERS = 20
 API_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
+# Operator allow-list for API base URLs: a comma-separated list of host,
+# host:port or *.domain entries. When it is empty every public host is allowed,
+# except reserved and link-local addresses.
+API_ALLOWED_HOSTS_ENV = "ASTRAL_MANAGE_API_ALLOWED_HOSTS"
 
 
 class PromptDataError(ValueError):
   pass
+
+
+def _normalized_api_base_url(value: Any) -> str:
+  return str(value or "").strip().rstrip("/")
+
+
+def _api_host_allowlist() -> tuple[str, ...]:
+  raw = str(os.environ.get(API_ALLOWED_HOSTS_ENV) or "")
+  return tuple(
+    item.strip().casefold() for item in raw.split(",") if item.strip()
+  )
+
+
+def _api_host_matches(
+  host: str,
+  port: int | None,
+  pattern: str,
+) -> bool:
+  if pattern.startswith("*."):
+    return host.endswith(pattern[1:])
+  if ":" in pattern:
+    pattern_host, _, pattern_port = pattern.rpartition(":")
+    return (
+      pattern_host == host
+      and pattern_port.isdigit()
+      and int(pattern_port) == port
+    )
+  return pattern == host
+
+
+def _blocked_api_host(host: str) -> bool:
+  try:
+    address = ipaddress.ip_address(host)
+  except ValueError:
+    return False
+  return bool(
+    address.is_link_local
+    or address.is_multicast
+    or address.is_unspecified
+    or address.is_reserved
+  )
+
+
+def _api_base_url(value: Any) -> str:
+  base_url = _clean_text(value, maximum=2000, field="API address")
+  if not base_url:
+    return ""
+  if not re.match(r"^https?://", base_url, re.IGNORECASE):
+    raise PromptDataError("API address must use http:// or https://")
+  parsed = urllib.parse.urlsplit(base_url)
+  if not parsed.hostname:
+    raise PromptDataError("API address is missing a host name")
+  if parsed.username is not None or parsed.password is not None:
+    raise PromptDataError("API address must not contain a username or password")
+  host = parsed.hostname.casefold().rstrip(".")
+  if _blocked_api_host(host):
+    raise PromptDataError(
+      "API address must not point to a reserved or link-local address"
+    )
+  try:
+    port = parsed.port
+  except ValueError:
+    raise PromptDataError("API address has an invalid port") from None
+  allowed = _api_host_allowlist()
+  if allowed and not any(
+    _api_host_matches(host, port, pattern) for pattern in allowed
+  ):
+    raise PromptDataError("API address is not in the allowed host list")
+  return base_url
+
+
+def _provider_api_key(provider: dict[str, Any]) -> str:
+  key = str(provider.get("apiKey") or "").strip()
+  if not key:
+    return ""
+  saved_base_url = str(provider.get("apiKeyBaseUrl") or "")
+  if saved_base_url and _normalized_api_base_url(
+    saved_base_url
+  ) != _normalized_api_base_url(provider.get("baseUrl")):
+    return ""
+  return key
 
 
 def default_data_directory() -> str:
@@ -96,11 +186,15 @@ def _read_json(path: str, default: dict[str, Any]) -> dict[str, Any]:
         with open(backup, "r", encoding="utf-8-sig") as source:
           payload = json.load(source)
       except (OSError, json.JSONDecodeError, UnicodeDecodeError):
-        raise PromptDataError(f"无法读取数据文件：{os.path.basename(path)}") from error
+        raise PromptDataError(
+          f"Unable to read data file: {os.path.basename(path)}"
+        ) from error
     else:
-      raise PromptDataError(f"无法读取数据文件：{os.path.basename(path)}") from error
+      raise PromptDataError(
+        f"Unable to read data file: {os.path.basename(path)}"
+      ) from error
   if not isinstance(payload, dict):
-    raise PromptDataError(f"数据文件格式错误：{os.path.basename(path)}")
+    raise PromptDataError(f"Invalid data file format: {os.path.basename(path)}")
   return payload
 
 
@@ -140,9 +234,9 @@ def _atomic_write_json(path: str, payload: dict[str, Any]) -> None:
 def _clean_text(value: Any, *, maximum: int, field: str, required: bool = False) -> str:
   text = str(value or "").strip()
   if required and not text:
-    raise PromptDataError(f"{field}不能为空")
+    raise PromptDataError(f"{field} cannot be empty")
   if len(text) > maximum:
-    raise PromptDataError(f"{field}不能超过 {maximum} 个字符")
+    raise PromptDataError(f"{field} cannot exceed {maximum} characters")
   return text
 
 
@@ -150,7 +244,7 @@ def _clean_category(value: Any) -> str:
   category = str(value or "text").strip().lower()
   if category not in TEMPLATE_CATEGORIES:
     raise PromptDataError(
-      "提示词分类必须是 text、image、audio、video、expand 或 invert"
+      "Prompt category must be text, image, audio, video, expand or invert"
     )
   return category
 
@@ -160,21 +254,26 @@ def _safe_conversation_id(value: Any, *, create: bool = False) -> str:
   if not conversation_id and create:
     return uuid.uuid4().hex
   if not CONVERSATION_ID_RE.fullmatch(conversation_id):
-    raise PromptDataError("会话 ID 只能包含字母、数字、点、下划线或短横线")
+    raise PromptDataError(
+      "Conversation ID may only contain letters, digits, dots, "
+      "underscores or hyphens"
+    )
   return conversation_id
 
 
 def _normalize_attachment(raw: Any) -> dict[str, Any]:
   if not isinstance(raw, dict):
-    raise PromptDataError("素材附件格式错误")
+    raise PromptDataError("Invalid asset attachment format")
   root = str(raw.get("root", "")).strip().lower()
   if root not in ATTACHMENT_ROOTS:
-    raise PromptDataError("素材附件根目录必须是 input 或 output")
+    raise PromptDataError("Asset attachment root must be input or output")
   path = str(raw.get("path", "")).replace("\\", "/").strip("/")
   if not path or "\x00" in path:
-    raise PromptDataError("素材附件路径不能为空")
+    raise PromptDataError("Asset attachment path must not be empty")
   if re.match(r"^[A-Za-z]:", path) or any(part == ".." for part in path.split("/")):
-    raise PromptDataError("素材附件必须使用 input/output 内的相对路径")
+    raise PromptDataError(
+      "Asset attachments must use a relative path inside input/output"
+    )
   kind = str(raw.get("kind", "")).strip().lower()
   if kind not in {"", "image", "audio", "video"}:
     kind = ""
@@ -196,10 +295,10 @@ def _normalize_attachments(value: Any) -> list[dict[str, Any]]:
   if value is None:
     return []
   if not isinstance(value, list):
-    raise PromptDataError("素材附件必须是数组")
+    raise PromptDataError("Asset attachments must be an array")
   if len(value) > MAX_CONVERSATION_ATTACHMENTS:
     raise PromptDataError(
-      f"一次最多附加 {MAX_CONVERSATION_ATTACHMENTS} 个素材"
+      f"At most {MAX_CONVERSATION_ATTACHMENTS} assets can be attached at once"
     )
   result = []
   seen = set()
@@ -250,7 +349,7 @@ def get_template(
     None,
   )
   if template is None:
-    raise FileNotFoundError("提示词模板不存在")
+    raise FileNotFoundError("Prompt template not found")
   return copy.deepcopy(template)
 
 
@@ -263,7 +362,7 @@ def list_templates(
   normalized_query = " ".join(str(query or "").split()).casefold()
   normalized_category = str(category or "").strip().lower()
   if normalized_category and normalized_category not in TEMPLATE_CATEGORIES:
-    raise PromptDataError("未知的提示词分类")
+    raise PromptDataError("Unknown prompt category")
   templates = _load_templates(data_directory)
   if normalized_category:
     templates = [
@@ -301,7 +400,7 @@ def save_template(
   payload: dict[str, Any],
 ) -> dict[str, Any]:
   if not isinstance(payload, dict):
-    raise PromptDataError("提示词模板格式错误")
+    raise PromptDataError("Invalid prompt template format")
   now = time.time()
   requested_id = str(payload.get("id", "")).strip()
   template_id = (
@@ -314,14 +413,14 @@ def save_template(
     "title": _clean_text(
       payload.get("title"),
       maximum=MAX_TITLE_LENGTH,
-      field="标题",
+      field="Title",
       required=True,
     ),
     "category": _clean_category(payload.get("category")),
     "prompt": _clean_text(
       payload.get("prompt"),
       maximum=MAX_PROMPT_LENGTH,
-      field="提示词",
+      field="Prompt",
       required=True,
     ),
     "createdAt": now,
@@ -334,7 +433,9 @@ def save_template(
   )
   if existing_index is None:
     if len(templates) >= MAX_TEMPLATES:
-      raise PromptDataError(f"提示词模板最多保存 {MAX_TEMPLATES} 条")
+      raise PromptDataError(
+        f"At most {MAX_TEMPLATES} prompt templates can be saved"
+      )
     templates.append(template)
   else:
     template["createdAt"] = float(templates[existing_index].get("createdAt") or now)
@@ -351,7 +452,7 @@ def delete_template(data_directory: str, template_id: str) -> dict[str, Any]:
   templates = _load_templates(data_directory)
   remaining = [item for item in templates if item.get("id") != template_id]
   if len(remaining) == len(templates):
-    raise FileNotFoundError("提示词模板不存在")
+    raise FileNotFoundError("Prompt template not found")
   _atomic_write_json(
     _templates_path(data_directory),
     {"version": 1, "templates": remaining},
@@ -382,17 +483,17 @@ def _api_common_settings(
   config["systemPrompt"] = _clean_text(
     config.get("systemPrompt"),
     maximum=100_000,
-    field="系统提示词",
+    field="System prompt",
   )
   config["targetLanguage"] = _clean_text(
     config.get("targetLanguage"),
     maximum=60,
-    field="目标语言",
+    field="Target language",
   )
   config["sourceLanguage"] = _clean_text(
     config.get("sourceLanguage"),
     maximum=60,
-    field="源语言",
+    field="Source language",
   ) or "auto"
 
   def bounded_float(
@@ -405,7 +506,7 @@ def _api_common_settings(
     try:
       value = float(config.get(key, default))
     except (TypeError, ValueError) as error:
-      raise PromptDataError(f"{field}必须是数字") from error
+      raise PromptDataError(f"{field} must be a number") from error
     return min(maximum, max(minimum, value))
 
   def bounded_int(
@@ -418,7 +519,7 @@ def _api_common_settings(
     try:
       value = int(config.get(key, default))
     except (TypeError, ValueError) as error:
-      raise PromptDataError(f"{field}必须是整数") from error
+      raise PromptDataError(f"{field} must be an integer") from error
     return min(maximum, max(minimum, value))
 
   config["temperature"] = bounded_float(
@@ -426,36 +527,36 @@ def _api_common_settings(
     0.7,
     0.0,
     2.0,
-    "temperature ",
+    "Temperature",
   )
-  config["topP"] = bounded_float("topP", 0.95, 0.0, 1.0, "Top P ")
+  config["topP"] = bounded_float("topP", 0.95, 0.0, 1.0, "Top P")
   config["maxTokens"] = bounded_int(
     "maxTokens",
     2048,
     1,
     128_000,
-    "最大输出 Token ",
+    "Max output tokens",
   )
   config["maxRounds"] = bounded_int(
     "maxRounds",
     12,
     1,
     50,
-    "最大对话轮数 ",
+    "Max conversation rounds",
   )
   config["frequencyPenalty"] = bounded_float(
     "frequencyPenalty",
     0.0,
     -2.0,
     2.0,
-    "频率惩罚 ",
+    "Frequency penalty",
   )
   config["presencePenalty"] = bounded_float(
     "presencePenalty",
     0.0,
     -2.0,
     2.0,
-    "存在惩罚 ",
+    "Presence penalty",
   )
 
   seed_value = config.get("seed")
@@ -467,7 +568,7 @@ def _api_common_settings(
       42,
       0,
       4_294_967_295,
-      "API Seed ",
+      "API Seed",
     )
 
   raw_stop = config.get("stop")
@@ -478,13 +579,13 @@ def _api_common_settings(
   elif raw_stop is None:
     stop_values = []
   else:
-    raise PromptDataError("停止序列必须是字符串或字符串数组")
+    raise PromptDataError("Stop sequences must be a string or an array of strings")
   stop_sequences: list[str] = []
   for value in stop_values:
     sequence = _clean_text(
       value,
       maximum=200,
-      field="停止序列",
+      field="Stop sequence",
     )
     if sequence and sequence not in stop_sequences:
       stop_sequences.append(sequence)
@@ -492,12 +593,12 @@ def _api_common_settings(
 
   response_format = str(config.get("responseFormat") or "default").strip()
   if response_format not in {"default", "text", "json_object"}:
-    raise PromptDataError("未知的 API 响应格式")
+    raise PromptDataError("Unknown API response format")
   config["responseFormat"] = response_format
 
   reasoning_effort = str(config.get("reasoningEffort") or "default").strip()
   if reasoning_effort not in {"default", "low", "medium", "high"}:
-    raise PromptDataError("未知的 API 推理强度")
+    raise PromptDataError("Unknown API reasoning effort")
   config["reasoningEffort"] = reasoning_effort
   return config
 
@@ -507,22 +608,34 @@ def _safe_api_id(value: Any, *, create: bool = False) -> str:
   if not api_id and create:
     return uuid.uuid4().hex
   if not API_ID_RE.fullmatch(api_id):
-    raise PromptDataError("API 配置 ID 只能包含字母、数字、点、下划线或短横线")
+    raise PromptDataError(
+      "API config ID may only contain letters, digits, dots, "
+      "underscores or hyphens"
+    )
   return api_id
 
 
 def _api_key_value(
   raw: dict[str, Any],
   previous: dict[str, Any] | None = None,
+  *,
+  base_url_changed: bool = False,
 ) -> str:
   previous = previous or {}
-  current_key = str(previous.get("apiKey") or "")
+  current_key = "" if base_url_changed else str(previous.get("apiKey") or "")
   if raw.get("clearApiKey") is True:
     return ""
   if "apiKey" not in raw:
     return current_key
   requested_key = str(raw.get("apiKey") or "").strip()
-  if requested_key and "•" not in requested_key and requested_key != "[已保存]":
+  if (
+    requested_key
+    and "•" not in requested_key
+    and requested_key not in {"[已保存]", "[Saved]"}
+  ):
+    if base_url_changed and requested_key == str(previous.get("apiKey") or ""):
+      # The key came from the merged previous provider, not from the user.
+      return ""
     return requested_key[:8000]
   return current_key
 
@@ -534,7 +647,7 @@ def _normalized_api_provider(
   index: int = 0,
 ) -> dict[str, Any]:
   if not isinstance(raw, dict):
-    raise PromptDataError("API 配置项格式错误")
+    raise PromptDataError("Invalid API config entry format")
   previous = previous or {}
   requested_id = str(raw.get("id") or "").strip()
   provider_id = (
@@ -545,15 +658,19 @@ def _normalized_api_provider(
   name = _clean_text(
     raw.get("name", previous.get("name") or f"API {index + 1}"),
     maximum=80,
-    field="API 名称",
+    field="API name",
   ) or f"API {index + 1}"
-  base_url = _clean_text(
-    raw.get("baseUrl", previous.get("baseUrl") or ""),
-    maximum=2000,
-    field="API 地址",
+  base_url = _api_base_url(raw.get("baseUrl", previous.get("baseUrl") or ""))
+  previous_base_url = str(previous.get("baseUrl") or "")
+  base_url_changed = bool(previous_base_url) and (
+    _normalized_api_base_url(base_url)
+    != _normalized_api_base_url(previous_base_url)
   )
-  if base_url and not re.match(r"^https?://", base_url, re.I):
-    raise PromptDataError("API 地址必须使用 http:// 或 https://")
+  api_key = _api_key_value(
+    raw,
+    previous,
+    base_url_changed=base_url_changed,
+  )
   return {
     "id": provider_id,
     "name": name,
@@ -561,9 +678,11 @@ def _normalized_api_provider(
     "model": _clean_text(
       raw.get("model", previous.get("model") or ""),
       maximum=300,
-      field="模型名称",
+      field="Model name",
     ),
-    "apiKey": _api_key_value(raw, previous),
+    "apiKey": api_key,
+    # The key is only ever sent back to the base URL it was entered for.
+    "apiKeyBaseUrl": base_url if api_key else "",
   }
 
 
@@ -592,7 +711,9 @@ def _initial_api_settings(
   is_multi_payload = isinstance(raw_providers, list)
   if is_multi_payload:
     if len(raw_providers) > MAX_API_PROVIDERS:
-      raise PromptDataError(f"最多保存 {MAX_API_PROVIDERS} 个 API 配置")
+      raise PromptDataError(
+        f"At most {MAX_API_PROVIDERS} API configs can be saved"
+      )
     providers = []
     seen_ids: set[str] = set()
     for index, item in enumerate(raw_providers):
@@ -639,7 +760,7 @@ def _initial_api_settings(
     else:
       legacy_provider = {
         "id": "default",
-        "name": raw.get("name") or "默认 API",
+        "name": raw.get("name") or "Default API",
         **{
           key: DEFAULT_API_CONFIG[key]
           for key in ("baseUrl", "model", "apiKey")
@@ -658,7 +779,7 @@ def _initial_api_settings(
       _normalized_api_provider(
         {
           "id": "default",
-          "name": "默认 API",
+          "name": "Default API",
           **{
             key: DEFAULT_API_CONFIG[key]
             for key in ("baseUrl", "model", "apiKey")
@@ -722,7 +843,7 @@ def _initial_api_settings(
       "model": _clean_text(
         default_model,
         maximum=300,
-        field="任务模型名称",
+        field="Task model name",
       ),
     }
   return {
@@ -744,7 +865,7 @@ def _public_api_provider(provider: dict[str, Any]) -> dict[str, Any]:
   public["hasApiKey"] = bool(key)
   public["apiKey"] = "••••••••" if key else ""
   if key:
-    public["apiKeyHint"] = "已保存"
+    public["apiKeyHint"] = "Saved"
   else:
     public["apiKeyHint"] = ""
   return public
@@ -803,7 +924,7 @@ def _flatten_api_config(settings: dict[str, Any]) -> dict[str, Any]:
     {
       "baseUrl": provider.get("baseUrl", ""),
       "model": text_task.get("model") or provider.get("model", ""),
-      "apiKey": provider.get("apiKey", ""),
+      "apiKey": _provider_api_key(provider),
       "providerId": provider.get("id", ""),
       "providerName": provider.get("name", ""),
     }
@@ -825,7 +946,7 @@ def load_api_config(
   public["hasApiKey"] = bool(key)
   public["apiKey"] = "••••••••" if key else ""
   if key:
-    public["apiKeyHint"] = "已保存"
+    public["apiKeyHint"] = "Saved"
   else:
     public["apiKeyHint"] = ""
   return public
@@ -851,7 +972,7 @@ def resolve_api_config(
 ) -> dict[str, Any]:
   normalized_task = str(task or "text").strip().lower()
   if normalized_task not in API_TASKS:
-    raise PromptDataError("未知的 API 任务类型")
+    raise PromptDataError("Unknown API task type")
   settings = _load_api_settings(data_directory, include_secret=True)
   provider_map = {
     str(provider.get("id")): provider
@@ -869,7 +990,7 @@ def resolve_api_config(
     {
       "baseUrl": provider.get("baseUrl", ""),
       "model": str(model or binding.get("model") or provider.get("model") or ""),
-      "apiKey": provider.get("apiKey", ""),
+      "apiKey": _provider_api_key(provider),
       "providerId": provider.get("id", ""),
       "providerName": provider.get("name", ""),
       "task": normalized_task,
@@ -882,19 +1003,30 @@ def resolve_api_provider(
   data_directory: str,
   payload: dict[str, Any],
 ) -> dict[str, Any]:
+  """Return a saved API provider selected by id.
+
+  The request body may only choose among providers saved on disk: the base URL
+  and the key always come from the stored settings, never from the request.
+  """
   if not isinstance(payload, dict):
-    raise PromptDataError("API 配置格式错误")
+    raise PromptDataError("Invalid API config format")
   settings = _load_api_settings(data_directory, include_secret=True)
   provider_id = str(payload.get("id") or "").strip()
-  previous = next(
+  provider = next(
     (
-      provider
-      for provider in settings["providers"]
-      if provider.get("id") == provider_id
+      item
+      for item in settings["providers"]
+      if item.get("id") == provider_id
     ),
-    {},
-  )
-  return _normalized_api_provider(payload, previous, index=0)
+    None,
+  ) or _active_provider(settings)
+  return {
+    "id": str(provider.get("id") or ""),
+    "name": str(provider.get("name") or ""),
+    "baseUrl": str(provider.get("baseUrl") or ""),
+    "model": str(provider.get("model") or ""),
+    "apiKey": _provider_api_key(provider),
+  }
 
 
 def _save_api_settings(
@@ -924,7 +1056,7 @@ def save_api_config(
   payload: dict[str, Any],
 ) -> dict[str, Any]:
   if not isinstance(payload, dict):
-    raise PromptDataError("API 配置格式错误")
+    raise PromptDataError("Invalid API config format")
   previous = _load_api_settings(data_directory, include_secret=True)
   is_multi_config = (
     isinstance(payload.get("providers"), list)
@@ -1003,7 +1135,7 @@ def normalize_conversation_system_prompt(value: Any) -> dict[str, str] | None:
   prompt = _clean_text(
     value.get("content"),
     maximum=MAX_PROMPT_LENGTH,
-    field="系统提示词",
+    field="System prompt",
   )
   if not prompt:
     return None
@@ -1013,9 +1145,9 @@ def normalize_conversation_system_prompt(value: Any) -> dict[str, str] | None:
   return {
     "id": template_id,
     "title": _clean_text(
-      value.get("title") or "系统提示词",
+      value.get("title") or "System Prompt",
       maximum=MAX_TITLE_LENGTH,
-      field="系统提示词标题",
+      field="System prompt title",
       required=True,
     ),
     "content": prompt,
@@ -1077,7 +1209,7 @@ def _conversation_message(
   content = _clean_text(
     raw_message.get("content"),
     maximum=MAX_PROMPT_LENGTH,
-    field="消息内容",
+    field="Message content",
   )
   attachments = []
   raw_attachments = raw_message.get("attachments")
@@ -1203,7 +1335,7 @@ def _conversation_summary(conversation: dict[str, Any]) -> dict[str, Any]:
   )
   return {
     "id": conversation.get("id"),
-    "title": conversation.get("title") or "未命名会话",
+    "title": conversation.get("title") or "Untitled Conversation",
     "messageCount": len(messages),
     "createdAt": conversation.get("createdAt"),
     "updatedAt": conversation.get("updatedAt"),
@@ -1234,20 +1366,22 @@ def create_conversation(
   payload = payload or {}
   conversations = _load_conversations(data_directory)
   if len(conversations) >= MAX_CONVERSATIONS:
-    raise PromptDataError(f"最多保存 {MAX_CONVERSATIONS} 个会话")
+    raise PromptDataError(
+      f"At most {MAX_CONVERSATIONS} conversations can be saved"
+    )
   conversation_id = _safe_conversation_id(
     payload.get("id"),
     create=True,
   )
   if any(item.get("id") == conversation_id for item in conversations):
-    raise PromptDataError("会话 ID 已存在")
+    raise PromptDataError("Conversation ID already exists")
   now = time.time()
   conversation = {
     "id": conversation_id,
     "title": _clean_text(
-      payload.get("title") or "新会话",
+      payload.get("title") or "New Conversation",
       maximum=MAX_TITLE_LENGTH,
-      field="会话标题",
+      field="Conversation title",
       required=True,
     ),
     "messages": [],
@@ -1278,7 +1412,9 @@ def get_or_create_conversation(
     data_directory,
     {
       "id": conversation_id,
-      "title": "画布对话" if conversation_id == "canvas" else "新会话",
+      "title": (
+        "Canvas Chat" if conversation_id == "canvas" else "New Conversation"
+      ),
     },
   )
 
@@ -1288,7 +1424,7 @@ def get_conversation(data_directory: str, conversation_id: str) -> dict[str, Any
   for item in _load_conversations(data_directory):
     if item.get("id") == conversation_id:
       return copy.deepcopy(item)
-  raise FileNotFoundError("会话不存在")
+  raise FileNotFoundError("Conversation not found")
 
 
 def update_conversation(
@@ -1303,12 +1439,12 @@ def update_conversation(
     None,
   )
   if conversation is None:
-    raise FileNotFoundError("会话不存在")
+    raise FileNotFoundError("Conversation not found")
   if "title" in payload:
     conversation["title"] = _clean_text(
       payload.get("title"),
       maximum=MAX_TITLE_LENGTH,
-      field="会话标题",
+      field="Conversation title",
       required=True,
     )
   _set_conversation_context(conversation, payload)
@@ -1333,7 +1469,7 @@ def append_conversation_messages(
     None,
   )
   if conversation is None:
-    raise FileNotFoundError("会话不存在")
+    raise FileNotFoundError("Conversation not found")
   accepted = []
   now = time.time()
   for index, message in enumerate(messages):
@@ -1345,7 +1481,7 @@ def append_conversation_messages(
     content = _clean_text(
       message.get("content"),
       maximum=MAX_PROMPT_LENGTH,
-      field="消息内容",
+      field="Message content",
     )
     attachments = _normalize_attachments(message.get("attachments"))
     if not content and not attachments:
@@ -1380,7 +1516,7 @@ def append_conversation_messages(
   conversation["updatedAt"] = now
   if (
     not conversation.get("title")
-    or conversation.get("title") == "新会话"
+    or conversation.get("title") in {"新会话", "New Conversation"}
   ):
     first_user = next(
       (item for item in stored if item.get("role") == "user"),
@@ -1396,7 +1532,7 @@ def append_conversation_messages(
       conversation["title"] = str(
         first_user.get("content")
         or first_attachment.get("name")
-        or "图片消息"
+        or "Image message"
       )[:48]
   _save_conversations(data_directory, conversations)
   return copy.deepcopy(conversation)
@@ -1410,19 +1546,19 @@ def delete_conversation_message(
   conversation_id = _safe_conversation_id(conversation_id)
   message_id = str(message_id or "").strip()
   if not MESSAGE_ID_RE.fullmatch(message_id):
-    raise PromptDataError("消息 ID 无效")
+    raise PromptDataError("Invalid message ID")
   conversations = _load_conversations(data_directory)
   conversation = next(
     (item for item in conversations if item.get("id") == conversation_id),
     None,
   )
   if conversation is None:
-    raise FileNotFoundError("会话不存在")
+    raise FileNotFoundError("Conversation not found")
   stored = conversation.get("messages")
   stored = stored if isinstance(stored, list) else []
   remaining = [item for item in stored if item.get("id") != message_id]
   if len(remaining) == len(stored):
-    raise FileNotFoundError("消息不存在或已被删除")
+    raise FileNotFoundError("Message not found or already deleted")
   conversation["messages"] = remaining
   conversation["updatedAt"] = time.time()
   _save_conversations(data_directory, conversations)
@@ -1443,6 +1579,6 @@ def delete_conversation(
   conversations = _load_conversations(data_directory)
   remaining = [item for item in conversations if item.get("id") != conversation_id]
   if len(remaining) == len(conversations):
-    raise FileNotFoundError("会话不存在")
+    raise FileNotFoundError("Conversation not found")
   _save_conversations(data_directory, remaining)
   return {"ok": True, "id": conversation_id, "deleted": 1}

@@ -528,7 +528,7 @@ function drawInputToggle(ctx, node, entry, effectiveKey) {
   const effective = entry.key === effectiveKey;
   const accent = effective ? "#72bfff" : enabled ? "#d1a85a" : "#777";
   const label = inputToggleLabel(entry.input, entry.slot);
-  const stateText = effective ? "yes" : enabled ? "备选" : "no";
+  const stateText = effective ? "yes" : enabled ? "alt" : "no";
   const trackWidth = 24;
   const trackHeight = 12;
   const trackX = rect.x + rect.width - trackWidth - 8;
@@ -578,11 +578,11 @@ function drawInputToggle(ctx, node, entry, effectiveKey) {
 
 function notifyIncompatibleType(lockedType, sourceType) {
   const message = (
-    `Typed Bypass Switch 已锁定为 ${typeLabel(lockedType)}，`
-    + `不能再接入 ${typeLabel(sourceType)}。`
+    `Typed Bypass Switch is locked to ${typeLabel(lockedType)}, `
+    + `so it cannot accept ${typeLabel(sourceType)}.`
   );
   void showAstralAlert({
-    title: "输入类型不匹配",
+    title: "Input Type Mismatch",
     message,
     tone: "warning",
   });

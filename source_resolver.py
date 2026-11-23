@@ -200,25 +200,25 @@ def request_with_system_proxy(method: str, url: str, **kwargs: Any):
 
 def _request_error(source: str, error: requests.exceptions.RequestException) -> SourceRequestError:
   if isinstance(error, requests.exceptions.Timeout):
-    return SourceRequestError(f"{source}请求超时，请检查网络后重试", 504)
+    return SourceRequestError(f"The {source} request timed out. Check the network and try again.", 504)
   if isinstance(error, requests.exceptions.SSLError):
-    return SourceRequestError(f"与{source}建立 TLS 连接失败，请检查代理设置", 502)
+    return SourceRequestError(f"Failed to establish a TLS connection to {source}. Check proxy settings.", 502)
   if isinstance(error, requests.exceptions.ConnectionError):
-    return SourceRequestError(f"无法连接{source}，请检查网络或代理设置", 502)
-  return SourceRequestError(f"访问{source}失败，请检查网络或代理设置", 502)
+    return SourceRequestError(f"Could not connect to {source}. Check the network or proxy settings.", 502)
+  return SourceRequestError(f"Could not access {source}. Check the network or proxy settings.", 502)
 
 
 def _status_error(source: str, status_code: int) -> SourceRequestError:
   if status_code == 429:
-    message = f"{source}请求过于频繁，请稍后重试"
+    message = f"{source} is receiving too many requests. Try again later."
   elif status_code in (401, 403):
-    message = f"{source}要求登录或 API 密钥"
+    message = f"{source} requires login or an API key"
   elif status_code == 404:
-    message = f"{source}未找到匹配内容"
+    message = f"{source} did not find any matching content"
   elif status_code >= 500:
-    message = f"{source}服务暂时不可用（HTTP {status_code}）"
+    message = f"{source} service is temporarily unavailable (HTTP {status_code})"
   else:
-    message = f"{source}返回 HTTP {status_code}"
+    message = f"{source} returned HTTP {status_code}"
   return SourceRequestError(message, status_code)
 
 
@@ -251,7 +251,7 @@ def _json_request_with_headers(
   try:
     payload = response.json()
   except (ValueError, UnicodeDecodeError) as error:
-    raise SourceRequestError(f"{source}返回的数据不是有效 JSON", 502) from error
+    raise SourceRequestError(f"{source} returned invalid JSON", 502) from error
   headers = {
     str(key): str(value)
     for key, value in response.headers.items()
@@ -443,10 +443,10 @@ def summarize_safetensors_metadata(metadata: dict[str, str] | None) -> dict[str,
 
 def _basis_match(basis: str) -> tuple[str, str]:
   if basis == "canonical":
-    return "civitai-name", "C站哈希对应的名称引导候选"
+    return "civitai-name", "Civitai hash-guided name candidate"
   if basis == "metadata":
-    return "metadata", "Safetensors 元数据候选"
-  return "name-candidate", "名称候选，未经文件哈希确认"
+    return "metadata", "Safetensors metadata candidate"
+  return "name-candidate", "Name candidate; not confirmed by file hash"
 
 
 def _mark_match(candidate: dict[str, Any], basis: str) -> None:
@@ -458,7 +458,7 @@ def _mark_match(candidate: dict[str, Any], basis: str) -> None:
 
 def _mark_exact_hash(candidate: dict[str, Any], file_name: str) -> None:
   candidate["matchType"] = "sha256"
-  candidate["matchLabel"] = "SHA256 精确匹配"
+  candidate["matchLabel"] = "Exact SHA256 match"
   candidate["matchedFile"] = file_name
 
 
@@ -546,7 +546,7 @@ def _verify_huggingface_paths(
       _mark_exact_hash(candidate, file_name)
       return True
   if errors:
-    candidate["hashVerificationError"] = "；".join(dict.fromkeys(errors))
+    candidate["hashVerificationError"] = "; ".join(dict.fromkeys(errors))
     return None
   return False
 
@@ -648,10 +648,10 @@ def find_huggingface_sources(
         },
       )
     except SourceRequestError as error:
-      warnings.append(f"{query}：{error}")
+      warnings.append(f"{query}: {error}")
       continue
     if not isinstance(payload, list):
-      warnings.append(f"{query}：Hugging Face 返回了意外的数据格式")
+      warnings.append(f"{query}: Hugging Face returned an unexpected data format")
       continue
     successful_queries += 1
     new_candidates: list[dict[str, Any]] = []
@@ -688,7 +688,7 @@ def find_huggingface_sources(
       break
 
   if not successful_queries and warnings:
-    raise SourceRequestError("；".join(warnings))
+    raise SourceRequestError("; ".join(warnings))
 
   candidates = sorted(results.values(), key=_candidate_rank)
   if sha256:
@@ -747,7 +747,7 @@ def _verify_modelscope_hash(candidate: dict[str, Any], sha256: str) -> None:
     return
   try:
     payload = _json_request(
-      "魔搭社区",
+      "ModelScope",
       "GET",
       MODELSCOPE_FILES_API.format(model_id=quote(model_id, safe="/")),
       params={"Revision": "master", "Recursive": "true", "Root": ""},
@@ -787,7 +787,7 @@ def find_modelscope_sources(
   for query, basis in query_entries:
     try:
       payload = _json_request(
-        "魔搭社区",
+        "ModelScope",
         "PUT",
         MODELSCOPE_API,
         body={
@@ -801,15 +801,15 @@ def find_modelscope_sources(
         },
       )
     except SourceRequestError as error:
-      warnings.append(f"{query}：{error}")
+      warnings.append(f"{query}: {error}")
       continue
     if not isinstance(payload, dict):
-      warnings.append(f"{query}：魔搭社区返回了意外的数据格式")
+      warnings.append(f"{query}: ModelScope returned an unexpected data format")
       continue
     code = payload.get("Code")
     if code not in (None, 0, 200, "0", "200"):
-      message = payload.get("Message") or payload.get("ErrorMessage") or f"接口错误码 {code}"
-      warnings.append(f"{query}：魔搭社区搜索失败：{message}")
+      message = payload.get("Message") or payload.get("ErrorMessage") or f"API error code {code}"
+      warnings.append(f"{query}: ModelScope search failed: {message}")
       continue
     successful_queries += 1
     model_data = payload.get("Data", {}).get("Model", {})
@@ -850,7 +850,7 @@ def find_modelscope_sources(
       break
 
   if not successful_queries and warnings:
-    raise SourceRequestError("；".join(warnings))
+    raise SourceRequestError("; ".join(warnings))
 
   candidates = sorted(results.values(), key=_candidate_rank)
   if sha256:
@@ -916,9 +916,9 @@ def _enrich_huggingface_source(source: dict[str, Any]) -> None:
     if isinstance(payload, dict):
       api_payload = payload
     else:
-      warnings.append("Hugging Face 模型接口返回了意外的数据格式")
+      warnings.append("Hugging Face model API returned an unexpected data format")
   except SourceRequestError as error:
-    warnings.append(f"Hugging Face 模型接口：{error}")
+    warnings.append(f"Hugging Face model API: {error}")
   try:
     readme = _text_request(
       "Hugging Face",
@@ -927,7 +927,7 @@ def _enrich_huggingface_source(source: dict[str, Any]) -> None:
     )
   except SourceRequestError as error:
     if error.http_status != 404:
-      warnings.append(f"Hugging Face README：{error}")
+      warnings.append(f"Hugging Face README: {error}")
 
   card_data = api_payload.get("cardData")
   if not isinstance(card_data, dict):
@@ -946,7 +946,7 @@ def _enrich_huggingface_source(source: dict[str, Any]) -> None:
   triggers = normalize_trigger_words([structured_triggers, readme_triggers])
   recommendation = extract_recommended_strength_from_text(
     readme,
-    "Hugging Face 模型卡",
+    "Hugging Face model card",
   )
   thumbnail_url = _first_mapping_image(
     card_data,
@@ -971,10 +971,10 @@ def _enrich_huggingface_source(source: dict[str, Any]) -> None:
     source["recommendedStrength"] = recommendation
   if triggers:
     source["triggers"] = triggers
-    source["triggersSource"] = "Hugging Face 模型卡"
+    source["triggersSource"] = "Hugging Face model card"
   if thumbnail_url:
     source["thumbnailUrl"] = thumbnail_url
-    source["thumbnailSource"] = "Hugging Face 模型卡"
+    source["thumbnailSource"] = "Hugging Face model card"
   source["modelDetails"] = {
     "id": model_id,
     "readmeLoaded": bool(readme),
@@ -1019,24 +1019,24 @@ def _enrich_modelscope_source(source: dict[str, Any]) -> None:
   model_id = str(candidate.get("id") or "")
   try:
     payload = _json_request(
-      "魔搭社区",
+      "ModelScope",
       "GET",
       MODELSCOPE_MODEL_API.format(model_id=quote(model_id, safe="/")),
     )
   except SourceRequestError as error:
-    _source_warning(source, f"魔搭模型详情：{error}")
+    _source_warning(source, f"ModelScope model details: {error}")
     return
   if not isinstance(payload, dict):
-    _source_warning(source, "魔搭模型详情返回了意外的数据格式")
+    _source_warning(source, "ModelScope model details returned an unexpected data format")
     return
   code = payload.get("Code")
   if code not in (None, 0, 200, "0", "200"):
-    message = payload.get("Message") or f"接口错误码 {code}"
-    _source_warning(source, f"魔搭模型详情：{message}")
+    message = payload.get("Message") or f"API error code {code}"
+    _source_warning(source, f"ModelScope model details: {message}")
     return
   data = payload.get("Data")
   if not isinstance(data, dict):
-    _source_warning(source, "魔搭模型详情缺少 Data 数据")
+    _source_warning(source, "ModelScope model details are missing the Data field")
     return
 
   thumbnail_url = _first_mapping_image(
@@ -1094,7 +1094,7 @@ def _enrich_modelscope_source(source: dict[str, Any]) -> None:
   for text in text_parts:
     recommendation = extract_recommended_strength_from_text(
       _modelscope_rich_text(text),
-      "魔搭模型卡",
+      "ModelScope model card",
     )
     if recommendation:
       break
@@ -1103,10 +1103,10 @@ def _enrich_modelscope_source(source: dict[str, Any]) -> None:
     source["recommendedStrength"] = recommendation
   if triggers:
     source["triggers"] = triggers
-    source["triggersSource"] = "魔搭模型卡"
+    source["triggersSource"] = "ModelScope model card"
   if thumbnail_url:
     source["thumbnailUrl"] = thumbnail_url
-    source["thumbnailSource"] = "魔搭模型卡"
+    source["thumbnailSource"] = "ModelScope model card"
   source["modelDetails"] = {
     "id": model_id,
     "readmeLoaded": bool(data.get("ReadMeContent")),
@@ -1118,9 +1118,9 @@ def _aggregate_model_info(sources: dict[str, Any]) -> dict[str, Any]:
   recommendation = None
   recommendation_source = None
   for source_name, label in (
-    ("civitai", "C站"),
+    ("civitai", "Civitai"),
     ("huggingface", "Hugging Face"),
-    ("modelscope", "魔搭"),
+    ("modelscope", "ModelScope"),
   ):
     source = sources.get(source_name)
     if not isinstance(source, dict) or not source.get("ok"):
@@ -1134,9 +1134,9 @@ def _aggregate_model_info(sources: dict[str, Any]) -> dict[str, Any]:
   triggers: list[str] = []
   triggers_source = None
   for source_name, label in (
-    ("civitai", "C站模型"),
-    ("huggingface", "Hugging Face 模型卡"),
-    ("modelscope", "魔搭模型卡"),
+    ("civitai", "Civitai model"),
+    ("huggingface", "Hugging Face model card"),
+    ("modelscope", "ModelScope model card"),
   ):
     source = sources.get(source_name)
     if not isinstance(source, dict) or not source.get("ok"):
@@ -1150,9 +1150,9 @@ def _aggregate_model_info(sources: dict[str, Any]) -> dict[str, Any]:
   thumbnail_url = None
   thumbnail_source = None
   for source_name, label in (
-    ("civitai", "C站示例图"),
-    ("huggingface", "Hugging Face 模型卡"),
-    ("modelscope", "魔搭模型卡"),
+    ("civitai", "Civitai preview image"),
+    ("huggingface", "Hugging Face model card"),
+    ("modelscope", "ModelScope model card"),
   ):
     source = sources.get(source_name)
     if not isinstance(source, dict) or not source.get("ok"):
@@ -1184,7 +1184,7 @@ def _sha256(path: str) -> str:
 def _fetch_civitai(file: str, sha256: str) -> dict[str, Any]:
   try:
     data = _json_request(
-      "C站",
+      "Civitai",
       "GET",
       CIVITAI_API.format(sha256=sha256),
     )
@@ -1196,7 +1196,7 @@ def _fetch_civitai(file: str, sha256: str) -> dict[str, Any]:
       ) from error
     raise
   if not isinstance(data, dict):
-    raise SourceRequestError("C站返回了意外的数据格式")
+    raise SourceRequestError("Civitai returned an unexpected data format")
   info = normalize_civitai_model_version(data, file, sha256)
   thumbnail_url = _first_mapping_image(
     data.get("images"),
@@ -1222,7 +1222,7 @@ def _fetch_civitai(file: str, sha256: str) -> dict[str, Any]:
     or data.get("description")
     or "",
     "thumbnailUrl": thumbnail_url,
-    "thumbnailSource": "C站示例图" if thumbnail_url else None,
+    "thumbnailSource": "Civitai preview image" if thumbnail_url else None,
   }
 
 
@@ -1254,7 +1254,7 @@ async def resolve_lora_sources(
   if isinstance(sha_result, Exception):
     sha_value = None
     civitai_result: dict[str, Any] = _failure(
-      SourceRequestError("读取本地 LoRA 文件失败，无法按 SHA256 查询 C站")
+      SourceRequestError("Failed to read the local LoRA file, so it cannot be queried on Civitai by SHA256")
     )
   else:
     sha_value = sha_result

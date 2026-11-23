@@ -1,9 +1,9 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import {
-  getLanguage,
   onLanguageChange,
   registerLocalizationRoot,
+  translateUiText,
 } from "./astral_i18n.js";
 
 const STYLE_URL = "/extensions/ComfyUI-Astral-Manage/prompt_tools.css";
@@ -118,8 +118,8 @@ const ui = {
 let initialized = false;
 let languageUnsubscribe = null;
 
-function text(zh, en) {
-  return getLanguage() === "en" ? en : zh;
+function text(english) {
+  return translateUiText(english);
 }
 
 function createElement(tag, className = "", value = "") {
@@ -333,7 +333,7 @@ function imageLabelFromElement(image) {
       }
     }
   }
-  return text("画布图片", "Canvas image");
+  return text("Canvas image", "Canvas image");
 }
 
 function findImageSource(node) {
@@ -350,7 +350,7 @@ function findImageSource(node) {
         label:
           source instanceof HTMLImageElement
             ? imageLabelFromElement(source)
-            : text("画布图片", "Canvas image"),
+            : text("Canvas image", "Canvas image"),
       };
     }
   }
@@ -461,43 +461,43 @@ function formatTimestamp(value) {
 
 function actionTitle(action = state.action) {
   return {
-    expand: text("提示词扩写", "Expand Prompt"),
-    translate: text("翻译", "Translate"),
-    invert: text("图像反推", "Image Inversion"),
-  }[action] || text("提示词工具", "Prompt Tools");
+    expand: text("Expand Prompt", "Expand Prompt"),
+    translate: text("Translate", "Translate"),
+    invert: text("Image Inversion", "Image Inversion"),
+  }[action] || text("Prompt Tools", "Prompt Tools");
 }
 
 function statusText() {
   const { key, detail } = state.status;
   const labels = {
-    loadingRules: text("正在读取规则与 Skill…", "Loading rules and Skills..."),
-    rulesLoaded: text("规则与 Skill 已更新。", "Rules and Skills updated."),
-    needText: text("请先填写或选中提示词。", "Enter or select a prompt first."),
-    needImage: text("请选择包含图片的节点。", "Select a node containing an image first."),
+    loadingRules: text("Loading rules and Skills...", "Loading rules and Skills..."),
+    rulesLoaded: text("Rules and Skills updated.", "Rules and Skills updated."),
+    needText: text("Enter or select a prompt first.", "Enter or select a prompt first."),
+    needImage: text("Select a node containing an image first.", "Select a node containing an image first."),
     conflict: text(
-      "系统提示词与 Skill 只能选择一个。",
+      "Choose either a system prompt or a Skill.",
       "Choose either a system prompt or a Skill.",
     ),
-    preparingImage: text("正在读取图片…", "Reading image..."),
-    runningExpand: text("正在扩写提示词…", "Expanding prompt..."),
-    runningTranslate: text("正在翻译…", "Translating..."),
-    runningInvert: text("正在反推图像…", "Inverting image..."),
-    stopping: text("正在停止…", "Stopping..."),
-    stopped: text("操作已停止。", "Action stopped."),
-    completed: text("结果已返回。", "Result received."),
-    copied: text("已复制到剪贴板。", "Copied to the clipboard."),
-    applied: text("结果已应用回源控件。", "Result applied to the source widget."),
+    preparingImage: text("Reading image...", "Reading image..."),
+    runningExpand: text("Expanding prompt...", "Expanding prompt..."),
+    runningTranslate: text("Translating...", "Translating..."),
+    runningInvert: text("Inverting image...", "Inverting image..."),
+    stopping: text("Stopping...", "Stopping..."),
+    stopped: text("Action stopped.", "Action stopped."),
+    completed: text("Result received.", "Result received."),
+    copied: text("Copied to the clipboard.", "Copied to the clipboard."),
+    applied: text("Result applied to the source widget.", "Result applied to the source widget."),
     expandedApplied: text(
-      "扩写完成，已填充到提示词框。",
+      "Expansion complete. The prompt field was updated.",
       "Expansion complete. The prompt field was updated.",
     ),
     invertedCopied: text(
-      "反推完成，已复制到剪贴板。",
+      "Inversion complete. Copied to the clipboard.",
       "Inversion complete. Copied to the clipboard.",
     ),
-    copyFailed: text("复制失败：", "Copy failed: "),
-    clearFailed: text("任务完成，但清理显存失败：", "Task finished, but clearing VRAM failed: "),
-    error: text("操作失败：", "Action failed: "),
+    copyFailed: text("Copy failed: ", "Copy failed: "),
+    clearFailed: text("Task finished, but clearing VRAM failed: ", "Task finished, but clearing VRAM failed: "),
+    error: text("Action failed: ", "Action failed: "),
   };
   return (labels[key] || "") + (detail || "");
 }
@@ -559,7 +559,7 @@ function createToolIconButton(role, icon) {
 function createTranslationButton(target) {
   const button = createButton(
     "astral-pt-tool-button astral-pt-translate-button",
-    target === "zh" ? "中" : "英",
+    target === "zh" ? "ZH" : "EN",
     `translate-${target}`,
   );
   button.dataset.target = target;
@@ -607,20 +607,20 @@ function createFloatingUi() {
   const panelFields = createElement("div", "astral-pt-fields");
   ui.serviceSelect = createElement("select", "astral-pt-select");
   ui.serviceField = createField(
-    "服务",
+    "Service",
     ui.serviceSelect,
     "astral-pt-wide-field",
   );
   ui.languageSelect = createElement("select", "astral-pt-select");
   ui.languageField = createField(
-    "目标语言",
+    "Target language",
     ui.languageSelect,
     "astral-pt-language-field",
   );
   ui.clearLabel = createElement("label", "astral-pt-check");
   ui.clearVram = document.createElement("input");
   ui.clearVram.type = "checkbox";
-  const clearText = createElement("span", "", "任务后清理显存");
+  const clearText = createElement("span", "", "Clear VRAM after task");
   ui.clearLabel.append(ui.clearVram, clearText);
   panelFields.append(
     ui.serviceField,
@@ -631,22 +631,22 @@ function createFloatingUi() {
   const panelActions = createElement("div", "astral-pt-actions");
   ui.runButton = createButton(
     "astral-pt-primary-button",
-    "发送",
+    "Send",
     "run",
   );
   ui.copyButton = createButton(
     "astral-pt-action-button",
-    "复制",
+    "Copy",
     "copy",
   );
   ui.applyButton = createButton(
     "astral-pt-action-button",
-    "应用结果",
+    "Apply result",
     "apply",
   );
   ui.retryButton = createButton(
     "astral-pt-action-button",
-    "重试",
+    "Retry",
     "retry",
   );
   panelActions.append(
@@ -711,7 +711,7 @@ function createFloatingUi() {
   ui.settingsRuleSelect = createElement("select", "astral-pt-select");
   ui.settingsManageButton = createButton(
     "astral-pt-link-button",
-    "规则管理",
+    "Manage rules",
     "manage-settings-rules",
   );
   const settingsRuleControl = createElement(
@@ -723,7 +723,7 @@ function createFloatingUi() {
     ui.settingsManageButton,
   );
   ui.settingsRuleField = createField(
-    "系统提示词",
+    "System Prompt",
     settingsRuleControl,
     "astral-pt-wide-field",
   );
@@ -735,7 +735,7 @@ function createFloatingUi() {
   );
   ui.settingsServiceSelect = createElement("select", "astral-pt-select");
   ui.settingsServiceField = createField(
-    "服务",
+    "Service",
     ui.settingsServiceSelect,
     "astral-pt-wide-field",
   );
@@ -745,7 +745,7 @@ function createFloatingUi() {
   const settingsClearText = createElement(
     "span",
     "",
-    "任务后清理显存",
+    "Clear VRAM after task",
   );
   ui.settingsClearLabel.append(
     ui.settingsClearVram,
@@ -766,7 +766,7 @@ function createFloatingUi() {
   );
   ui.settingsRefreshButton = createButton(
     "astral-pt-link-button",
-    "↻ 刷新规则与 Skill",
+    "↻ Refresh rules and Skills",
     "refresh-settings",
   );
   settingsActions.append(ui.settingsRefreshButton);
@@ -914,7 +914,7 @@ function fillSelect(select, items, selectedValue, emptyLabel, labelKey = "title"
     const missing = createElement(
       "option",
       "",
-      `${text("已失效", "Missing")}: ${requested}`,
+      `${text("Missing", "Missing")}: ${requested}`,
     );
     missing.value = requested;
     markUserContent(missing);
@@ -941,9 +941,9 @@ function refreshServiceOptions() {
   for (const item of [
     {
       value: "api",
-      label: text("API纯文本模式", "API Text-only Mode"),
+      label: text("API Text-only Mode", "API Text-only Mode"),
     },
-    { value: "local", label: text("本地模式", "Local Mode") },
+    { value: "local", label: text("Local Mode", "Local Mode") },
   ]) {
     const option = createElement("option", "", item.label);
     option.value = item.value;
@@ -969,7 +969,7 @@ function refreshSettingsOptions() {
   if (!ui.settings || !config) return;
 
   ui.settingsHeading.textContent = `${actionTitle(action)} ${text(
-    "设置",
+    "settings",
     "settings",
   )}`;
   const target =
@@ -977,17 +977,17 @@ function refreshSettingsOptions() {
       ? state.imageLabel
       : state.widget?.name || state.node?.title || "";
   ui.settingsSource.textContent = target
-    ? `${text("目标", "Target")}：${target}`
+    ? `${text("Target", "Target")}: ${target}`
     : "";
   ui.settingsRuleField.__label.textContent = text(
-    "系统提示词",
+    "System Prompt",
     "System prompt",
   );
   ui.settingsSkillField.__label.textContent = "Skill";
-  ui.settingsServiceField.__label.textContent = text("服务", "Service");
+  ui.settingsServiceField.__label.textContent = text("Service", "Service");
   setCheckCaption(
     ui.settingsClearLabel,
-    "任务后清理显存",
+    "Clear VRAM after task",
     "Clear VRAM after task",
   );
 
@@ -995,24 +995,24 @@ function refreshSettingsOptions() {
     ui.settingsRuleSelect,
     state.catalogs[action] || [],
     config.ruleId,
-    text("不使用系统提示词", "No system prompt"),
+    text("No system prompt", "No system prompt"),
   );
   fillSelect(
     ui.settingsSkillSelect,
     state.catalogs.skills,
     config.skillId,
-    text("不使用 Skill", "No Skill"),
+    text("No Skill", "No Skill"),
   );
 
   const apiLabel =
     action === "invert"
-      ? text("API图片模式", "API Image Mode")
-      : text("API纯文本模式", "API Text-only Mode");
+      ? text("API Image Mode", "API Image Mode")
+      : text("API Text-only Mode", "API Text-only Mode");
   const serviceValue = config.mode === "local" ? "local" : "api";
   ui.settingsServiceSelect.replaceChildren();
   for (const item of [
     { value: "api", label: apiLabel },
-    { value: "local", label: text("本地模式", "Local Mode") },
+    { value: "local", label: text("Local Mode", "Local Mode") },
   ]) {
     const option = createElement("option", "", item.label);
     option.value = item.value;
@@ -1031,23 +1031,23 @@ function refreshSettingsOptions() {
   ui.settingsClearVram.disabled = state.running;
   ui.settingsManageButton.disabled = state.running;
   ui.settingsRefreshButton.disabled = state.running;
-  ui.settingsManageButton.textContent = text("规则管理", "Manage rules");
+  ui.settingsManageButton.textContent = text("Manage rules", "Manage rules");
   ui.settingsRefreshButton.textContent = text(
-    "↻ 刷新规则与 Skill",
+    "↻ Refresh rules and Skills",
     "↻ Refresh rules and Skills",
   );
   ui.settingsHint.textContent = text(
-    "左键执行，右键修改设置。系统提示词与 Skill 只能选择一个。",
+    "Left-click to run; right-click to configure. Choose either a system prompt or a Skill.",
     "Left-click to run; right-click to configure. Choose either a system prompt or a Skill.",
   );
 }
 
 function refreshTimestamps() {
   ui.sentTime.textContent = state.sentAt
-    ? `${text("发送", "Sent")} ${formatTimestamp(state.sentAt)}`
+    ? `${text("Send", "Sent")} ${formatTimestamp(state.sentAt)}`
     : "";
   ui.receivedTime.textContent = state.receivedAt
-    ? `${text("接收", "Received")} ${formatTimestamp(state.receivedAt)}`
+    ? `${text("Received", "Received")} ${formatTimestamp(state.receivedAt)}`
     : "";
   ui.sentTime.hidden = !ui.sentTime.textContent;
   ui.receivedTime.hidden = !ui.receivedTime.textContent;
@@ -1060,7 +1060,7 @@ function refreshResult() {
     !state.running;
   ui.result.value = state.result;
   ui.result.hidden = !visible;
-  ui.resultLabel.textContent = text("结果", "Result");
+  ui.resultLabel.textContent = text("Result", "Result");
   ui.resultLabel.hidden = !visible;
   ui.copyButton.hidden = !visible;
   ui.applyButton.hidden =
@@ -1074,8 +1074,8 @@ function setRunning(running) {
   state.running = running;
   const activeTool = running ? state.action : "";
   ui.runButton.textContent = running
-    ? text("停止", "Stop")
-    : text("发送", "Send");
+    ? text("Stop", "Stop")
+    : text("Send", "Send");
   ui.runButton.dataset.running = running ? "true" : "false";
   ui.closeButton.disabled = running;
   ui.serviceSelect.disabled = running;
@@ -1111,29 +1111,29 @@ function refreshTexts() {
   const invertRunning =
     state.running && state.action === "invert";
   ui.expandButton.title = expandRunning
-    ? text("停止提示词扩写", "Stop prompt expansion")
+    ? text("Stop prompt expansion", "Stop prompt expansion")
     : text(
-        "提示词扩写（左键执行，右键设置）",
+        "Expand selected text (left-click to run, right-click to configure)",
         "Expand selected text (left-click to run, right-click to configure)",
       );
   ui.translateEnButton.title = text(
-    "翻译为英文",
+    "Translate to English",
     "Translate to English",
   );
   ui.translateZhButton.title = text(
-    "翻译为简体中文",
+    "Translate to Simplified Chinese",
     "Translate to Simplified Chinese",
   );
   ui.invertButton.title = invertRunning
-    ? text("停止图像反推", "Stop image inversion")
+    ? text("Stop image inversion", "Stop image inversion")
     : text(
-        "中文图像反推（左键执行，右键设置）",
+        "Chinese image inversion (left-click to run, right-click to configure)",
         "Chinese image inversion (left-click to run, right-click to configure)",
       );
   ui.invertEnButton.title = invertRunning
-    ? text("停止图像反推", "Stop image inversion")
+    ? text("Stop image inversion", "Stop image inversion")
     : text(
-        "英文图像反推（左键执行，右键设置）",
+        "English image inversion (left-click to run, right-click to configure)",
         "English image inversion (left-click to run, right-click to configure)",
       );
   ui.expandButton.setAttribute("aria-label", ui.expandButton.title);
@@ -1148,34 +1148,34 @@ function refreshTexts() {
   ui.invertButton.setAttribute("aria-label", ui.invertButton.title);
   ui.invertEnButton.setAttribute("aria-label", ui.invertEnButton.title);
   ui.panelHeading.textContent = actionTitle("translate");
-  ui.closeButton.title = text("关闭", "Close");
+  ui.closeButton.title = text("Close", "Close");
   ui.closeButton.setAttribute("aria-label", ui.closeButton.title);
-  ui.resultLabel.textContent = text("结果", "Result");
+  ui.resultLabel.textContent = text("Result", "Result");
   ui.runButton.textContent =
     state.running && state.action === "translate"
-    ? text("停止", "Stop")
-    : text("发送", "Send");
+    ? text("Stop", "Stop")
+    : text("Send", "Send");
   ui.runButton.dataset.running =
     state.running && state.action === "translate" ? "true" : "false";
-  ui.copyButton.textContent = text("复制", "Copy");
-  ui.applyButton.textContent = text("应用结果", "Apply result");
-  ui.retryButton.textContent = text("重试", "Retry");
-  ui.serviceField.__label.textContent = text("服务", "Service");
+  ui.copyButton.textContent = text("Copy", "Copy");
+  ui.applyButton.textContent = text("Apply result", "Apply result");
+  ui.retryButton.textContent = text("Retry", "Retry");
+  ui.serviceField.__label.textContent = text("Service", "Service");
   ui.languageField.__label.textContent = text(
-    "目标语言",
+    "Target language",
     "Target language",
   );
   setCheckCaption(
     ui.clearLabel,
-    "任务后清理显存",
+    "Clear VRAM after task",
     "Clear VRAM after task",
   );
   ui.clearLabel.hidden = ui.serviceSelect.value !== "local";
   if (ui.panelSource?.childNodes.length) {
     ui.panelSource.firstChild.textContent =
       state.kind === "image"
-        ? text("当前图片", "Current image")
-        : text("当前控件", "Current widget");
+        ? text("Current image", "Current image")
+        : text("Current widget", "Current widget");
   }
   refreshServiceOptions();
   refreshLanguageOptions();
@@ -1189,8 +1189,8 @@ function updateSourceLabel() {
     "span",
     "",
     state.kind === "image"
-      ? text("当前图片：", "Current image: ")
-      : text("当前控件：", "Current widget: "),
+      ? text("Current image: ", "Current image: ")
+      : text("Current widget: ", "Current widget: "),
   );
   const value = createElement(
     "span",
@@ -1575,7 +1575,7 @@ function insertImageElement(source) {
     };
     image.onerror = () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
-      reject(new Error(text("无法读取图片", "Unable to read image")));
+      reject(new Error(text("Unable to read image", "Unable to read image")));
     };
     if (source instanceof Blob) {
       objectUrl = URL.createObjectURL(source);
@@ -1611,7 +1611,7 @@ async function imageToJpegAttachment(source, name = "canvas-image.jpg") {
   ) {
     await source.decode?.().catch(() => null);
   }
-  if (!drawable) throw new Error(text("没有可用图片", "No image is available"));
+  if (!drawable) throw new Error(text("No image is available", "No image is available"));
 
   let width =
     drawable.naturalWidth ||
@@ -1632,7 +1632,7 @@ async function imageToJpegAttachment(source, name = "canvas-image.jpg") {
     height = drawable.height;
   }
   if (!width || !height) {
-    throw new Error(text("图片尺寸无效", "The image has no valid dimensions"));
+    throw new Error(text("The image has no valid dimensions", "The image has no valid dimensions"));
   }
   const ratio = Math.min(1, MAX_IMAGE_EDGE / Math.max(width, height));
   width = Math.max(1, Math.round(width * ratio));
@@ -1642,7 +1642,7 @@ async function imageToJpegAttachment(source, name = "canvas-image.jpg") {
   canvas.height = height;
   const context = canvas.getContext("2d");
   if (!context) {
-    throw new Error(text("无法创建图片画布", "Unable to create an image canvas"));
+    throw new Error(text("Unable to create an image canvas", "Unable to create an image canvas"));
   }
   context.fillStyle = "#111827";
   context.fillRect(0, 0, width, height);
@@ -1657,7 +1657,7 @@ async function imageToJpegAttachment(source, name = "canvas-image.jpg") {
   } catch {
     throw new Error(
       text(
-        "画布图片不允许读取像素，请先保存到 input 或 output",
+        "Canvas pixels are blocked; save the image to input or output first",
         "Canvas pixels are blocked; save the image to input or output first",
       ),
     );
@@ -1699,7 +1699,7 @@ async function writeClipboardText(value) {
   } finally {
     scratch.remove?.();
   }
-  throw clipboardError || new Error(text("复制失败", "Copy failed"));
+  throw clipboardError || new Error(text("Copy failed", "Copy failed"));
 }
 
 async function runTask(
@@ -1815,7 +1815,7 @@ async function runTask(
     state.result = String(payload?.text || "").trim();
     if (!state.result) {
       throw new Error(
-        text("模型没有返回可用内容", "The model returned no content"),
+        text("The model returned no content", "The model returned no content"),
       );
     }
     state.sentAt = Number(payload?.sentAt || 0) * 1000 || state.sentAt;

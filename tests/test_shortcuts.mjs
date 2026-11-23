@@ -134,7 +134,7 @@ for (const comfyUiShortcut of [
 ]) {
   assert.equal(
     validateAssetManagerShortcut(comfyUiShortcut),
-    "该组合会被 ComfyUI 快捷键占用，请换一组。",
+    "This combination is already used by a ComfyUI shortcut. Choose another one.",
     `${formatShortcut(comfyUiShortcut)} must not override a ComfyUI shortcut`,
   );
 }

@@ -62,16 +62,16 @@ def _read_limited(path: str, maximum: int) -> str:
   try:
     size = os.path.getsize(path)
   except OSError as error:
-    raise SkillLibraryError(f"无法读取 Skill 文件：{error}") from error
+    raise SkillLibraryError(f"Unable to read skill file: {error}") from error
   if size > maximum:
     raise SkillLibraryError(
-      f"Skill 文件过大（{size} bytes），上限为 {maximum} bytes"
+      f"Skill file too large ({size} bytes); limit is {maximum} bytes"
     )
   try:
     with open(path, "r", encoding="utf-8-sig") as source:
       return source.read()
   except (OSError, UnicodeDecodeError) as error:
-    raise SkillLibraryError(f"无法读取 Skill 文件：{error}") from error
+    raise SkillLibraryError(f"Unable to read skill file: {error}") from error
 
 
 def _parse_frontmatter(text: str) -> dict[str, str]:
@@ -110,7 +110,7 @@ def _first_heading(text: str) -> str:
 def _safe_relative(path: str, root: str) -> str:
   relative = os.path.relpath(path, root).replace("\\", "/")
   if relative == ".." or relative.startswith("../") or os.path.isabs(relative):
-    raise SkillLibraryError("Skill 路径越过了 Skill 根目录")
+    raise SkillLibraryError("Skill path escapes the skill root directory")
   return relative
 
 
@@ -305,7 +305,7 @@ def get_skill(
   for skill in discover_skills(skills_root, input_root=input_root):
     if skill["id"] == requested:
       return skill
-  raise FileNotFoundError("Skill 不存在")
+  raise FileNotFoundError("Skill not found")
 
 
 def resolve_skill_file(
@@ -317,7 +317,7 @@ def resolve_skill_file(
   skill = get_skill(skill_id, skills_root, input_root=input_root)
   path = os.path.realpath(str(skill.get("absolutePath") or ""))
   if not os.path.isfile(path):
-    raise FileNotFoundError("Skill 文件不存在")
+    raise FileNotFoundError("Skill file not found")
   return path
 
 
@@ -342,7 +342,7 @@ def _selected_reference_text(
 ) -> str:
   reference = str(reference or "").replace("\\", "/").strip("/")
   if reference not in skill["references"]:
-    raise SkillLibraryError(f"Skill 引用文件不存在：{reference}")
+    raise SkillLibraryError(f"Skill reference file not found: {reference}")
   skill_directory = os.path.realpath(
     os.path.dirname(skill["absolutePath"])
   )
@@ -351,9 +351,9 @@ def _selected_reference_text(
   )
   try:
     if os.path.commonpath((skill_directory, path)) != skill_directory:
-      raise SkillLibraryError("Skill 引用文件路径越界")
+      raise SkillLibraryError("Skill reference file path escapes the skill directory")
   except ValueError as error:
-    raise SkillLibraryError("Skill 引用文件路径无效") from error
+    raise SkillLibraryError("Invalid skill reference file path") from error
   return _read_limited(path, MAX_REFERENCE_FILE_BYTES)
 
 
@@ -384,7 +384,7 @@ def build_skill_context(
   for skill_id in selected_ids:
     available = available_skills.get(skill_id)
     if available is None:
-      raise FileNotFoundError("Skill 不存在")
+      raise FileNotFoundError("Skill not found")
     skill = _load_skill_record(available)
     text = (
       f"<skill id=\"{skill['id']}\" name=\"{skill['name']}\">\n"
@@ -403,7 +403,7 @@ def build_skill_context(
         text += block
     text += "\n</skill>"
     if total_bytes > MAX_SKILL_CONTEXT_BYTES:
-      raise SkillLibraryError("所选 Skill 内容总量过大，请减少 Skill 数量")
+      raise SkillLibraryError("Selected skill content is too large; reduce the number of skills")
     sections.append(text)
     loaded.append(
       {
@@ -413,7 +413,7 @@ def build_skill_context(
       }
     )
   context = (
-    "以下 Skill 是用户明确加载的工作说明。请在不违背系统安全要求和用户请求的前提下遵循：\n\n"
+    "The following Skills are work instructions the user explicitly loaded. Follow them without violating system safety requirements or the user's request:\n\n"
     + "\n\n".join(sections)
   )
   return loaded, context

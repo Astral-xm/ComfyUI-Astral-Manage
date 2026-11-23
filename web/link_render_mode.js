@@ -1,7 +1,7 @@
 import { app } from "../../scripts/app.js";
 
 const MODE = 1001;
-const MODE_TEXT = "直角曲线";
+const MODE_TEXT = "Right-Angle Curve";
 const RADIUS = 5;
 const PORT_STUB = 10 + RADIUS;
 const CLEARANCE = 5;
@@ -368,7 +368,7 @@ function installPatches() {
       try {
         linkData.__astralRounded = buildRoute(linkData);
       } catch (error) {
-        console.warn("[Astral-Manage] 直角曲线路径计算失败", error);
+        console.warn("[Astral-Manage] Right-angle curve path calculation failed", error);
       }
     }
     return originalDrawLink.call(this, ctx, linkData, context);

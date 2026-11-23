@@ -332,7 +332,7 @@ function syncModeToggleWidgets(node) {
     let widget = findModeToggleWidgets(node).find(
       (candidate) => candidate._astralStringModeIndex === entry.index,
     );
-    const label = `Enable ${entry.title.trim() || `未命名模式 ${entry.index}`}`;
+    const label = `Enable ${entry.title.trim() || `Untitled Mode ${entry.index}`}`;
     if (!widget && typeof node.addWidget === "function") {
       widget = node.addWidget(
         "toggle",
@@ -502,13 +502,13 @@ function initializeStringModeSelector(node) {
 
 
 function propertyLabel(property) {
-  if (property === PROMPT_COUNT_PROPERTY) return "模式数量";
-  if (property === ACTIVE_MODE_PROPERTY) return "当前模式";
+  if (property === PROMPT_COUNT_PROPERTY) return "Mode Count";
+  if (property === ACTIVE_MODE_PROPERTY) return "Current Mode";
   const match = String(property).match(/(\d+)$/);
   const index = match ? Number.parseInt(match[1], 10) : null;
   if (!index) return null;
-  if (property.startsWith(TITLE_PREFIX)) return `模式 ${index} 标题`;
-  if (property.startsWith(PROMPT_PREFIX)) return `模式 ${index} 提示词`;
+  if (property.startsWith(TITLE_PREFIX)) return `Mode ${index} Title`;
+  if (property.startsWith(PROMPT_PREFIX)) return `Mode ${index} Prompt`;
   return null;
 }
 

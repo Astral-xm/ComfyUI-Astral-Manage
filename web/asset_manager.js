@@ -95,7 +95,7 @@ function skillPreviewExcerpt(content, limit = 1400) {
   const text = String(content || "").replace(/\r\n?/g, "\n").trim();
   const body = text.replace(/^---\n[\s\S]*?\n---(?:\n|$)/, "").trim();
   const source = body || text;
-  if (!source) return "这个 Skill 的正文为空。";
+  if (!source) return "This Skill has no body content.";
   return source.length > limit
     ? `${source.slice(0, limit).trimEnd()}\n…`
     : source;
@@ -203,7 +203,7 @@ function captureScrollState(element, anchorAttribute = "") {
   const anchors = [...element.querySelectorAll(`[${anchorAttribute}]`)];
   // Use the row that actually crosses the viewport's top edge. Preferring the
   // next fully visible row moves the list whenever the clicked row changes
-  // height, such as when "刷新来源" replaces its metadata with a loading state.
+  // height, such as when "Refresh Sources" replaces its metadata with a loading state.
   const anchor = anchors.find(
     (candidate) => candidate.getBoundingClientRect().bottom > containerTop,
   );
@@ -317,12 +317,12 @@ function formatBytes(value) {
 
 function formatDuration(value) {
   const seconds = Math.max(0, Number(value) || 0);
-  if (seconds < 60) return `${Math.ceil(seconds)} 秒`;
+  if (seconds < 60) return `${Math.ceil(seconds)} sec`;
   const minutes = Math.floor(seconds / 60);
   const remainder = Math.ceil(seconds % 60);
-  if (minutes < 60) return `${minutes} 分 ${remainder} 秒`;
+  if (minutes < 60) return `${minutes} min ${remainder} sec`;
   const hours = Math.floor(minutes / 60);
-  return `${hours} 小时 ${minutes % 60} 分`;
+  return `${hours} h ${minutes % 60} min`;
 }
 
 function formatDate(value) {
@@ -397,17 +397,17 @@ async function fetchJson(path, options = {}) {
     try {
       payload = JSON.parse(text);
     } catch {
-      const contentType = response.headers.get("content-type") || "未知类型";
+      const contentType = response.headers.get("content-type") || "Unknown type";
       const preview = text.replace(/\s+/g, " ").trim().slice(0, 160);
       throw new Error(
-        `后端返回了无法解析的数据（HTTP ${response.status}，${contentType}）` +
-          (preview ? `：${preview}` : ""),
+        `The backend returned unparseable data (HTTP ${response.status}, ${contentType})` +
+          (preview ? `: ${preview}` : ""),
       );
     }
   }
   if (!response.ok || payload?.error) {
     const error = new Error(
-      payload?.error || `请求失败（HTTP ${response.status}）`,
+      payload?.error || `Request failed (HTTP ${response.status})`,
     );
     error.status = response.status;
     error.payload = payload;
@@ -532,9 +532,9 @@ function sourceThumbnailUrl(result, source, sourceName = "") {
     return localUrl;
   }
   const labels = {
-    civitai: "C站",
+    civitai: "Civitai",
     huggingface: "Hugging Face",
-    modelscope: "魔搭",
+    modelscope: "ModelScope",
   };
   const topLevelMatches =
     !sourceName ||
@@ -564,7 +564,7 @@ async function copyText(value) {
   textarea.select();
   const copied = document.execCommand?.("copy");
   textarea.remove();
-  if (!copied) throw new Error("浏览器拒绝了剪贴板写入");
+  if (!copied) throw new Error("The browser denied clipboard access.");
 }
 
 function sourceLink(url, label) {
@@ -616,7 +616,7 @@ function createCustomDropdown(className = "") {
       options.find((option) => option.value === currentValue) ||
       options.find((option) => !option.disabled);
     if (!selected) {
-      label.textContent = "无可用选项";
+      label.textContent = "No options available";
       return;
     }
     currentValue = selected.value;
@@ -730,16 +730,16 @@ class AssetBrowser {
     const toolbar = createElement("div", "astral-am-toolbar");
     const search = createElement("input", "astral-am-search");
     search.type = "search";
-    search.placeholder = "搜索文件名或子目录";
+    search.placeholder = "Search file names or subdirectories";
     search.autocomplete = "off";
-    search.setAttribute("aria-label", "筛选素材关键词");
+    search.setAttribute("aria-label", "Filter assets by keyword");
 
     const kind = createElement("select", "astral-am-select");
-    kind.setAttribute("aria-label", "素材类型");
+    kind.setAttribute("aria-label", "Asset type");
     for (const [value, label] of [
-      ["all", "全部类型"],
-      ["image", "图片"],
-      ["video", "视频"],
+      ["all", "All Types"],
+      ["image", "Image"],
+      ["video", "Video"],
     ]) {
       const option = createElement("option", "", label);
       option.value = value;
@@ -747,18 +747,18 @@ class AssetBrowser {
     }
 
     const root = createElement("select", "astral-am-select");
-    root.setAttribute("aria-label", "素材目录");
+    root.setAttribute("aria-label", "Asset directory");
     for (const [value, label] of [
       ["all", "input + output"],
-      ["input", "仅 input"],
-      ["output", "仅 output"],
+      ["input", "input only"],
+      ["output", "output only"],
     ]) {
       const option = createElement("option", "", label);
       option.value = value;
       root.append(option);
     }
 
-    const refresh = createElement("button", "astral-am-button", "刷新");
+    const refresh = createElement("button", "astral-am-button", "Refresh");
     refresh.type = "button";
     toolbar.append(root, kind, search, refresh);
 
@@ -768,16 +768,16 @@ class AssetBrowser {
     directoryNav.append(breadcrumb, tree);
 
     const fileActions = createElement("div", "astral-am-file-actions");
-    const selectAll = createElement("button", "astral-am-button is-small", "全选");
+    const selectAll = createElement("button", "astral-am-button is-small", "Select All");
     const invertSelection = createElement(
       "button",
       "astral-am-button is-small",
-      "反选",
+      "Invert",
     );
-    const clearSelection = createElement("button", "astral-am-button is-small", "清除选择");
-    const renameSelected = createElement("button", "astral-am-button is-small", "重命名");
-    const renamePrefix = createElement("button", "astral-am-button is-small", "按前缀改名");
-    const deleteSelected = createElement("button", "astral-am-button is-small is-danger", "删除选中");
+    const clearSelection = createElement("button", "astral-am-button is-small", "Clear Selection");
+    const renameSelected = createElement("button", "astral-am-button is-small", "Rename");
+    const renamePrefix = createElement("button", "astral-am-button is-small", "Batch Prefix Rename");
+    const deleteSelected = createElement("button", "astral-am-button is-small is-danger", "Delete Selected");
     for (const button of [
       selectAll,
       invertSelection,
@@ -788,9 +788,9 @@ class AssetBrowser {
     ]) {
       button.type = "button";
     }
-    renameSelected.title = "重命名一个选中的图片或视频";
-    renamePrefix.title = "按 image1、image2 的递增规则批量重命名选中的图片";
-    deleteSelected.title = "将选中素材移到 Windows 回收站";
+    renameSelected.title = "Rename one selected image or video.";
+    renamePrefix.title = "Batch-rename selected images as image1, image2, and so on.";
+    deleteSelected.title = "Move selected assets to the Windows Recycle Bin.";
     fileActions.append(
       selectAll,
       invertSelection,
@@ -869,28 +869,28 @@ class AssetBrowser {
     const toolbar = createElement("div", "astral-am-toolbar");
     const search = createElement("input", "astral-am-search");
     search.type = "search";
-    search.placeholder = "搜索文件名或子目录";
+    search.placeholder = "Search file names or subdirectories";
     search.autocomplete = "off";
-    search.setAttribute("aria-label", "筛选素材关键词");
+    search.setAttribute("aria-label", "Filter assets by keyword");
 
     const kind = createCustomDropdown("astral-am-category-dropdown");
-    kind.element.setAttribute("aria-label", "素材类型");
+    kind.element.setAttribute("aria-label", "Asset type");
     kind.setOptions([
-      { value: "all", label: "全部类型" },
-      { value: "image", label: "图片" },
-      { value: "video", label: "视频" },
-      { value: "audio", label: "音频" },
+      { value: "all", label: "All Types" },
+      { value: "image", label: "Image" },
+      { value: "video", label: "Video" },
+      { value: "audio", label: "Audio" },
     ]);
 
     const root = createCustomDropdown("astral-am-category-dropdown");
-    root.element.setAttribute("aria-label", "素材目录");
+    root.element.setAttribute("aria-label", "Asset directory");
     root.setOptions([
       { value: "all", label: "input + output" },
       { value: "input", label: "input" },
       { value: "output", label: "output" },
     ]);
 
-    const refresh = createElement("button", "astral-am-button", "刷新");
+    const refresh = createElement("button", "astral-am-button", "Refresh");
     refresh.type = "button";
     toolbar.append(root.element, kind.element, search, refresh);
 
@@ -904,20 +904,20 @@ class AssetBrowser {
     const content = createElement("div", "astral-am-model-content");
 
     const fileActions = createElement("div", "astral-am-file-actions");
-    const selectAll = createElement("button", "astral-am-button is-small", "全选");
+    const selectAll = createElement("button", "astral-am-button is-small", "Select All");
     const invertSelection = createElement(
       "button",
       "astral-am-button is-small",
-      "反选",
+      "Invert",
     );
-    const clearSelection = createElement("button", "astral-am-button is-small", "清除选择");
-    const renameSelected = createElement("button", "astral-am-button is-small", "重命名");
-    const renamePrefix = createElement("button", "astral-am-button is-small", "按前缀改名");
-    const addToChat = createElement("button", "astral-am-button is-small", "加入对话");
+    const clearSelection = createElement("button", "astral-am-button is-small", "Clear Selection");
+    const renameSelected = createElement("button", "astral-am-button is-small", "Rename");
+    const renamePrefix = createElement("button", "astral-am-button is-small", "Batch Prefix Rename");
+    const addToChat = createElement("button", "astral-am-button is-small", "Add to Chat");
     const deleteSelected = createElement(
       "button",
       "astral-am-button is-small is-danger",
-      "删除选中",
+      "Delete Selected",
     );
     for (const button of [
       selectAll,
@@ -930,10 +930,10 @@ class AssetBrowser {
     ]) {
       button.type = "button";
     }
-    renameSelected.title = "重命名一个选中的图片、视频或音频";
-    renamePrefix.title = "按 image1、image2 的递增规则批量重命名选中的图片";
-    addToChat.title = "将勾选的素材追加到当前 API 对话";
-    deleteSelected.title = "将选中素材移到 Windows 回收站";
+    renameSelected.title = "Rename one selected image, video, or audio file.";
+    renamePrefix.title = "Batch-rename selected images as image1, image2, and so on.";
+    addToChat.title = "Append selected assets to the current API chat.";
+    deleteSelected.title = "Move selected assets to the Windows Recycle Bin.";
     fileActions.append(
       selectAll,
       invertSelection,
@@ -1029,14 +1029,14 @@ class AssetBrowser {
     this.chatSelectionTarget = promptBrowser || this.root.promptBrowser;
     this.clearSelection();
     this.setStatus(
-      `请勾选要加入当前 API 对话的素材，最多 ${this.chatSelectionTarget.chatComposerAttachmentLimit} 个。`,
+      `Select assets to add to the current API chat, up to ${this.chatSelectionTarget.chatComposerAttachmentLimit}.`,
     );
   }
 
   async addSelectedToChat() {
     const items = this.selectedItems();
     if (!items.length) {
-      this.setStatus("请先勾选要加入对话的素材。", "warning");
+      this.setStatus("Select assets to add to chat first.", "warning");
       return;
     }
     await this.addItemsToChat(items);
@@ -1049,7 +1049,7 @@ class AssetBrowser {
       if (Array.isArray(result?.retainedItems) && result.retainedItems.length) {
         this.setSelectedItems(result.retainedItems);
       }
-      this.setStatus(result?.message || "加入对话失败。", "warning");
+      this.setStatus(result?.message || "Failed to add to chat.", "warning");
       if (result?.message) promptBrowser.setChatStatus(result.message, "warning");
       return;
     }
@@ -1092,22 +1092,22 @@ class AssetBrowser {
     this.addToChatButton.disabled = busy || !count;
     this.deleteButton.disabled = busy || !count;
     this.selectAllButton.textContent = this.selectionLoading
-      ? "正在全选..."
+      ? "Selecting all..."
       : allSelected
-        ? `已全选 (${this.total})`
+        ? `All Selected (${this.total})`
         : this.total
-          ? `全选 (${this.total})`
-          : "全选";
+          ? `Select All (${this.total})`
+          : "Select All";
     this.addToChatButton.textContent = count
       ? count > chatAttachmentLimit
-        ? `加入对话 (前 ${chatAttachmentLimit}/${count})`
-        : `加入对话 (${count})`
-      : "加入对话";
-    this.deleteButton.textContent = count ? `删除选中 (${count})` : "删除选中";
+        ? `Add to Chat (first ${chatAttachmentLimit}/${count})`
+        : `Add to Chat (${count})`
+      : "Add to Chat";
+    this.deleteButton.textContent = count ? `Delete Selected (${count})` : "Delete Selected";
     if (this.total) {
       this.summary.textContent =
-        `共 ${this.total} 个素材，已显示 ${this.items.length} 个` +
-        (count ? ` · 已选 ${count} 个` : "");
+        `${this.total} assets total, showing ${this.items.length}` +
+        (count ? ` · ${count} selected` : "");
     }
     this.actionBar.dataset.selectedCount = String(count);
   }
@@ -1207,8 +1207,8 @@ class AssetBrowser {
     this.updateSelectionControls();
     this.setStatus(
       invert
-        ? "正在读取当前路径的全部素材并反选..."
-        : "正在读取当前路径的全部素材...",
+        ? "Loading every asset in the current path and inverting selection..."
+        : "Loading every asset in the current path...",
       "loading",
     );
     try {
@@ -1224,13 +1224,13 @@ class AssetBrowser {
       this.syncSelectionCards();
       this.setStatus(
         invert
-          ? `反选完成，当前选中 ${this.selected.size} 个素材。`
-          : `已全选当前路径的 ${this.selected.size} 个素材，包括尚未加载显示的文件。`,
+          ? `Inverted selection, ${this.selected.size} assets selected.`
+          : `Selected all ${this.selected.size} assets in the current path, including files not yet loaded.`,
         "success",
       );
     } catch (error) {
       this.setStatus(
-        `${invert ? "反选" : "全选"}失败：${error.message || error}`,
+        `${invert ? "Invert" : "Select All"} failed: ${error.message || error}`,
         "error",
       );
     } finally {
@@ -1253,14 +1253,14 @@ class AssetBrowser {
       });
       this.setStatus(
         select && path && result?.revealMode === "selected"
-          ? `已在系统文件管理器中定位：${root}/${path}`
+          ? `Revealed in system file manager: ${root}/${path}`
           : select && path
-            ? `已打开文件所在目录：${result?.absolutePath || `${endpointRoot}/${path}`}`
-            : `已打开系统文件管理器：${result?.absolutePath || `${endpointRoot}/${path}`}`,
+            ? `Opened containing folder: ${result?.absolutePath || `${endpointRoot}/${path}`}`
+            : `Opened system file manager: ${result?.absolutePath || `${endpointRoot}/${path}`}`,
         "success",
       );
     } catch (error) {
-      this.setStatus(`打开系统文件管理器失败：${error.message || error}`, "error");
+      this.setStatus(`Failed to open system file manager: ${error.message || error}`, "error");
     }
   }
 
@@ -1285,7 +1285,7 @@ class AssetBrowser {
     const loadedCount = this.items.length;
     this.operationBusy = true;
     this.updateSelectionControls();
-    this.setStatus(`正在${label}...`, "loading");
+    this.setStatus(`${label} in progress...`, "loading");
     try {
       const result = await fetchJson(endpoint, {
         method: "POST",
@@ -1294,9 +1294,9 @@ class AssetBrowser {
       });
       this.selected.clear();
       await this.reloadPreservingLoadedCount(loadedCount, true);
-      this.setStatus(`${label}完成，共处理 ${Number(result?.count) || 0} 个素材。`, "success");
+      this.setStatus(`${label} complete, processed ${Number(result?.count) || 0} assets.`, "success");
     } catch (error) {
-      this.setStatus(`${label}失败：${error.message || error}`, "error");
+      this.setStatus(`${label} failed: ${error.message || error}`, "error");
     } finally {
       this.operationBusy = false;
       this.updateSelectionControls();
@@ -1308,14 +1308,14 @@ class AssetBrowser {
     if (items.length !== 1 || this.operationBusy) return;
     const item = items[0];
     const newName = await showAstralPrompt({
-      title: "重命名素材",
-      message: `输入“${item.name}”的新文件名。省略扩展名时会保留原扩展名。`,
-      label: "新文件名",
+      title: "Rename Asset",
+      message: `Enter a new file name for "${item.name}". If you omit the extension, the original extension will be kept.`,
+      label: "New file name",
       initialValue: item.name,
-      confirmLabel: "重命名",
+      confirmLabel: "Rename",
     });
     if (newName === null || !newName.trim() || newName.trim() === item.name) return;
-    await this.runAssetOperation("重命名", "/assets-astral/assets/rename", {
+    await this.runAssetOperation("Rename", "/assets-astral/assets/rename", {
       mode: "single",
       items: assetSelectionPayload(items),
       newName: newName.trim(),
@@ -1325,14 +1325,14 @@ class AssetBrowser {
   async renameItem(item) {
     if (this.operationBusy) return;
     const newName = await showAstralPrompt({
-      title: "重命名素材",
-      message: `输入“${item.name}”的新文件名。省略扩展名时会保留原扩展名。`,
-      label: "新文件名",
+      title: "Rename Asset",
+      message: `Enter a new file name for "${item.name}". If you omit the extension, the original extension will be kept.`,
+      label: "New file name",
       initialValue: item.name,
-      confirmLabel: "重命名",
+      confirmLabel: "Rename",
     });
     if (newName === null || !newName.trim() || newName.trim() === item.name) return;
-    await this.runAssetOperation("重命名", "/assets-astral/assets/rename", {
+    await this.runAssetOperation("Rename", "/assets-astral/assets/rename", {
       mode: "single",
       items: assetSelectionPayload([item]),
       newName: newName.trim(),
@@ -1343,18 +1343,18 @@ class AssetBrowser {
     const items = this.selectedItems();
     if (!items.length || this.operationBusy) return;
     if (!items.every((item) => item.kind === "image")) {
-      this.setStatus("按前缀批量改名目前只支持选中的图片。", "warning");
+      this.setStatus("Batch prefix rename currently supports selected images only.", "warning");
       return;
     }
     const prefix = await showAstralPrompt({
-      title: "按前缀批量重命名",
-      message: "将按选择顺序生成 image1、image2…",
-      label: "文件名前缀",
+      title: "Batch Rename by Prefix",
+      message: "Files will be generated as image1, image2, and so on in selection order.",
+      label: "File name prefix",
       initialValue: "image",
-      confirmLabel: "开始重命名",
+      confirmLabel: "Start Rename",
     });
     if (prefix === null || !prefix.trim()) return;
-    await this.runAssetOperation("按前缀批量改名", "/assets-astral/assets/rename", {
+    await this.runAssetOperation("Batch rename by prefix", "/assets-astral/assets/rename", {
       mode: "prefix",
       items: assetSelectionPayload(items),
       prefix: prefix.trim(),
@@ -1366,18 +1366,18 @@ class AssetBrowser {
     const items = this.selectedItems();
     if (!items.length || this.operationBusy) return;
     const confirmed = await showAstralConfirm({
-      title: "移至回收站",
+      title: "Move to Recycle Bin",
       message:
-        `将选中的 ${items.length} 个素材移到 Windows 回收站？\n\n` +
-        "此操作会从 input/output 中移除文件；确认后执行。",
-      confirmLabel: "移至回收站",
+        `Move the selected ${items.length} assets to the Windows Recycle Bin?\n\n` +
+        "This removes files from input/output after confirmation.",
+      confirmLabel: "Move to Recycle Bin",
     });
     if (!confirmed) return;
     const loadedCount = this.items.length;
     let processed = 0;
     this.operationBusy = true;
     this.updateSelectionControls();
-    this.setStatus(`正在将 ${items.length} 个素材移到回收站...`, "loading");
+    this.setStatus(`Moving ${items.length} assets to the Recycle Bin...`, "loading");
     try {
       for (
         let index = 0;
@@ -1398,14 +1398,14 @@ class AssetBrowser {
         });
         processed += Number(result?.count) || chunk.length;
         this.setStatus(
-          `正在移至回收站：${processed}/${items.length}`,
+          `Moving to Recycle Bin: ${processed}/${items.length}`,
           "loading",
         );
       }
       this.selected.clear();
       await this.reloadPreservingLoadedCount(loadedCount, true);
       this.setStatus(
-        `删除完成，共将 ${processed} 个素材移到 Windows 回收站。`,
+        `Deletion complete, moved ${processed} assets to the Windows Recycle Bin.`,
         "success",
       );
     } catch (error) {
@@ -1415,7 +1415,7 @@ class AssetBrowser {
       } catch {
         // Keep the original backend error visible.
       }
-      this.setStatus(`删除失败：${error.message || error}`, "error");
+      this.setStatus(`Delete failed: ${error.message || error}`, "error");
     } finally {
       this.operationBusy = false;
       this.updateSelectionControls();
@@ -1441,7 +1441,7 @@ class AssetBrowser {
       if (!scrollState) this.grid.replaceChildren();
     }
     this.refreshButton.disabled = true;
-    this.setStatus(reset ? "正在读取素材..." : "正在加载更多素材...", "loading");
+    this.setStatus(reset ? "Loading assets..." : "Loading more assets...", "loading");
 
     try {
       const payload = await fetchJson(
@@ -1486,12 +1486,12 @@ class AssetBrowser {
       }
       this.updateSelectionControls();
       this.setStatus(
-        page.length ? "" : this.items.length ? "没有更多素材" : "没有找到符合条件的素材",
+        page.length ? "" : this.items.length ? "No more assets" : "No matching assets found",
         page.length ? "" : "empty",
       );
     } catch (error) {
       if (requestId === this.requestId) {
-        this.setStatus(`读取失败：${error.message || error}`, "error");
+        this.setStatus(`Read failed: ${error.message || error}`, "error");
       }
     } finally {
       if (requestId === this.requestId) {
@@ -1505,7 +1505,7 @@ class AssetBrowser {
   async loadTree() {
     const selectedRoot = this.assetRoot.value;
     const roots = selectedRoot === "all" ? ["input", "output"] : [selectedRoot];
-    this.tree.replaceChildren(createElement("span", "astral-am-muted", "正在读取目录..."));
+    this.tree.replaceChildren(createElement("span", "astral-am-muted", "Loading folders..."));
     try {
       const payloads = await Promise.all(
         roots.map((root) =>
@@ -1520,7 +1520,7 @@ class AssetBrowser {
       this.renderTree(payloads);
     } catch (error) {
       this.tree.replaceChildren(
-        createElement("span", "astral-am-source-error", `目录读取失败：${error.message || error}`),
+        createElement("span", "astral-am-source-error", `Failed to read directory: ${error.message || error}`),
       );
     }
   }
@@ -1560,13 +1560,13 @@ class AssetBrowser {
       locationLine = createElement(
         "span",
         "astral-am-location-path",
-        "正在浏览 input 与 output 的全部子目录",
+        "Browsing all input and output subdirectories",
       );
     } else if (!currentParts.length) {
       locationLine = createElement(
         "span",
         "astral-am-location-path",
-        `当前目录：${this.assetRoot.value} /（根目录）`,
+        `Current directory: ${this.assetRoot.value} / (root)`,
       );
     }
     this.breadcrumb.replaceChildren(crumbs);
@@ -1595,7 +1595,7 @@ class AssetBrowser {
       rootHeader.addEventListener("click", () => this.navigate(root, treePath));
       const openRoot = createElement("button", "astral-am-tree-open", "📁");
       openRoot.type = "button";
-    openRoot.title = `在系统文件管理器中打开 ${treeLocation}`;
+    openRoot.title = `Open ${treeLocation} in system file manager`;
       openRoot.addEventListener(
         "click",
         () => void this.openLocation(root, treePath, false),
@@ -1604,7 +1604,7 @@ class AssetBrowser {
       group.append(rootRow);
       const directories = Array.isArray(payload?.directories) ? payload.directories : [];
       if (!directories.length) {
-        group.append(createElement("span", "astral-am-muted astral-am-tree-empty", "没有子目录"));
+        group.append(createElement("span", "astral-am-muted astral-am-tree-empty", "No subdirectories"));
       } else {
         const list = createElement("div", "astral-am-tree-children");
         for (const directory of directories) {
@@ -1619,7 +1619,7 @@ class AssetBrowser {
           button.addEventListener("click", () => this.navigate(root, directory.path));
           const openDirectory = createElement("button", "astral-am-tree-open", "📁");
           openDirectory.type = "button";
-    openDirectory.title = `在系统文件管理器中打开 ${root}/${directory.path}`;
+    openDirectory.title = `Open ${root}/${directory.path} in system file manager`;
           openDirectory.addEventListener(
             "click",
             () => void this.openLocation(root, directory.path, false),
@@ -1644,7 +1644,7 @@ class AssetBrowser {
 
     const preview = createElement("button", "astral-am-card-main");
     preview.type = "button";
-    preview.title = "点击预览";
+    preview.title = "Click to preview";
 
     const media = createElement("div", "astral-am-card-media");
     if (item.kind === "audio") {
@@ -1675,7 +1675,7 @@ class AssetBrowser {
       const play = createElement("span", "astral-am-play", "▶");
       media.append(play);
     }
-    const kindLabels = { image: "图片", video: "视频", audio: "音频" };
+    const kindLabels = { image: "Image", video: "Video", audio: "Audio" };
     const badges = createElement("div", "astral-am-card-badges");
     badges.append(
       createElement("span", "astral-am-badge", item.root.toUpperCase()),
@@ -1698,11 +1698,11 @@ class AssetBrowser {
     });
 
     const selection = createElement("label", "astral-am-card-select");
-    selection.title = "勾选后可批量加入对话、删除或按前缀改名";
+    selection.title = "Select assets to add them to chat, delete them, or batch-rename by prefix.";
     const checkbox = createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = selected;
-    checkbox.setAttribute("aria-label", `选择 ${item.name}`);
+    checkbox.setAttribute("aria-label", `Select ${item.name}`);
     checkbox.addEventListener("change", () => {
       this.setCardSelected(item, checkbox.checked);
     });
@@ -1712,11 +1712,11 @@ class AssetBrowser {
     const copyMedia = createElement(
       "button",
       "astral-am-card-action",
-      item.kind === "video" ? "复制视频" : "复制图片",
+      item.kind === "video" ? "Copy Video" : "Copy Image",
     );
     copyMedia.type = "button";
     copyMedia.title =
-      item.kind === "video" ? "将此视频复制到系统剪贴板" : "将此图片复制到系统剪贴板";
+      item.kind === "video" ? "Copy this video to the system clipboard." : "Copy this image to the system clipboard.";
     copyMedia.addEventListener(
       "click",
       () =>
@@ -1724,17 +1724,17 @@ class AssetBrowser {
           this.setStatus(message, kind);
         }),
     );
-    const insertNode = createElement("button", "astral-am-card-action", "放入画布");
+    const insertNode = createElement("button", "astral-am-card-action", "Add to Canvas");
     insertNode.type = "button";
-    insertNode.title = "使用官方加载节点放入当前画布";
+    insertNode.title = "Add to the current canvas using the official loader node.";
     insertNode.addEventListener("click", () => {
       this.root.viewer.insertLoader(item, (message, kind) => {
         this.setStatus(message, kind);
       });
     });
-    const addToChat = createElement("button", "astral-am-card-action", "加入对话");
+    const addToChat = createElement("button", "astral-am-card-action", "Add to Chat");
     addToChat.type = "button";
-    addToChat.title = "将此素材追加到当前 API 对话";
+    addToChat.title = "Append this asset to the current API chat.";
     addToChat.addEventListener(
       "click",
       () => void this.addItemsToChat([item]),
@@ -1767,30 +1767,30 @@ class LegacyPromptBrowser {
     const toolbar = createElement("div", "astral-am-toolbar");
     const search = createElement("input", "astral-am-search");
     search.type = "search";
-    search.placeholder = "搜索提示词或素材路径";
+    search.placeholder = "Search prompts or asset paths";
     search.autocomplete = "off";
-    search.setAttribute("aria-label", "搜索提示词");
+    search.setAttribute("aria-label", "Search prompts");
 
     const root = createElement("select", "astral-am-select");
-    root.setAttribute("aria-label", "提示词素材目录");
+    root.setAttribute("aria-label", "Prompt asset directory");
     for (const [value, label] of [
       ["all", "input + output"],
-      ["input", "仅 input"],
-      ["output", "仅 output"],
+      ["input", "input only"],
+      ["output", "output only"],
     ]) {
       const option = createElement("option", "", label);
       option.value = value;
       root.append(option);
     }
 
-    const refresh = createElement("button", "astral-am-button", "刷新");
+    const refresh = createElement("button", "astral-am-button", "Refresh");
     refresh.type = "button";
     toolbar.append(search, root, refresh);
 
     const note = createElement(
       "p",
       "astral-am-note",
-      "从图片和视频的内嵌元数据、工作流及同名 JSON 文件中提取提示词。预览素材时会载入现有媒体查看器。",
+      "Extract prompts from embedded image/video metadata, workflows, and matching JSON files. Preview opens in the existing media viewer.",
     );
     const summary = createElement("div", "astral-am-summary");
     const status = createElement("div", "astral-am-status");
@@ -1843,7 +1843,7 @@ class LegacyPromptBrowser {
       if (!scrollState) this.list.replaceChildren();
     }
     this.refreshButton.disabled = true;
-    this.setStatus(reset ? "正在扫描素材提示词..." : "正在加载更多提示词...", "loading");
+    this.setStatus(reset ? "Scanning asset prompts..." : "Loading more prompts...", "loading");
     try {
       const payload = await fetchJson(
         `/assets-astral/prompts?${queryString({
@@ -1881,15 +1881,15 @@ class LegacyPromptBrowser {
         );
       }
       this.summary.textContent =
-        `共 ${this.total} 条提示词，已显示 ${this.items.length} 条` +
-        (payload?.scannedAssets ? ` · 扫描 ${payload.scannedAssets} 个素材` : "");
+        `${this.total} prompts total, showing ${this.items.length}` +
+        (payload?.scannedAssets ? ` · scanned ${payload.scannedAssets} assets` : "");
       this.setStatus(
-        page.length ? "" : this.items.length ? "没有更多提示词" : "没有找到符合条件的提示词",
+        page.length ? "" : this.items.length ? "No more prompts" : "No matching prompts found",
         page.length ? "" : "empty",
       );
     } catch (error) {
       if (requestId === this.requestId) {
-        this.setStatus(`读取失败：${error.message || error}`, "error");
+        this.setStatus(`Read failed: ${error.message || error}`, "error");
       }
     } finally {
       if (requestId === this.requestId) {
@@ -1916,20 +1916,20 @@ class LegacyPromptBrowser {
     footer.append(createElement("span", "astral-am-prompt-source", entry.asset.path));
 
     const actions = createElement("div", "astral-am-prompt-actions");
-    const copy = createElement("button", "astral-am-button is-small", "复制提示词");
+    const copy = createElement("button", "astral-am-button is-small", "Copy Prompt");
     copy.type = "button";
     copy.addEventListener("click", async () => {
       try {
         await copyText(entry.prompt);
-        copy.textContent = "已复制";
+        copy.textContent = "Copied";
         window.setTimeout(() => {
-          copy.textContent = "复制提示词";
+          copy.textContent = "Copy Prompt";
         }, 1200);
       } catch (error) {
-        this.setStatus(`复制失败：${error.message || error}`, "error");
+        this.setStatus(`Copy failed: ${error.message || error}`, "error");
       }
     });
-    const preview = createElement("button", "astral-am-button is-small", "预览素材");
+    const preview = createElement("button", "astral-am-button is-small", "Preview Asset");
     preview.type = "button";
     preview.addEventListener("click", () => this.root.viewer.open(entry.asset));
     actions.append(copy, preview);
@@ -1940,58 +1940,58 @@ class LegacyPromptBrowser {
 }
 
 const PROMPT_CATEGORY_OPTIONS = [
-  { value: "text", label: "文本" },
-  { value: "image", label: "图片" },
-  { value: "audio", label: "音频" },
-  { value: "video", label: "视频" },
-  { value: "expand", label: "提示词扩写" },
-  { value: "invert", label: "图像反推" },
+  { value: "text", label: "Text" },
+  { value: "image", label: "Image" },
+  { value: "audio", label: "Audio" },
+  { value: "video", label: "Video" },
+  { value: "expand", label: "Expand Prompt" },
+  { value: "invert", label: "Image Inversion" },
 ];
 
 const API_TASK_DEFINITIONS = [
   {
     id: "text",
-    label: "纯文本模式",
-    hint: "翻译、提示词扩写与优化",
+    label: "Text-only Mode",
+    hint: "Translation, prompt expansion, and refinement",
     legacyIds: ["optimize", "translate"],
     legacyWriteIds: ["optimize", "translate"],
   },
   {
     id: "image",
-    label: "图片模式",
-    hint: "图像反推提示词",
+    label: "Image Mode",
+    hint: "Reverse-engineer prompts from images",
     legacyIds: ["invert"],
     legacyWriteIds: ["invert"],
   },
   {
     id: "multimodal",
-    label: "多模态模式",
-    hint: "图像、视频、音频识别",
+    label: "Multimodal Mode",
+    hint: "Image, video, and audio understanding",
     legacyIds: ["chat"],
     legacyWriteIds: ["chat"],
   },
 ];
 const LOCAL_CHAT_MODE_DEFINITION = Object.freeze({
   id: "local",
-  label: "本地模式",
-  hint: "使用 ComfyUI/models/LLM 中的 GGUF",
+  label: "Local Mode",
+  hint: "Use GGUF models in ComfyUI/models/LLM",
 });
 const CHAT_MODE_DEFINITIONS = [
   ...API_TASK_DEFINITIONS,
   LOCAL_CHAT_MODE_DEFINITION,
 ];
 const TRANSLATION_LANGUAGES = [
-  { value: "en", label: "英语 (English)" },
-  { value: "zh", label: "简体中文" },
-  { value: "ja", label: "日语 (日本語)" },
-  { value: "ko", label: "韩语 (한국어)" },
-  { value: "fr", label: "法语 (Français)" },
-  { value: "de", label: "德语 (Deutsch)" },
-  { value: "es", label: "西班牙语 (Español)" },
-  { value: "ru", label: "俄语 (Русский)" },
-  { value: "pt", label: "葡萄牙语 (Português)" },
-  { value: "it", label: "意大利语 (Italiano)" },
-  { value: "ar", label: "阿拉伯语 (العربية)" },
+  { value: "en", label: "English" },
+  { value: "zh", label: "Simplified Chinese" },
+  { value: "ja", label: "Japanese (日本語)" },
+  { value: "ko", label: "Korean (한국어)" },
+  { value: "fr", label: "French (Français)" },
+  { value: "de", label: "German (Deutsch)" },
+  { value: "es", label: "Spanish (Español)" },
+  { value: "ru", label: "Russian (Русский)" },
+  { value: "pt", label: "Portuguese (Português)" },
+  { value: "it", label: "Italian (Italiano)" },
+  { value: "ar", label: "Arabic (العربية)" },
 ];
 const DEFAULT_LOCAL_LLM_CONFIG = Object.freeze({
   modelPath: "",
@@ -2035,41 +2035,41 @@ const DEFAULT_API_RUNTIME_SETTINGS = Object.freeze({
   reasoningEffort: "default",
   sourceLanguage: "auto",
   targetLanguage: "zh",
-  systemPrompt: "你是一个严谨、有帮助的 AI 助手。",
+  systemPrompt: "You are a rigorous and helpful AI assistant.",
 });
 
 const LOCAL_LLM_PARAMETER_HINTS = Object.freeze({
-  nCtx: "模型一次可处理的最大上下文 Token 数。数值越大越占内存或显存。",
-  nBatch: "提示词批处理大小。增大通常提高吞吐，但会占用更多内存。",
-  nUbatch: "微批大小，影响推理速度和显存占用。通常保持默认即可。",
-  maxTokens: "单次回复最多生成的 Token 数，不包含输入的 Token。",
-  maxRounds: "多轮对话发送时携带的历史轮数；Prompt Processor 不携带历史。",
-  temperature: "控制随机性。数值越低越稳定，越高越有创意和发散性。",
-  topP: "核采样阈值。通常与 Temperature 只调整其中一个，常用 0.9–0.95。",
-  topK: "每一步只从概率最高的 K 个候选 Token 中采样。",
-  minP: "过滤概率低于最高候选指定比例的 Token，用于减少低概率噪声。",
-  repeatPenalty: "降低最近出现过的 Token 再次重复的概率。",
-  frequencyPenalty: "按 Token 出现频率进行惩罚，可减少重复用词。",
-  presencePenalty: "Token 只要出现过就进行惩罚，可鼓励模型引入新内容。",
-  gpuLayers: "-1 表示尽可能全部卸载到 GPU；0 表示只使用 CPU。",
-  threads: "CPU 推理线程数。0 表示由推理库自动选择。",
-  seed: "本地采样种子。固定值可复现，修改后可生成不同结果。",
-  maxImageEdge: "图片送入模型前的最长边像素。越小越快，也越省内存。",
-  imageJpegQuality: "图片转换为 JPEG 时的质量。越高越清晰，请求数据也越大。",
-  contextCheckpoints: "llama.cpp 上下文检查点数量，用于复用长上下文；0 表示关闭。",
-  flashAttention: "注意力计算加速选项。不兼容时可选择关闭或自动。",
-  kvCacheTypeK: "K 侧 KV Cache 类型。Q8_0 可节省显存，但可能有少量精度损失。",
-  kvCacheTypeV: "V 侧 KV Cache 类型。Q8_0 可节省显存，但可能有少量精度损失。",
-  reasoningEffort: "Qwen3.8 的推理强度。XHigh 偏质量，Low 偏速度。",
-  enableThinking: "启用模型思考过程。对 Qwen3.8、Qwen3.5/3.6 与 Gemma4 生效。",
-  preserveThinking: "在历史上下文中保留 think 内容；关闭可节省上下文。",
-  useMmap: "使用内存映射加载模型。默认开启；关闭会更快消耗物理内存。",
+  nCtx: "Maximum context tokens the model can process at once. Larger values use more memory or VRAM.",
+  nBatch: "Prompt batch size. Increasing it usually improves throughput but uses more memory.",
+  nUbatch: "Micro-batch size, affecting inference speed and VRAM usage. Usually best left at the default.",
+  maxTokens: "Maximum tokens generated per reply, excluding input tokens.",
+  maxRounds: "Number of history rounds included when sending multi-turn chats; Prompt Processor sends no history.",
+  temperature: "Controls randomness. Lower values are more stable; higher values are more creative and varied.",
+  topP: "Nucleus sampling threshold. Usually adjust only one of Temperature or Top P; 0.9–0.95 is common.",
+  topK: "Sample each step only from the K most probable candidate tokens.",
+  minP: "Filters out tokens whose probability is below the given fraction of the top candidate, reducing low-probability noise.",
+  repeatPenalty: "Reduces the chance of recently seen tokens repeating.",
+  frequencyPenalty: "Penalizes tokens by how often they appear, reducing repeated wording.",
+  presencePenalty: "Penalizes any token that has already appeared, encouraging the model to introduce new content.",
+  gpuLayers: "-1 offloads as many layers as possible to the GPU; 0 uses CPU only.",
+  threads: "Number of CPU inference threads. 0 lets the inference library choose automatically.",
+  seed: "Local sampling seed. A fixed value is reproducible; changing it produces different results.",
+  maxImageEdge: "Longest edge in pixels before an image is sent to the model. Smaller is faster and uses less memory.",
+  imageJpegQuality: "Quality when converting images to JPEG. Higher is clearer but makes requests larger.",
+  contextCheckpoints: "Number of llama.cpp context checkpoints for reusing long contexts; 0 disables.",
+  flashAttention: "Attention computation acceleration option. Choose off or auto if incompatible.",
+  kvCacheTypeK: "KV Cache type for K. Q8_0 saves VRAM but may lose a little precision.",
+  kvCacheTypeV: "KV Cache type for V. Q8_0 saves VRAM but may lose a little precision.",
+  reasoningEffort: "Reasoning effort for Qwen3.8. XHigh favors quality, Low favors speed.",
+  enableThinking: "Enable the model's thinking process. Works for Qwen3.8, Qwen3.5/3.6 and Gemma4.",
+  preserveThinking: "Keep think content in the history context; turn off to save context.",
+  useMmap: "Load the model with memory mapping. On by default; turning it off consumes physical memory faster.",
 });
 function promptCategoryLabel(category) {
   return (
     PROMPT_CATEGORY_OPTIONS.find((option) => option.value === category)?.label ||
     category ||
-    "文本"
+    "Text"
   );
 }
 
@@ -2154,23 +2154,23 @@ class PromptBrowser {
       "astral-am-pane astral-am-prompts-pane",
     );
     const modeTabs = createElement("nav", "astral-am-subtabs");
-    modeTabs.setAttribute("aria-label", "提示词管理工具");
+    modeTabs.setAttribute("aria-label", "Prompt management tools");
     this.skillTagModeButton = createElement(
       "button",
       "astral-am-subtab",
-      "提示词灵感",
+      "Prompt Inspiration",
     );
     this.templateModeButton = createElement(
       "button",
       "astral-am-subtab is-active",
-      "系统提示词管理",
+      "System Prompt Management",
     );
-    this.skillModeButton = createElement("button", "astral-am-subtab", "Skill 管理");
-    this.chatModeButton = createElement("button", "astral-am-subtab", "API 对话");
+    this.skillModeButton = createElement("button", "astral-am-subtab", "Skill Management");
+    this.chatModeButton = createElement("button", "astral-am-subtab", "API Chat");
     this.apiConfigModeButton = createElement(
       "button",
       "astral-am-subtab",
-      "API配置",
+      "API Configuration",
     );
     for (const button of [
       this.skillTagModeButton,
@@ -2223,22 +2223,22 @@ class PromptBrowser {
     const toolbar = createElement("div", "astral-am-toolbar");
     this.templateSearch = createElement("input", "astral-am-search");
     this.templateSearch.type = "search";
-    this.templateSearch.placeholder = "搜索标题、分类或提示词内容";
+    this.templateSearch.placeholder = "Search titles, categories, or prompt content";
     this.templateSearch.autocomplete = "off";
-    this.templateSearch.setAttribute("aria-label", "搜索提示词模板");
+    this.templateSearch.setAttribute("aria-label", "Search prompt templates");
     this.templateCategory = createCustomDropdown("astral-am-category-dropdown");
-    this.templateCategory.element.setAttribute("aria-label", "提示词模板分类");
+    this.templateCategory.element.setAttribute("aria-label", "Prompt template category");
     this.templateCategory.setOptions([
-      { value: "all", label: "全部分类" },
+      { value: "all", label: "All Categories" },
       ...PROMPT_CATEGORY_OPTIONS,
     ]);
     this.templateCreateButton = createElement(
       "button",
       "astral-am-button is-primary",
-      "新建模板",
+      "New Template",
     );
     this.templateCreateButton.type = "button";
-    this.templateRefreshButton = createElement("button", "astral-am-button", "刷新");
+    this.templateRefreshButton = createElement("button", "astral-am-button", "Refresh");
     this.templateRefreshButton.type = "button";
     toolbar.append(
       this.templateSearch,
@@ -2284,25 +2284,25 @@ class PromptBrowser {
       "nav",
       "astral-am-api-provider-tabs",
     );
-    this.apiProviderTabs.setAttribute("aria-label", "API 配置列表");
+    this.apiProviderTabs.setAttribute("aria-label", "API configuration list");
     this.apiProviderTabs.setAttribute("role", "tablist");
     this.apiProviderSelect = createElement("select", "astral-am-select");
-    this.apiProviderSelect.setAttribute("aria-label", "选择要编辑的 API 配置");
+    this.apiProviderSelect.setAttribute("aria-label", "Select an API configuration to edit");
     this.apiProviderSelect.hidden = true;
     this.addApiButton = createElement(
       "button",
       "astral-am-button is-small",
-      "新增 API",
+      "Add API",
     );
     this.duplicateApiButton = createElement(
       "button",
       "astral-am-button is-small",
-      "复制 API",
+      "Duplicate API",
     );
     this.deleteApiButton = createElement(
       "button",
       "astral-am-button is-small is-danger",
-      "删除 API",
+      "Delete API",
     );
     this.addApiButton.type = "button";
     this.duplicateApiButton.type = "button";
@@ -2324,23 +2324,23 @@ class PromptBrowser {
 
     const configGrid = createElement("div", "astral-am-chat-config-grid");
     this.apiNameInput = createElement("input", "astral-am-input");
-    this.apiNameInput.placeholder = "例如 OpenAI、DeepSeek、本地 LM Studio";
+    this.apiNameInput.placeholder = "For example: OpenAI, DeepSeek, or local LM Studio";
     this.baseUrlInput = createElement("input", "astral-am-input");
     this.baseUrlInput.type = "url";
     this.baseUrlInput.placeholder = "https://api.openai.com/v1";
     this.modelInput = createElement("input", "astral-am-input");
-    this.modelInput.placeholder = "输入模型名，或拉取后选择";
+    this.modelInput.placeholder = "Enter a model name or fetch the list and choose one";
     this.providerModelList = createElement("datalist");
     this.providerModelList.id = "astral-am-provider-model-options";
     this.modelInput.setAttribute("list", this.providerModelList.id);
     this.fetchModelsButton = createElement(
       "button",
       "astral-am-button is-small",
-      "拉取模型",
+      "Fetch Models",
     );
     this.fetchModelsButton.type = "button";
     this.fetchModelsButton.title =
-      "读取 OpenAI 兼容的 /models 列表；仍可手动输入模型名称";
+      "Read the OpenAI-compatible /models list; manual model names are still supported.";
     const providerModelControl = createElement(
       "div",
       "astral-am-input-with-action",
@@ -2353,33 +2353,33 @@ class PromptBrowser {
     this.apiKeyInput = createElement("input", "astral-am-input");
     this.apiKeyInput.type = "password";
     this.apiKeyInput.autocomplete = "new-password";
-    this.apiKeyInput.placeholder = "本地 API 可留空";
+    this.apiKeyInput.placeholder = "Optional for local APIs";
 
     for (const [label, input, hint] of [
       [
-        "API 名称",
+        "API name",
         this.apiNameInput,
-        "仅用于区分多个 API 配置，不会发送给接口，也不影响生成结果。",
+        "Only used to distinguish multiple API configurations; it is not sent to the endpoint and does not affect generation results.",
       ],
       [
-        "API 地址",
+        "API URL",
         this.baseUrlInput,
-        "OpenAI 兼容 API 的根地址，例如 https://api.openai.com/v1；通常不需要填写 /chat/completions。",
+        "Root address of the OpenAI-compatible API, e.g. https://api.openai.com/v1; usually you do not need to add /chat/completions.",
       ],
       [
         "API Key",
         this.apiKeyInput,
-        "接口鉴权密钥。本地 API 可留空；保存后会以掩码显示。",
+        "Endpoint authentication key. Can be left empty for local APIs; it is shown masked after saving.",
       ],
     ]) {
       configGrid.append(this.createField(label, input, "", hint));
     }
     configGrid.append(
       this.createField(
-        "该 API 的默认模型",
+        "Default model for this API",
         providerModelControl,
         "",
-        "未在具体模式中单独填写模型时使用；可从 /models 拉取，也可手动输入。",
+        "Used when no model is specified for a particular mode; can be fetched from /models or entered manually.",
       ),
     );
     providerPanel.append(providerToolbar, configGrid);
@@ -2393,11 +2393,11 @@ class PromptBrowser {
       "astral-am-api-task-heading",
     );
     runtimeHeading.append(
-      createElement("strong", "", "通用生成参数"),
+      createElement("strong", "", "General Generation Parameters"),
       createElement(
         "span",
         "astral-am-muted",
-        "纯文本、图片和多模态三种外部 API 模式共用；接口不支持的可选字段会自动移除后重试。",
+        "Shared by the plain-text, image and multimodal external API modes; optional fields the endpoint does not support are removed automatically and retried.",
       ),
     );
     const runtimeGrid = createElement(
@@ -2418,7 +2418,7 @@ class PromptBrowser {
       input.min = String(minimum);
       input.max = String(maximum);
       input.step = step;
-      if (optional) input.placeholder = "留空不发送";
+      if (optional) input.placeholder = "Leave empty to omit";
       this[`api${key[0].toUpperCase()}${key.slice(1)}Input`] = input;
       runtimeGrid.append(this.createField(label, input, "", hint));
     };
@@ -2461,7 +2461,7 @@ class PromptBrowser {
       0,
       2,
       "0.05",
-      "控制随机性。提示词扩写常用 0.7–0.9，图片反推常用 0.4–0.7。",
+      "Controls randomness. Prompt expansion usually uses 0.7–0.9; image reverse-prompting usually uses 0.4–0.7.",
     );
     runtimeNumberField(
       "topP",
@@ -2469,39 +2469,39 @@ class PromptBrowser {
       0,
       1,
       "0.01",
-      "核采样阈值。通常保持 0.9–0.95，并与 Temperature 配合调整。",
+      "Nucleus sampling threshold. Usually keep 0.9–0.95 and adjust together with Temperature.",
     );
     runtimeNumberField(
       "maxTokens",
-      "最大输出 Token",
+      "Maximum output tokens",
       1,
       128000,
       "1",
-      "单次回复允许生成的最大 Token 数，不包含输入内容。",
+      "Maximum tokens allowed per reply, excluding input content.",
     );
     runtimeNumberField(
       "maxRounds",
-      "携带历史轮数",
+      "History rounds",
       1,
       50,
       "1",
-      "API 对话最多携带的历史消息轮数；Prompt Processor 无历史，不受此项影响。",
+      "Maximum number of history message rounds carried in API chats; Prompt Processor has no history and is unaffected.",
     );
     runtimeNumberField(
       "frequencyPenalty",
-      "频率惩罚",
+      "Frequency penalty",
       -2,
       2,
       "0.05",
-      "按 Token 出现频率进行惩罚，正值可减少重复用词。",
+      "Penalizes tokens by how often they appear; a positive value reduces repeated wording.",
     );
     runtimeNumberField(
       "presencePenalty",
-      "存在惩罚",
+      "Presence penalty",
       -2,
       2,
       "0.05",
-      "Token 只要出现过就进行惩罚，正值可鼓励模型引入新内容。",
+      "Penalizes any token that has already appeared; a positive value encourages the model to introduce new content.",
     );
     runtimeNumberField(
       "seed",
@@ -2509,43 +2509,43 @@ class PromptBrowser {
       0,
       4294967295,
       "1",
-      "请求接口的随机种子。留空则不发送；是否支持及能否完全复现取决于 API 服务商。",
+      "Random seed for the API request. Leave empty to omit it; whether it is supported and fully reproducible depends on the API provider.",
       true,
     );
     runtimeChoiceField(
       "responseFormat",
-      "响应格式",
+      "Response format",
       [
-        ["default", "默认（不发送）"],
-        ["text", "纯文本"],
-        ["json_object", "JSON 对象"],
+        ["default", "Default (not sent)"],
+        ["text", "Plain text"],
+        ["json_object", "JSON object"],
       ],
-      "要求接口返回的格式。非“默认”选项会发送 response_format，不支持时自动重试。",
+      "Response format requested from the endpoint. Non-default options send response_format and retry automatically if unsupported.",
     );
     runtimeChoiceField(
       "reasoningEffort",
-      "推理强度",
+      "Reasoning effort",
       [
-        ["default", "默认（不发送）"],
-        ["low", "Low（速度优先）"],
-        ["medium", "Medium（均衡）"],
-        ["high", "High（质量优先）"],
+        ["default", "Default (not sent)"],
+        ["low", "Low (speed)"],
+        ["medium", "Medium (balanced)"],
+        ["high", "High (quality first)"],
       ],
-      "发送 reasoning_effort 可选参数。仅部分推理模型和 OpenAI 兼容接口支持。",
+      "Sends the optional reasoning_effort parameter. Only some reasoning models and OpenAI-compatible endpoints support it.",
     );
     runtimeTextField(
       "stop",
-      "停止序列",
-      "每行填写一个停止序列。模型生成到任一片段时停止；留空则不发送。",
-      "例如：\n</answer>\n<END>",
+      "Stop sequences",
+      "Enter one stop sequence per line. Generation stops when any of them is produced; leave empty to omit.",
+      "e.g.:\n</answer>\n<END>",
       2,
       true,
     );
     runtimeTextField(
       "systemPrompt",
-      "通用系统提示词",
-      "附加到 API 请求的系统指令。具体模式规则、Skill 和内置任务指令仍会追加。",
-      "你是一个严谨、有帮助的 AI 助手。",
+      "General system prompt",
+      "System instructions appended to API requests. Mode-specific rules, Skills and built-in task instructions are still appended.",
+      "You are a rigorous and helpful AI assistant.",
       3,
       true,
     );
@@ -2555,11 +2555,11 @@ class PromptBrowser {
     const taskSection = createElement("section", "astral-am-api-task-section");
     const taskHeading = createElement("div", "astral-am-api-task-heading");
     taskHeading.append(
-      createElement("strong", "", "每种模式使用哪个 API 与模型"),
+      createElement("strong", "", "API and Model for Each Mode"),
       createElement(
         "span",
         "astral-am-muted",
-        "三种模式可分别选择 API 和模型；模型留空时使用该 API 的默认模型。",
+        "Assign an API and model to each mode. Leave the model blank to use the API default.",
       ),
     );
     const taskGrid = createElement("div", "astral-am-api-task-grid");
@@ -2572,16 +2572,16 @@ class PromptBrowser {
         createElement("span", "astral-am-muted", task.hint),
       );
       const taskApiSelect = createElement("select", "astral-am-select");
-      taskApiSelect.setAttribute("aria-label", `${task.label}使用的 API`);
+      taskApiSelect.setAttribute("aria-label", `API used by ${task.label}`);
       const taskModelInput = createElement("input", "astral-am-input");
-      taskModelInput.placeholder = "选择默认模型或拉取后选择";
+      taskModelInput.placeholder = "Choose the default model or fetch the list";
       const taskModelList = createElement("datalist");
       taskModelList.id = `astral-am-task-${task.id}-model-options`;
       taskModelInput.setAttribute("list", taskModelList.id);
       const taskFetchButton = createElement(
         "button",
         "astral-am-button is-small",
-        "拉取模型",
+        "Fetch Models",
       );
       taskFetchButton.type = "button";
       const taskModelControl = createElement(
@@ -2599,13 +2599,13 @@ class PromptBrowser {
           "API",
           taskApiSelect,
           "",
-          `选择“${task.label}”使用的 API 配置。`,
+          `API configuration used by "${task.label}".`,
         ),
         this.createField(
-          "模型",
+          "Model",
           taskModelControl,
           "",
-          `“${task.label}”使用的模型；留空时使用所选 API 的默认模型。`,
+          `Model used by "${task.label}"; leave blank to use the default model of the selected API.`,
         ),
       );
       taskGrid.append(taskCard);
@@ -2623,7 +2623,7 @@ class PromptBrowser {
     this.saveConfigButton = createElement(
       "button",
       "astral-am-button is-primary",
-      "保存 API 设置",
+      "Save API Settings",
     );
     this.saveConfigButton.type = "button";
     this.chatConfigStatus = createElement("div", "astral-am-action-status");
@@ -2642,12 +2642,12 @@ class PromptBrowser {
     this.newConversationButton = createElement(
       "button",
       "astral-am-button is-small is-primary",
-      "新建会话",
+      "New Conversation",
     );
     this.deleteConversationButton = createElement(
       "button",
       "astral-am-button is-small is-danger",
-      "删除会话",
+      "Delete Conversation",
     );
     this.newConversationButton.type = "button";
     this.deleteConversationButton.type = "button";
@@ -2665,17 +2665,17 @@ class PromptBrowser {
     this.systemPromptButton = createElement(
       "button",
       "astral-am-button is-small",
-      "加载系统提示词",
+      "Load System Prompt",
     );
     this.skillButton = createElement(
       "button",
       "astral-am-button is-small",
-      "加载 Skill",
+      "Load Skill",
     );
     this.attachmentButton = createElement(
       "button",
       "astral-am-button is-small",
-      "上传素材",
+      "Attach Assets",
     );
     this.systemPromptButton.type = "button";
     this.attachmentButton.type = "button";
@@ -2692,7 +2692,7 @@ class PromptBrowser {
     this.chatInput = createElement("textarea", "astral-am-textarea");
     this.chatInput.rows = 4;
     this.chatInput.placeholder =
-      "输入消息。可点击素材标签插入 image1、video1 等名称。";
+      "Enter a message. Click an asset chip to insert names such as image1 or video1.";
     const composerActions = createElement("div", "astral-am-chat-composer-actions");
     this.chatStatus = createElement("div", "astral-am-action-status");
     this.translationControls = createElement(
@@ -2704,20 +2704,20 @@ class PromptBrowser {
       "astral-am-chat-translation-toggle",
     );
     this.translationToggle.title =
-      "开启后只翻译本次发送的文本，不发送历史、系统提示词、Skill 或素材";
+      "Only translate the text being sent; do not send history, system prompts, Skills, or assets.";
     this.translationCheckbox = createElement("input");
     this.translationCheckbox.type = "checkbox";
-    this.translationCheckbox.setAttribute("aria-label", "翻译模式");
+    this.translationCheckbox.setAttribute("aria-label", "Translation Mode");
     this.translationToggle.append(
       this.translationCheckbox,
       createElement("span", "astral-am-chat-translation-switch"),
-      createElement("span", "", "翻译模式"),
+      createElement("span", "", "Translation Mode"),
     );
     this.translationLanguageSelect = createElement(
       "select",
       "astral-am-select astral-am-chat-translation-language",
     );
-    this.translationLanguageSelect.setAttribute("aria-label", "翻译目标语言");
+    this.translationLanguageSelect.setAttribute("aria-label", "Translation target language");
     this.translationLanguageSelect.replaceChildren(
       ...TRANSLATION_LANGUAGES.map((language) => {
         const option = createElement("option", "", language.label);
@@ -2738,7 +2738,7 @@ class PromptBrowser {
     this.sendButton = createElement(
       "button",
       "astral-am-button is-primary",
-      "发送",
+      "Send",
     );
     this.sendButton.type = "button";
     composerActions.append(
@@ -2759,7 +2759,7 @@ class PromptBrowser {
       "astral-am-chat-mode-buttons",
     );
     modeButtons.setAttribute("role", "group");
-    modeButtons.setAttribute("aria-label", "选择对话模式");
+    modeButtons.setAttribute("aria-label", "Select chat mode");
     this.chatModeButtons.clear();
     for (const task of CHAT_MODE_DEFINITIONS) {
       const modeButton = createElement(
@@ -2768,7 +2768,7 @@ class PromptBrowser {
         task.label,
       );
       modeButton.type = "button";
-      modeButton.title = `${task.label}：${task.hint}`;
+      modeButton.title = `${task.label}: ${task.hint}`;
       modeButton.setAttribute("aria-pressed", "false");
       modeButton.addEventListener("click", () =>
         this.selectChatTask(task.id),
@@ -2779,7 +2779,7 @@ class PromptBrowser {
     this.openApiConfigButton = createElement(
       "button",
       "astral-am-button is-small",
-      "打开 API配置",
+      "Open API Configuration",
     );
     this.openApiConfigButton.type = "button";
     this.openApiConfigButton.addEventListener("click", () =>
@@ -2788,7 +2788,7 @@ class PromptBrowser {
     this.openLocalLlmConfigButton = createElement(
       "button",
       "astral-am-button is-small",
-      "本地 LLM 配置",
+      "Local LLM Configuration",
     );
     this.openLocalLlmConfigButton.type = "button";
     this.openLocalLlmConfigButton.addEventListener("click", () =>
@@ -2807,9 +2807,9 @@ class PromptBrowser {
       "div",
       "astral-am-chat-current-model",
     );
-    this.chatCurrentModelName = createElement("strong", "", "尚未配置");
+    this.chatCurrentModelName = createElement("strong", "", "Not configured");
     this.chatCurrentModel.append(
-      createElement("span", "", "当前模型："),
+      createElement("span", "", "Current model: "),
       this.chatCurrentModelName,
     );
     configHint.append(configToolbar, this.chatCurrentModel);
@@ -2866,8 +2866,8 @@ class PromptBrowser {
       );
       this.setChatStatus(
         this.translationEnabled
-          ? "翻译模式已开启：本次发送将忽略历史、系统提示词、Skill 和素材。"
-          : "翻译模式已关闭。",
+          ? "Translation Mode enabled: this send will ignore history, system prompts, Skills, and assets."
+          : "Translation Mode turned off.",
         this.translationEnabled ? "warning" : "",
       );
     });
@@ -2889,11 +2889,11 @@ class PromptBrowser {
     );
     const heading = createElement("div", "astral-am-api-config-heading");
     heading.append(
-      createElement("strong", "", "多 API 与模式分工"),
+      createElement("strong", "", "Multiple APIs and Mode Assignment"),
       createElement(
         "span",
         "astral-am-muted",
-        "配置保存在本机。上方管理外部 API，下方配置本地 GGUF 模型。",
+        "Configuration stays on this machine. Manage external APIs above and local GGUF models below.",
       ),
     );
     this.localLlmConfigPane = this.buildLocalLlmConfigPane();
@@ -2916,11 +2916,11 @@ class PromptBrowser {
       "astral-am-api-config-heading",
     );
     heading.append(
-      createElement("strong", "", "本地 GGUF 多模态模型"),
+      createElement("strong", "", "Local GGUF Multimodal Models"),
       createElement(
         "span",
         "astral-am-muted",
-        "扫描 ComfyUI models/LLM。主模型负责对话，mmproj 提供图片、视频抽帧与 Gemma4 音频能力。",
+        "Scan ComfyUI models/LLM. The main model handles chat; mmproj adds images, video frames, and Gemma4 audio.",
       ),
     );
 
@@ -2935,7 +2935,7 @@ class PromptBrowser {
     this.localLlmModelsRootLabel = createElement(
       "div",
       "astral-am-location-path",
-      "尚未读取模型目录",
+      "Model directory not loaded",
     );
     const modelToolbar = createElement(
       "div",
@@ -2945,27 +2945,27 @@ class PromptBrowser {
       "select",
       "astral-am-select astral-am-local-llm-model-select",
     );
-    this.localLlmModelSelect.setAttribute("aria-label", "选择本地 LLM 主模型");
+    this.localLlmModelSelect.setAttribute("aria-label", "Select the local LLM main model");
     this.localLlmModelSelect.title =
-      "选择用于本地对话和提示词处理的 GGUF 主模型；音频、图片和视频还需要匹配的 mmproj。";
+      "Select the GGUF main model for local chat and prompt processing; audio, images and video also need a matching mmproj.";
     this.localLlmVisionModelSelect = createElement(
       "select",
       "astral-am-select astral-am-local-llm-model-select",
     );
     this.localLlmVisionModelSelect.setAttribute(
       "aria-label",
-      "选择本地 LLM 视觉投影模型 mmproj",
+      "Select the local LLM vision projection model (mmproj)",
     );
     this.localLlmVisionModelSelect.title =
-      "选择与主模型同系列的 mmproj。纯文本可设为“无”；图片、视频抽帧和 Gemma4 音频需要它。";
+      "Select a mmproj from the same family as the main model. For text-only use, set it to None; images, video frame extraction and Gemma4 audio need it.";
     this.localLlmRefreshButton = createElement(
       "button",
       "astral-am-button is-small",
-      "刷新模型",
+      "Refresh Models",
     );
     this.localLlmRefreshButton.type = "button";
     this.localLlmRefreshButton.title =
-      "重新扫描 ComfyUI/models/LLM，刷新主模型和 mmproj 列表。";
+      "Rescan ComfyUI/models/LLM to refresh the main model and mmproj lists.";
     modelToolbar.append(
       this.localLlmModelSelect,
       this.localLlmVisionModelSelect,
@@ -2974,7 +2974,7 @@ class PromptBrowser {
     this.localLlmModelHint = createElement(
       "div",
       "astral-am-muted astral-am-local-llm-model-hint",
-      "主模型与 mmproj 需要来自同一模型系列。纯文本可把 mmproj 设为“无（纯文本）”。",
+      "The main model and mmproj must come from the same model family. For text-only use, set mmproj to None (text-only).",
     );
     modelSection.append(
       this.localLlmModelsRootLabel,
@@ -3009,30 +3009,30 @@ class PromptBrowser {
       );
     };
     parameterGrid.append(
-      numberField("nCtx", "上下文长度 n_ctx", 512, 131072, "256"),
-      numberField("nBatch", "批处理 n_batch", 32, 65536, "32"),
-      numberField("nUbatch", "微批 n_ubatch", 32, 65536, "32"),
-      numberField("maxTokens", "最大输出 Token", 1, 32768),
-      numberField("maxRounds", "携带历史轮数", 1, 50),
+      numberField("nCtx", "Context length n_ctx", 512, 131072, "256"),
+      numberField("nBatch", "Batch size n_batch", 32, 65536, "32"),
+      numberField("nUbatch", "Micro-batch n_ubatch", 32, 65536, "32"),
+      numberField("maxTokens", "Maximum output tokens", 1, 32768),
+      numberField("maxRounds", "History rounds", 1, 50),
       numberField("temperature", "Temperature", 0, 2, "0.05"),
       numberField("topP", "Top P", 0.01, 1, "0.01"),
       numberField("topK", "Top K", 1, 200),
       numberField("minP", "Min P", 0, 1, "0.01"),
-      numberField("repeatPenalty", "重复惩罚", 0.5, 2, "0.05"),
-      numberField("frequencyPenalty", "频率惩罚", -2, 2, "0.05"),
-      numberField("presencePenalty", "存在惩罚", -2, 2, "0.05"),
-      numberField("gpuLayers", "GPU 层数", -1, 1000, "1", "-1 表示全部卸载"),
-      numberField("threads", "CPU 线程", 0, 128, "1", "0 表示自动"),
+      numberField("repeatPenalty", "Repetition penalty", 0.5, 2, "0.05"),
+      numberField("frequencyPenalty", "Frequency penalty", -2, 2, "0.05"),
+      numberField("presencePenalty", "Presence penalty", -2, 2, "0.05"),
+      numberField("gpuLayers", "GPU layers", -1, 1000, "1", "-1 unloads all layers"),
+      numberField("threads", "CPU threads", 0, 128, "1", "0 enables automatic selection"),
       numberField("seed", "Seed", 0, 4294967295),
-      numberField("maxImageEdge", "图片最大边", 256, 4096, "64"),
-      numberField("imageJpegQuality", "JPEG 质量", 40, 100, "1"),
+      numberField("maxImageEdge", "Maximum image edge", 256, 4096, "64"),
+      numberField("imageJpegQuality", "JPEG quality", 40, 100, "1"),
       numberField(
         "contextCheckpoints",
         "Context Checkpoints",
         0,
         64,
         "1",
-        "0 表示关闭",
+        "0 disables the limit",
       ),
     );
     const choiceField = (key, label, options) => {
@@ -3070,37 +3070,37 @@ class PromptBrowser {
     };
     parameterGrid.append(
       choiceField("flashAttention", "Flash Attention", [
-        ["auto", "自动（推荐）"],
-        ["enabled", "开启"],
-        ["disabled", "关闭"],
+        ["auto", "Auto (recommended)"],
+        ["enabled", "On"],
+        ["disabled", "Close"],
       ]),
       choiceField("kvCacheTypeK", "KV Cache K", [
-        ["default", "默认"],
+        ["default", "Default"],
         ["q8_0", "Q8_0"],
       ]),
       choiceField("kvCacheTypeV", "KV Cache V", [
-        ["default", "默认"],
+        ["default", "Default"],
         ["q8_0", "Q8_0"],
       ]),
-      choiceField("reasoningEffort", "Qwen3.8 推理强度", [
-        ["xhigh", "XHigh（质量优先）"],
-        ["medium", "Medium（均衡）"],
-        ["low", "Low（速度优先）"],
+      choiceField("reasoningEffort", "Qwen3.8 reasoning effort", [
+        ["xhigh", "XHigh (quality)"],
+        ["medium", "Medium (balanced)"],
+        ["low", "Low (speed)"],
       ]),
       toggleField(
         "enableThinking",
-        "启用思考",
-        "对 Qwen3.8、Qwen3.5/3.6 与 Gemma4 生效",
+        "Enable reasoning",
+        "Applies to Qwen3.8, Qwen3.5/3.6, and Gemma4.",
       ),
       toggleField(
         "preserveThinking",
-        "保留历史 think",
-        "关闭可节省上下文",
+        "Keep historical think blocks",
+        "Turn off to save context.",
       ),
       toggleField(
         "useMmap",
-        "使用 mmap",
-        "默认开启；关闭会更快消耗物理内存",
+        "Use mmap",
+        "On by default; disabling uses physical memory faster.",
       ),
     );
 
@@ -3111,12 +3111,12 @@ class PromptBrowser {
     const note = createElement(
       "span",
       "astral-am-muted",
-      "配置保存在 ComfyUI 用户目录/assets-astral/local-llm-config.json",
+      "Saved in the ComfyUI user directory at assets-astral/local-llm-config.json.",
     );
     this.saveLocalLlmConfigButton = createElement(
       "button",
       "astral-am-button is-primary",
-      "保存本地 LLM 设置",
+      "Save Local LLM Settings",
     );
     this.saveLocalLlmConfigButton.type = "button";
     actions.append(note, this.saveLocalLlmConfigButton);
@@ -3147,14 +3147,14 @@ class PromptBrowser {
     const note = createElement(
       "p",
       "astral-am-note",
-      "扫描 ComfyUI custom_nodes 和 input 目录中的 SKILL.cn.md 或 SKILL.md。每个会话最多加载 1 个 Skill，可随时切换；input 中的 Skill 会使用 input/... 命名空间。",
+      "Scan SKILL.cn.md or SKILL.md in ComfyUI custom_nodes and input. Each conversation can load one Skill at a time and switch freely; input Skills use the input/... namespace.",
     );
     this.skillSearch = createElement("input", "astral-am-search");
     this.skillSearch.type = "search";
-    this.skillSearch.placeholder = "搜索 Skill 名称、ID、描述或来源";
+    this.skillSearch.placeholder = "Search Skill name, ID, description, or source";
     this.skillSearch.autocomplete = "off";
-    this.skillSearch.setAttribute("aria-label", "搜索 Skill");
-    this.skillRefreshButton = createElement("button", "astral-am-button", "刷新 Skill");
+    this.skillSearch.setAttribute("aria-label", "Search Skills");
+    this.skillRefreshButton = createElement("button", "astral-am-button", "Refresh Skills");
     this.skillRefreshButton.type = "button";
     toolbar.append(this.skillSearch, this.skillRefreshButton);
     this.skillRootLabel = createElement("div", "astral-am-location-path");
@@ -3185,14 +3185,14 @@ class PromptBrowser {
     const toolbar = createElement("div", "astral-am-toolbar");
     this.skillTagSearch = createElement("input", "astral-am-search");
     this.skillTagSearch.type = "search";
-    this.skillTagSearch.placeholder = "搜索标签名称或分类";
+    this.skillTagSearch.placeholder = "Search tag names or categories";
     this.skillTagSearch.autocomplete = "off";
-    this.skillTagSearch.setAttribute("aria-label", "搜索提示词灵感标签");
+    this.skillTagSearch.setAttribute("aria-label", "Search prompt inspiration tags");
     toolbar.append(this.skillTagSearch);
     const note = createElement(
       "p",
       "astral-am-note",
-      "标签是提示词灵感素材。点击分类或二级分类旁的 + 可以批量新增标签；每行一个，也支持用逗号或分号分隔。",
+      "Tags are prompt-inspiration assets. Use + beside a category or subcategory to add tags in bulk, one per line or separated by commas or semicolons.",
     );
 
     const workspace = createElement("div", "astral-am-skill-tag-workspace");
@@ -3204,7 +3204,7 @@ class PromptBrowser {
     this.skillTagCategoryCount = createElement(
       "span",
       "astral-am-muted",
-      "分类",
+      "Category",
     );
     const addCategoryInline = createElement(
       "button",
@@ -3212,10 +3212,10 @@ class PromptBrowser {
       "+",
     );
     addCategoryInline.type = "button";
-    addCategoryInline.title = "新建顶级分类（分类树最多两级）";
+    addCategoryInline.title = "New Top-level Category (maximum two levels)";
     addCategoryInline.setAttribute(
       "aria-label",
-      "新建顶级分类，分类树最多两级",
+      "Create a top-level category (maximum two levels).",
     );
     sidebarHeading.append(this.skillTagCategoryCount, addCategoryInline);
     this.skillTagAllCategoryButton = createElement(
@@ -3228,7 +3228,7 @@ class PromptBrowser {
       "astral-am-skill-tag-category",
     );
     this.skillTagFavoriteCategoryButton.type = "button";
-    this.skillTagFavoriteCategoryButton.textContent = "★ 收藏";
+    this.skillTagFavoriteCategoryButton.textContent = "★ Favorites";
     this.skillTagCategoryList = createElement(
       "div",
       "astral-am-skill-tag-category-list",
@@ -3245,7 +3245,7 @@ class PromptBrowser {
       "div",
       "astral-am-skill-tag-content-heading",
     );
-    this.skillTagHeading = createElement("strong", "", "全部标签");
+    this.skillTagHeading = createElement("strong", "", "All Tags");
     this.skillTagSummary = createElement("span", "astral-am-muted");
     contentHeading.append(this.skillTagHeading, this.skillTagSummary);
 
@@ -3264,30 +3264,30 @@ class PromptBrowser {
     this.inspirationSelectionCount = createElement(
       "strong",
       "",
-      "已选 0 个灵感标签",
+      "0 inspiration tags selected",
     );
     inspirationHeading.append(
       this.inspirationSelectionCount,
       createElement(
         "span",
         "astral-am-muted",
-        "随机组合会从不同分类各取一个标签",
+        "Random Mix selects one tag from each of several categories.",
       ),
     );
     this.inspirationRandomButton = createElement(
       "button",
       "astral-am-button is-small",
-      "随机组合",
+      "Random Mix",
     );
     this.inspirationClearButton = createElement(
       "button",
       "astral-am-button is-small",
-      "清空选择",
+      "Clear Selection",
     );
     this.inspirationRandomButton.type = "button";
     this.inspirationClearButton.type = "button";
     this.inspirationRandomButton.title =
-      "从不同分类随机组合标签；再次点击换一批";
+      "Randomly combine tags from different categories; click again for another set.";
     const inspirationHeaderActions = createElement(
       "div",
       "astral-am-inspiration-header-actions",
@@ -3313,18 +3313,18 @@ class PromptBrowser {
     );
     this.inspirationBasePromptInput.rows = 3;
     this.inspirationBasePromptInput.placeholder =
-      "输入基础画面想法，例如：一位少女站在雨夜街头；留空则让模型根据标签自由构思。";
+      "Describe the base scene, for example: a girl standing on a rainy street. Leave blank to let the model create freely from the tags.";
     this.inspirationTargetInput = createElement(
       "select",
       "astral-am-select",
     );
     this.inspirationTargetInput.setAttribute(
       "aria-label",
-      "提示词生成目标",
+      "Prompt target",
     );
     for (const [value, label] of [
-      ["image", "文生图"],
-      ["video", "文生视频"],
+      ["image", "Text to Image"],
+      ["video", "Text to Video"],
     ]) {
       const option = createElement("option", "", label);
       option.value = value;
@@ -3336,11 +3336,11 @@ class PromptBrowser {
     );
     this.inspirationLanguageInput.setAttribute(
       "aria-label",
-      "提示词输出语言",
+      "Prompt output language",
     );
     for (const [value, label] of [
-      ["en", "英文"],
-      ["zh", "中文"],
+      ["en", "English"],
+      ["zh", "Chinese"],
     ]) {
       const option = createElement("option", "", label);
       option.value = value;
@@ -3352,11 +3352,11 @@ class PromptBrowser {
     );
     this.inspirationModeInput.setAttribute(
       "aria-label",
-      "提示词扩写生成方式",
+      "Prompt expansion mode",
     );
     for (const [value, label] of [
-      ["api", "API纯文本模式"],
-      ["local", "本地模式"],
+      ["api", "API Text-only Mode"],
+      ["local", "Local Mode"],
     ]) {
       const option = createElement("option", "", label);
       option.value = value;
@@ -3365,7 +3365,7 @@ class PromptBrowser {
     this.inspirationGenerateButton = createElement(
       "button",
       "astral-am-button is-primary",
-      "生成灵感提示词",
+      "Generate Inspiration Prompt",
     );
     this.inspirationGenerateButton.type = "submit";
     const inspirationControls = createElement(
@@ -3373,10 +3373,10 @@ class PromptBrowser {
       "astral-am-inspiration-controls",
     );
     inspirationControls.append(
-      this.createField("基础画面想法", this.inspirationBasePromptInput),
-      this.createField("生成目标", this.inspirationTargetInput),
-      this.createField("输出语言", this.inspirationLanguageInput),
-      this.createField("生成方式", this.inspirationModeInput),
+      this.createField("Base Scene Idea", this.inspirationBasePromptInput),
+      this.createField("Target Type", this.inspirationTargetInput),
+      this.createField("Output language", this.inspirationLanguageInput),
+      this.createField("Generation Mode", this.inspirationModeInput),
       this.inspirationGenerateButton,
     );
     inspirationForm.append(inspirationControls);
@@ -3388,7 +3388,7 @@ class PromptBrowser {
       "astral-am-inspiration-result-heading",
     );
     resultHeading.append(
-      createElement("strong", "", "扩写结果"),
+      createElement("strong", "", "Expanded Result"),
       (this.inspirationResultHint = createElement("span", "astral-am-muted")),
     );
     this.inspirationResultInput = createElement(
@@ -3397,7 +3397,7 @@ class PromptBrowser {
     );
     this.inspirationResultInput.rows = 5;
     this.inspirationResultInput.placeholder =
-      "生成的灵感提示词会显示在这里。";
+      "The generated inspiration prompt will appear here.";
     const resultActions = createElement(
       "div",
       "astral-am-inspiration-result-actions",
@@ -3405,17 +3405,17 @@ class PromptBrowser {
     this.inspirationCopyButton = createElement(
       "button",
       "astral-am-button is-small",
-      "复制提示词",
+      "Copy Prompt",
     );
     this.inspirationUseAsBaseButton = createElement(
       "button",
       "astral-am-button is-small",
-      "作为基础想法",
+      "Use as Base Idea",
     );
     this.inspirationSendToChatButton = createElement(
       "button",
       "astral-am-button is-small is-primary",
-      "加入 API 对话",
+      "Add to API Chat",
     );
     for (const button of [
       this.inspirationCopyButton,
@@ -3444,27 +3444,27 @@ class PromptBrowser {
     this.skillTagBatchCount = createElement(
       "strong",
       "astral-am-skill-tag-batch-count",
-      "已勾选 0 个标签",
+      "0 tags selected",
     );
     this.skillTagSelectAllButton = createElement(
       "button",
       "astral-am-button is-small",
-      "全选当前结果",
+      "Select All Results",
     );
     this.skillTagClearSelectionButton = createElement(
       "button",
       "astral-am-button is-small",
-      "清空勾选",
+      "Clear Selection",
     );
     this.skillTagBatchDeleteButton = createElement(
       "button",
       "astral-am-button is-small is-danger",
-      "批量删除",
+      "Batch Delete",
     );
     this.skillTagBatchMoveButton = createElement(
       "button",
       "astral-am-button is-small is-primary",
-      "移动分类",
+      "Move Category",
     );
     for (const button of [
       this.skillTagSelectAllButton,
@@ -3474,11 +3474,11 @@ class PromptBrowser {
     ]) {
       button.type = "button";
     }
-    this.skillTagSelectAllButton.title = "勾选当前分类或搜索结果中的全部标签";
-    this.skillTagClearSelectionButton.title = "清除所有已勾选标签";
-    this.skillTagBatchDeleteButton.title = "删除所有已勾选标签";
+    this.skillTagSelectAllButton.title = "Select all tags in the current category or search results.";
+    this.skillTagClearSelectionButton.title = "Clear all selected tags.";
+    this.skillTagBatchDeleteButton.title = "Delete all selected tags.";
     this.skillTagBatchMoveButton.title =
-      "把已勾选标签移动到其他分类或二级分类";
+      "Move selected tags to another category or subcategory.";
     const skillTagBatchActions = createElement(
       "div",
       "astral-am-skill-tag-batch-actions",
@@ -3628,25 +3628,25 @@ class PromptBrowser {
       const isActive = task.id === activeTask.id;
       button.classList.toggle("is-active", isActive);
       button.setAttribute("aria-pressed", String(isActive));
-      button.title = `${task.label}：${task.hint}`;
+      button.title = `${task.label}: ${task.hint}`;
     }
     if (!this.chatCurrentModelName) return;
     if (activeTask.id === LOCAL_CHAT_MODE_DEFINITION.id) {
       const modelPath = this.currentChatTaskModel(activeTask.id);
       const modelName = modelPath.split("/").pop() || "";
-      this.chatCurrentModelName.textContent = modelName || "尚未配置";
+      this.chatCurrentModelName.textContent = modelName || "Not configured";
       this.chatCurrentModel.title = modelPath
-        ? `本地模式 · ComfyUI/models/LLM\n模型：${modelPath}`
-        : "本地模式尚未选择 GGUF 模型，请打开“本地 LLM 配置”进行设置。";
+        ? `Local Mode · ComfyUI/models/LLM\nModel: ${modelPath}`
+        : "No GGUF model is selected for Local Mode. Open Local LLM Configuration to set one.";
       return;
     }
     const binding = this.taskBindings[activeTask.id] || {};
     const provider = this.apiProviderById(binding.apiId || this.activeApiId);
     const model = this.currentChatTaskModel(activeTask.id);
-    this.chatCurrentModelName.textContent = model || "尚未配置";
+    this.chatCurrentModelName.textContent = model || "Not configured";
     this.chatCurrentModel.title = model
-      ? `${activeTask.label} · ${provider?.name || "未选择 API"}\n模型：${model}`
-      : `${activeTask.label}还没有配置模型，请打开 API配置进行设置。`;
+      ? `${activeTask.label} · ${provider?.name || "No API selected"}\nModel: ${model}`
+      : `${activeTask.label} has no model configured yet. Open API configuration to set one.`;
   }
 
   setMode(mode) {
@@ -3764,7 +3764,7 @@ class PromptBrowser {
     const requestId = this.templatesRequestId;
     this.templateRefreshButton.disabled = true;
     if (reset) this.templateList.classList.add("is-loading");
-    this.setTemplateStatus("正在读取提示词模板...", "loading");
+    this.setTemplateStatus("Loading prompt templates...", "loading");
     try {
       const category =
         this.templateCategory.value === "all"
@@ -3779,15 +3779,15 @@ class PromptBrowser {
       if (requestId !== this.templatesRequestId) return;
       this.templates = Array.isArray(payload?.items) ? payload.items : [];
       this.renderTemplates(preserveScroll);
-      this.templateSummary.textContent = `共 ${this.templates.length} 个提示词模板`;
+      this.templateSummary.textContent = `${this.templates.length} prompt templates`;
       this.setTemplateStatus(
-        this.templates.length ? "" : "还没有提示词模板，点击“新建模板”开始。",
+        this.templates.length ? "" : "No prompt templates yet. Click New Template to begin.",
         this.templates.length ? "" : "empty",
       );
       this.templatesLoaded = true;
     } catch (error) {
       if (requestId === this.templatesRequestId) {
-        this.setTemplateStatus(`读取提示词模板失败：${error.message || error}`, "error");
+        this.setTemplateStatus(`Failed to read prompt templates: ${error.message || error}`, "error");
       }
     } finally {
       if (requestId === this.templatesRequestId) {
@@ -3832,7 +3832,7 @@ class PromptBrowser {
         `astral-am-category-badge is-${template.category || "text"}`,
         promptCategoryLabel(template.category),
       ),
-      createElement("strong", "", template.title || "未命名模板"),
+      createElement("strong", "", template.title || "Untitled Template"),
     );
     header.append(
       heading,
@@ -3840,42 +3840,42 @@ class PromptBrowser {
     );
     const prompt = createElement("pre", "astral-am-template-text", template.prompt);
     const actions = createElement("div", "astral-am-template-actions");
-    const edit = createElement("button", "astral-am-button is-small", "编辑");
-    const copy = createElement("button", "astral-am-button is-small", "复制文本");
+    const edit = createElement("button", "astral-am-button is-small", "Edit");
+    const copy = createElement("button", "astral-am-button is-small", "Copy Text");
     const loaded =
       this.pendingSystemPromptTemplate?.id === template.id;
     const loadToChat = createElement(
       "button",
       "astral-am-button is-small",
-      loaded ? "当前会话提示词" : "加载到会话",
+      loaded ? "Current Session Prompt" : "Load to Conversation",
     );
     const insert = createElement(
       "button",
       "astral-am-button is-small is-primary",
-      "放入画布",
+      "Add to Canvas",
     );
     const remove = createElement(
       "button",
       "astral-am-button is-small is-danger",
-      "删除",
+      "Delete",
     );
     for (const button of [edit, copy, loadToChat, insert, remove]) {
       button.type = "button";
     }
     loadToChat.disabled = loaded;
     loadToChat.title = loaded
-      ? "当前会话已经加载这个系统提示词"
-      : "将这份系统提示词加载到当前 API 对话";
+      ? "This system prompt is already loaded in the session."
+      : "Load this system prompt into the current API chat.";
     edit.addEventListener("click", () => this.openTemplateEditor(template));
     copy.addEventListener("click", async () => {
       try {
         await copyText(template.prompt);
-        copy.textContent = "已复制";
+        copy.textContent = "Copied";
         window.setTimeout(() => {
-          copy.textContent = "复制文本";
+          copy.textContent = "Copy Text";
         }, 1200);
       } catch (error) {
-        this.setTemplateStatus(`复制失败：${error.message || error}`, "error");
+        this.setTemplateStatus(`Copy failed: ${error.message || error}`, "error");
       }
     });
     loadToChat.addEventListener(
@@ -3894,33 +3894,33 @@ class PromptBrowser {
     const dialog = createElement("dialog", "astral-am-editor-dialog");
     const shell = createElement("div", "astral-am-editor-shell");
     const header = createElement("div", "astral-am-editor-header");
-    this.templateEditorTitle = createElement("strong", "", "新建提示词模板");
+    this.templateEditorTitle = createElement("strong", "", "New Prompt Template");
     const close = createElement("button", "astral-am-icon-button", "×");
     close.type = "button";
-    close.title = "关闭";
+    close.title = "Close";
     close.addEventListener("click", () => dialog.close());
     header.append(this.templateEditorTitle, close);
 
     const body = createElement("div", "astral-am-editor-body");
     this.templateTitleInput = createElement("input", "astral-am-input");
-    this.templateTitleInput.placeholder = "例如：电影感人像";
+    this.templateTitleInput.placeholder = "For example: cinematic portrait";
     this.templateEditorCategory = createCustomDropdown("astral-am-category-dropdown");
     this.templateEditorCategory.setOptions(PROMPT_CATEGORY_OPTIONS);
     this.templatePromptInput = createElement("textarea", "astral-am-textarea");
     this.templatePromptInput.rows = 14;
-    this.templatePromptInput.placeholder = "输入提示词正文";
+    this.templatePromptInput.placeholder = "Enter prompt text";
     body.append(
-      this.createField("标题", this.templateTitleInput),
-      this.createField("分类", this.templateEditorCategory.element),
-      this.createField("提示词", this.templatePromptInput),
+      this.createField("Title", this.templateTitleInput),
+      this.createField("Category", this.templateEditorCategory.element),
+      this.createField("Prompt", this.templatePromptInput),
     );
     this.templateEditorStatus = createElement("div", "astral-am-action-status");
     const footer = createElement("div", "astral-am-editor-footer");
-    const cancel = createElement("button", "astral-am-button", "取消");
+    const cancel = createElement("button", "astral-am-button", "Cancel");
     this.templateEditorSave = createElement(
       "button",
       "astral-am-button is-primary",
-      "保存模板",
+      "Save Template",
     );
     cancel.type = "button";
     this.templateEditorSave.type = "button";
@@ -3938,8 +3938,8 @@ class PromptBrowser {
     const dialog = this.ensureTemplateEditor();
     this.editingTemplateId = template?.id || "";
     this.templateEditorTitle.textContent = template
-      ? "编辑提示词模板"
-      : "新建提示词模板";
+      ? "Edit Prompt Template"
+      : "New Prompt Template";
     this.templateTitleInput.value = template?.title || "";
     this.templateEditorCategory.value = template?.category || "text";
     this.templatePromptInput.value = template?.prompt || "";
@@ -3955,12 +3955,12 @@ class PromptBrowser {
     if (!title || !prompt) {
       this.templateEditorStatus.className =
         "astral-am-action-status is-error";
-      this.templateEditorStatus.textContent = "标题和提示词不能为空。";
+      this.templateEditorStatus.textContent = "Title and prompt cannot be empty.";
       return;
     }
     this.templateEditorSave.disabled = true;
     this.templateEditorStatus.className = "astral-am-action-status";
-    this.templateEditorStatus.textContent = "正在保存...";
+    this.templateEditorStatus.textContent = "Saving...";
     try {
       await fetchJson("/assets-astral/prompt-templates/save", {
         method: "POST",
@@ -3977,7 +3977,7 @@ class PromptBrowser {
     } catch (error) {
       this.templateEditorStatus.className =
         "astral-am-action-status is-error";
-      this.templateEditorStatus.textContent = `保存失败：${error.message || error}`;
+      this.templateEditorStatus.textContent = `Save failed: ${error.message || error}`;
     } finally {
       this.templateEditorSave.disabled = false;
     }
@@ -3985,12 +3985,12 @@ class PromptBrowser {
 
   async deleteTemplate(template) {
     const confirmed = await showAstralConfirm({
-      title: "删除提示词模板",
-      message: `确定删除提示词模板“${template.title}”吗？\n\n删除后无法从此页面恢复。`,
-      confirmLabel: "删除模板",
+      title: "Delete Prompt Template",
+      message: `Delete prompt template "${template.title}"?\n\nIt cannot be recovered from this page afterward.`,
+      confirmLabel: "Delete Template",
     });
     if (!confirmed) return;
-    this.setTemplateStatus(`正在删除“${template.title}”...`, "loading");
+    this.setTemplateStatus(`Deleting "${template.title}"...`, "loading");
     try {
       await fetchJson("/assets-astral/prompt-templates/delete", {
         method: "POST",
@@ -3998,9 +3998,9 @@ class PromptBrowser {
         body: JSON.stringify({ id: template.id }),
       });
       await this.loadTemplates();
-      this.setTemplateStatus("模板已删除。", "success");
+      this.setTemplateStatus("Template deleted.", "success");
     } catch (error) {
-      this.setTemplateStatus(`删除模板失败：${error.message || error}`, "error");
+      this.setTemplateStatus(`Failed to delete template: ${error.message || error}`, "error");
     }
   }
 
@@ -4008,14 +4008,14 @@ class PromptBrowser {
     try {
       const node = LiteGraph.createNode(ASTRAL_PROMPT_NODE_ID);
       if (!node) {
-        throw new Error("ComfyUI 未注册节点 Assets Prompt");
+        throw new Error("ComfyUI has not registered the Assets Prompt node.");
       }
       const titleWidget = node.widgets?.find((widget) => widget.name === "title");
       const promptWidget = node.widgets?.find((widget) => widget.name === "prompt");
       if (!titleWidget || !promptWidget) {
-        throw new Error("Assets Prompt 节点缺少 title 或 prompt 控件");
+        throw new Error("The Assets Prompt node is missing the title or prompt widget.");
       }
-      titleWidget.value = template.title || "提示词";
+      titleWidget.value = template.title || "Prompt";
       promptWidget.value = template.prompt || "";
       node.setSize?.([420, 240]);
       const canvas = app.canvas;
@@ -4031,7 +4031,7 @@ class PromptBrowser {
       app.canvas?.selectNode?.(node);
       this.root.close();
     } catch (error) {
-      this.setTemplateStatus(`放入画布失败：${error.message || error}`, "error");
+      this.setTemplateStatus(`Failed to place on canvas: ${error.message || error}`, "error");
     }
   }
 
@@ -4041,7 +4041,7 @@ class PromptBrowser {
       this.applyApiConfiguration(payload || {});
     } catch (error) {
       this.ensureApiProviderDraft();
-      this.setConfigStatus(`读取 API 设置失败：${error.message || error}`, "error");
+      this.setConfigStatus(`Failed to read API settings: ${error.message || error}`, "error");
     }
   }
 
@@ -4134,7 +4134,7 @@ class PromptBrowser {
     this.apiProviders = [
       {
         id: "default",
-        name: "默认 API",
+        name: "Default API",
         baseUrl: "https://api.openai.com/v1",
         model: "",
         apiKey: "",
@@ -4207,8 +4207,8 @@ class PromptBrowser {
     }
     this.renderApiProviderOptions();
     void this.saveApiConfig(
-      "API 标签顺序已保存。",
-      "正在保存 API 标签顺序...",
+      "API task order saved.",
+      "Saving API task order...",
     );
     return true;
   }
@@ -4241,14 +4241,14 @@ class PromptBrowser {
       button.setAttribute("aria-selected", String(isActive));
       button.tabIndex = isActive ? 0 : -1;
       button.title =
-        `${provider.baseUrl || "尚未填写 API 地址"}\n拖动可调整 API 标签顺序`;
+        `${provider.baseUrl || "API URL not entered"}\nDrag to reorder API tabs`;
       button.addEventListener("click", () => this.selectApiProvider(provider.id));
       button.addEventListener("dragstart", (event) => {
         if (!event.dataTransfer) return;
         if (this.saveConfigButton.disabled) {
           event.preventDefault();
           this.setConfigStatus(
-            "API 设置正在保存，请稍后再调整标签顺序。",
+            "API settings are still saving. Adjust the task order afterward.",
             "warning",
           );
           return;
@@ -4311,7 +4311,7 @@ class PromptBrowser {
     this.modelInput.value = provider.model || "";
     this.apiKeyInput.value = provider.apiKey || "";
     this.apiKeyInput.title =
-      "留空或保留掩码会继续使用已保存的 Key；输入新值会覆盖。";
+      "Leave blank or keep the mask to reuse the saved key; entering a new value overwrites it.";
     this.apiKeyHint.textContent = provider.apiKeyHint || "";
     this.refreshModelLists(provider.id);
   }
@@ -4334,14 +4334,14 @@ class PromptBrowser {
     this.loadApiProviderEditor(providerId);
     this.renderApiProviderOptions();
     this.setConfigStatus(
-      `正在编辑“${this.apiProviderById(providerId)?.name || providerId}”。`,
+      `Editing "${this.apiProviderById(providerId)?.name || providerId}".`,
     );
   }
 
   addApiProvider() {
     this.commitApiProviderEditor();
     if (this.apiProviders.length >= 20) {
-      this.setConfigStatus("最多保存 20 个 API 配置。", "warning");
+      this.setConfigStatus("Up to 20 API configurations can be saved.", "warning");
       return;
     }
     const provider = {
@@ -4358,7 +4358,7 @@ class PromptBrowser {
     this.renderApiProviderOptions();
     this.loadApiProviderEditor(provider.id);
     this.renderTaskBindingOptions();
-    this.setConfigStatus("已新增 API，填写地址和 Key 后保存。", "success");
+    this.setConfigStatus("API added. Enter its URL and key, then save.", "success");
     this.apiNameInput.focus();
   }
 
@@ -4367,16 +4367,16 @@ class PromptBrowser {
     const source = this.apiProviderById();
     if (!source) return;
     if (this.apiProviders.length >= 20) {
-      this.setConfigStatus("最多保存 20 个 API 配置。", "warning");
+      this.setConfigStatus("Up to 20 API configurations can be saved.", "warning");
       return;
     }
     const provider = {
       ...source,
       id: this.createApiId(),
-      name: `${source.name || "API"} 副本`.slice(0, 80),
+      name: `${source.name || "API"} copy`.slice(0, 80),
       apiKey: "",
       apiKeyHint: source.hasApiKey
-        ? "复制后请重新填写 API Key"
+        ? "Re-enter the API key after duplicating."
         : "",
     };
     delete provider.hasApiKey;
@@ -4387,7 +4387,7 @@ class PromptBrowser {
     this.loadApiProviderEditor(provider.id);
     this.renderTaskBindingOptions();
     this.setConfigStatus(
-      "API 已复制。出于安全考虑，API Key 需要重新填写。",
+      "API copied. For security, enter the API key again.",
       "warning",
     );
   }
@@ -4397,13 +4397,13 @@ class PromptBrowser {
     const provider = this.apiProviderById();
     if (!provider) return;
     if (this.apiProviders.length <= 1) {
-      this.setConfigStatus("至少保留一个 API 配置。", "warning");
+      this.setConfigStatus("Keep at least one API configuration.", "warning");
       return;
     }
     const confirmed = await showAstralConfirm({
-      title: "删除 API 配置",
-      message: `确定删除 API 配置“${provider.name || provider.id}”吗？`,
-      confirmLabel: "删除 API",
+      title: "Delete API Configuration",
+      message: `Delete API configuration "${provider.name || provider.id}"?`,
+      confirmLabel: "Delete API",
     });
     if (!confirmed) return;
     this.apiProviders = this.apiProviders.filter(
@@ -4423,7 +4423,7 @@ class PromptBrowser {
     this.renderApiProviderOptions();
     this.loadApiProviderEditor(fallbackId);
     this.renderTaskBindingOptions();
-    this.setConfigStatus("API 配置已删除。", "success");
+    this.setConfigStatus("API configuration deleted.", "success");
   }
 
   renderTaskBindingOptions() {
@@ -4504,12 +4504,12 @@ class PromptBrowser {
   async fetchModelsForProvider(provider, button) {
     if (!provider) return;
     if (!provider.baseUrl?.trim()) {
-      this.setConfigStatus("请先填写 API 地址，再拉取模型。", "warning");
+      this.setConfigStatus("Enter the API URL before fetching models.", "warning");
       return;
     }
     button.disabled = true;
-    button.textContent = "拉取中...";
-    this.setConfigStatus(`正在从“${provider.name || provider.id}”拉取模型...`);
+    button.textContent = "Fetching...";
+    this.setConfigStatus(`Fetching models from "${provider.name || provider.id}"...`);
     try {
       const result = await fetchJson("/assets-astral/chat/models", {
         method: "POST",
@@ -4521,18 +4521,18 @@ class PromptBrowser {
       this.refreshModelLists(provider.id);
       this.setConfigStatus(
         models.length
-          ? `已拉取 ${models.length} 个模型，可在模型框中输入或从下拉建议中选择。`
-          : "模型列表为空，可继续手动填写模型名称。",
+          ? `Fetched ${models.length} models; type one in the model box or pick from the suggestions.`
+          : "The model list is empty. You can still enter a model name manually.",
         models.length ? "success" : "warning",
       );
     } catch (error) {
       this.setConfigStatus(
-        `拉取模型失败：${error.message || error}`,
+        `Failed to fetch models: ${error.message || error}`,
         "error",
       );
     } finally {
       button.disabled = false;
-      button.textContent = "拉取模型";
+      button.textContent = "Fetch Models";
     }
   }
 
@@ -4643,8 +4643,8 @@ class PromptBrowser {
   }
 
   async saveApiConfig(
-    successMessage = "API 设置与模式分工已保存。",
-    pendingMessage = "正在保存 API 设置...",
+    successMessage = "API settings and mode assignments saved.",
+    pendingMessage = "Saving API settings...",
   ) {
     this.saveConfigButton.disabled = true;
     this.setConfigStatus(pendingMessage);
@@ -4657,7 +4657,7 @@ class PromptBrowser {
       this.applyApiConfiguration(payload || {});
       this.setConfigStatus(successMessage, "success");
     } catch (error) {
-      this.setConfigStatus(`保存失败：${error.message || error}`, "error");
+      this.setConfigStatus(`Save failed: ${error.message || error}`, "error");
     } finally {
       this.saveConfigButton.disabled = false;
     }
@@ -4676,16 +4676,16 @@ class PromptBrowser {
       this.sendButton.disabled = this.chatStopping;
       this.sendButton.textContent = this.chatGenerating
         ? this.chatStopping
-          ? "停止中..."
-          : "停止"
-        : "发送";
+          ? "Stopping..."
+          : "Stop"
+        : "Send";
       this.sendButton.classList.toggle(
         "is-danger",
         this.chatGenerating,
       );
       this.sendButton.setAttribute(
         "aria-label",
-        this.chatGenerating ? "停止当前生成" : "发送消息",
+        this.chatGenerating ? "Stop Current Generation" : "Send message",
       );
     }
     for (const button of [
@@ -4729,13 +4729,13 @@ class PromptBrowser {
       const missingOption = createElement(
         "option",
         "",
-        `${normalizedSelected}（未找到）`,
+        `${normalizedSelected} (not found)`,
       );
       missingOption.value = normalizedSelected;
       options.unshift(missingOption);
     }
     if (!options.length) {
-      const emptyOption = createElement("option", "", "未找到 GGUF 模型");
+      const emptyOption = createElement("option", "", "No GGUF model found");
       emptyOption.value = "";
       options.push(emptyOption);
     }
@@ -4757,7 +4757,7 @@ class PromptBrowser {
         : String(model.path || "");
       return option;
     });
-    const noVisionOption = createElement("option", "", "无（纯文本）");
+    const noVisionOption = createElement("option", "", "None (text-only)");
     noVisionOption.value = "";
     const normalizedVisionSelected = String(selectedVisionPath || "");
     if (
@@ -4767,7 +4767,7 @@ class PromptBrowser {
       const missingVisionOption = createElement(
         "option",
         "",
-        `${normalizedVisionSelected}（未找到）`,
+        `${normalizedVisionSelected} (not found)`,
       );
       missingVisionOption.value = normalizedVisionSelected;
       visionOptions.unshift(missingVisionOption);
@@ -4779,11 +4779,11 @@ class PromptBrowser {
     this.localLlmVisionModelSelect.value = normalizedVisionSelected;
 
     this.localLlmModelsRootLabel.textContent = this.localLlmModelsRoot
-      ? `模型目录：${this.localLlmModelsRoot}`
-      : "尚未找到 ComfyUI/models/LLM 目录";
+      ? `Model directory: ${this.localLlmModelsRoot}`
+      : "ComfyUI/models/LLM was not found";
     this.localLlmModelHint.textContent =
-      `已发现 ${models.length} 个主模型 / ${visionModels.length} 个视觉投影模型。`
-      + " 图片和视频抽帧需要 mmproj；音频仅支持 Gemma4。";
+      `Found ${models.length} main models / ${visionModels.length} vision projection models.`
+      + " Images and video frame extraction need mmproj; audio is only supported for Gemma4.";
   }
 
   populateLocalLlmInputs() {
@@ -4850,20 +4850,20 @@ class PromptBrowser {
   async loadLocalLlmConfig() {
     if (this.localLlmLoading) return this.localLlmLoading;
     this.localLlmLoading = (async () => {
-      this.setLocalLlmStatus("正在读取本地 LLM 配置和模型...");
+      this.setLocalLlmStatus("Loading local LLM configuration and models...");
       try {
         const payload = await fetchJson("/assets-astral/local-llm/config");
         this.applyLocalLlmPayload(payload, true);
         this.localLlmLoaded = true;
         this.setLocalLlmStatus(
           this.localLlmModels.length
-            ? `已读取配置，找到 ${this.localLlmModels.length} 个主模型和 ${this.localLlmVisionModels.length} 个视觉投影模型。`
-            : "已读取配置，但 models/LLM 中没有可用 GGUF 主模型。",
+            ? `Configuration loaded: found ${this.localLlmModels.length} main models and ${this.localLlmVisionModels.length} vision projection models.`
+            : "Configuration loaded, but no usable GGUF main model exists in models/LLM.",
           this.localLlmModels.length ? "success" : "warning",
         );
       } catch (error) {
         this.setLocalLlmStatus(
-          `读取本地 LLM 配置失败：${error.message || error}`,
+          `Failed to read local LLM configuration: ${error.message || error}`,
           "error",
         );
       } finally {
@@ -4875,14 +4875,14 @@ class PromptBrowser {
 
   async loadLocalLlmModels() {
     this.localLlmRefreshButton.disabled = true;
-    this.localLlmRefreshButton.textContent = "刷新中...";
+    this.localLlmRefreshButton.textContent = "Refreshing...";
     const selectedPath =
       this.localLlmModelSelect.value ||
       String(this.localLlmConfig?.modelPath || "");
     const selectedVisionPath =
       this.localLlmVisionModelSelect.value ||
       String(this.localLlmConfig?.visionModelPath || "");
-    this.setLocalLlmStatus("正在扫描 ComfyUI/models/LLM...");
+    this.setLocalLlmStatus("Scanning ComfyUI/models/LLM...");
     try {
       const payload = await fetchJson("/assets-astral/local-llm/models");
       this.localLlmModels = Array.isArray(payload?.items) ? payload.items : [];
@@ -4893,18 +4893,18 @@ class PromptBrowser {
       this.renderLocalLlmModels(selectedPath, selectedVisionPath);
       this.setLocalLlmStatus(
         this.localLlmModels.length
-          ? `已发现 ${this.localLlmModels.length} 个主模型和 ${this.localLlmVisionModels.length} 个视觉投影模型。`
-          : "没有发现 GGUF 主模型，请检查 models/LLM 目录。",
+          ? `Found ${this.localLlmModels.length} main models and ${this.localLlmVisionModels.length} vision projection models.`
+          : "No GGUF main model was found. Check the models/LLM directory.",
         this.localLlmModels.length ? "success" : "warning",
       );
     } catch (error) {
       this.setLocalLlmStatus(
-        `刷新模型失败：${error.message || error}`,
+        `Failed to refresh models: ${error.message || error}`,
         "error",
       );
     } finally {
       this.localLlmRefreshButton.disabled = false;
-      this.localLlmRefreshButton.textContent = "刷新模型";
+      this.localLlmRefreshButton.textContent = "Refresh Models";
     }
   }
 
@@ -4943,12 +4943,12 @@ class PromptBrowser {
   async saveLocalLlmConfig() {
     const config = this.collectLocalLlmConfig();
     if (!config.modelPath) {
-      this.setLocalLlmStatus("请先选择一个 GGUF 模型。", "warning");
+      this.setLocalLlmStatus("Select a GGUF model first.", "warning");
       return;
     }
     this.saveLocalLlmConfigButton.disabled = true;
-    this.saveLocalLlmConfigButton.textContent = "正在保存...";
-    this.setLocalLlmStatus("正在保存本地 LLM 设置...");
+    this.saveLocalLlmConfigButton.textContent = "Saving...";
+    this.setLocalLlmStatus("Saving local LLM settings...");
     try {
       const payload = await fetchJson("/assets-astral/local-llm/config", {
         method: "POST",
@@ -4957,15 +4957,15 @@ class PromptBrowser {
       });
       this.applyLocalLlmPayload(payload, true);
       this.localLlmLoaded = true;
-      this.setLocalLlmStatus("本地 LLM 设置已保存。", "success");
+      this.setLocalLlmStatus("Local LLM settings saved.", "success");
     } catch (error) {
       this.setLocalLlmStatus(
-        `保存失败：${error.message || error}`,
+        `Save failed: ${error.message || error}`,
         "error",
       );
     } finally {
       this.saveLocalLlmConfigButton.disabled = false;
-      this.saveLocalLlmConfigButton.textContent = "保存本地 LLM 设置";
+      this.saveLocalLlmConfigButton.textContent = "Save Local LLM Settings";
     }
   }
 
@@ -4995,7 +4995,7 @@ class PromptBrowser {
         await this.selectConversation(target.id);
       }
     } catch (error) {
-      this.setChatStatus(`读取对话列表失败：${error.message || error}`, "error");
+      this.setChatStatus(`Failed to read conversation list: ${error.message || error}`, "error");
     }
   }
 
@@ -5008,7 +5008,7 @@ class PromptBrowser {
   renderConversationList() {
     if (!this.conversations.length) {
       this.conversationList.replaceChildren(
-        createElement("span", "astral-am-muted", "还没有会话"),
+        createElement("span", "astral-am-muted", "No conversations yet"),
       );
       return;
     }
@@ -5022,20 +5022,20 @@ class PromptBrowser {
       );
       button.type = "button";
       button.disabled = this.chatGenerating;
-      button.title = "单击切换会话，双击重命名";
+      button.title = "Click to switch conversations; double-click to rename.";
       if (this.chatGenerating) {
-        button.title = "请先停止当前生成";
+        button.title = "Stop the current generation first";
       }
       button.setAttribute(
         "aria-label",
-        `${conversation.title || "未命名会话"}，单击切换会话，双击重命名`,
+        `${conversation.title || "Untitled Conversation"}, click to switch conversations, double-click to rename`,
       );
       button.append(
-        createElement("strong", "", conversation.title || "未命名会话"),
+        createElement("strong", "", conversation.title || "Untitled Conversation"),
         createElement(
           "span",
           "astral-am-muted",
-          `${Number(conversation.messageCount) || 0} 条消息`,
+          `${Number(conversation.messageCount) || 0} messages`,
         ),
       );
       button.addEventListener("click", () => {
@@ -5052,14 +5052,14 @@ class PromptBrowser {
 
   async createConversation(select = true) {
     if (this.chatGenerating) {
-      this.setChatStatus("请先停止当前生成，再新建会话。", "warning");
+      this.setChatStatus("Stop the current generation before creating a new conversation.", "warning");
       return null;
     }
     try {
       const conversation = await fetchJson("/assets-astral/chat/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "新会话" }),
+        body: JSON.stringify({ title: "New Conversation" }),
       });
       if (select) {
         this.activeConversation = conversation;
@@ -5071,11 +5071,11 @@ class PromptBrowser {
       }
       await this.refreshConversationSummaries();
       if (select) {
-        this.setChatStatus("已新建会话。", "success");
+        this.setChatStatus("New conversation created.", "success");
       }
       return conversation;
     } catch (error) {
-      this.setChatStatus(`新建会话失败：${error.message || error}`, "error");
+      this.setChatStatus(`Failed to create conversation: ${error.message || error}`, "error");
       throw error;
     }
   }
@@ -5083,12 +5083,12 @@ class PromptBrowser {
   async selectConversation(conversationId) {
     if (!conversationId) return;
     if (this.chatGenerating) {
-      this.setChatStatus("请先停止当前生成，再切换会话。", "warning");
+      this.setChatStatus("Stop the current generation before switching conversations.", "warning");
       return;
     }
     this.clearChatPendingRequest();
     const requestId = ++this.conversationLoadSequence;
-    this.setChatStatus("正在读取会话...", "loading");
+    this.setChatStatus("Loading conversations...", "loading");
     try {
       const conversation = await fetchJson(
         `/assets-astral/chat/conversations/get?${queryString({
@@ -5112,7 +5112,7 @@ class PromptBrowser {
           ? {
               id: String(conversation.systemPromptTemplate.id || ""),
               title: String(
-                conversation.systemPromptTemplate.title || "系统提示词",
+                conversation.systemPromptTemplate.title || "System Prompt",
               ),
               content: conversation.systemPromptTemplate.content,
             }
@@ -5126,9 +5126,9 @@ class PromptBrowser {
       this.renderConversation();
       this.setChatStatus(
         storedAttachments.length > this.pendingAttachments.length
-          ? `当前对话最多保留 ${this.chatComposerAttachmentLimit} 个素材，已忽略多出的 ${
+          ? `This conversation keeps at most ${this.chatComposerAttachmentLimit} assets; ignored ${
               storedAttachments.length - this.pendingAttachments.length
-            } 个。`
+            } extra.`
           : "",
         storedAttachments.length > this.pendingAttachments.length
           ? "warning"
@@ -5136,7 +5136,7 @@ class PromptBrowser {
       );
     } catch (error) {
       if (requestId === this.conversationLoadSequence) {
-        this.setChatStatus(`读取会话失败：${error.message || error}`, "error");
+        this.setChatStatus(`Failed to read conversation: ${error.message || error}`, "error");
       }
     }
   }
@@ -5217,8 +5217,8 @@ class PromptBrowser {
       chip.classList.add("is-mentionable");
       chip.tabIndex = 0;
       chip.setAttribute("role", "button");
-      chip.setAttribute("aria-label", `插入素材名称 ${mention}`);
-      chip.title = `点击插入 ${mention}\n${pathLabel}`;
+      chip.setAttribute("aria-label", `Insert asset name ${mention}`);
+      chip.title = `Click to insert ${mention}\n${pathLabel}`;
       chip.addEventListener("click", (event) => {
         if (event.target.closest(".astral-am-chip-remove")) return;
         onActivate();
@@ -5232,7 +5232,7 @@ class PromptBrowser {
     if (typeof onRemove === "function") {
       const remove = createElement("button", "astral-am-chip-remove", "×");
       remove.type = "button";
-      remove.title = "移除附件";
+      remove.title = "Remove attachment";
       remove.addEventListener("click", (event) => {
         event.stopPropagation();
         onRemove();
@@ -5258,7 +5258,7 @@ class PromptBrowser {
         createElement(
           "div",
           "astral-am-chat-empty",
-          "还没有消息。可先加载系统提示词、Skill 或上传素材，再发送第一条消息。",
+          "No messages yet. Load a system prompt or Skill, attach assets, then send the first message.",
         ),
       );
       return;
@@ -5293,7 +5293,7 @@ class PromptBrowser {
         createElement(
           "span",
           "astral-am-chat-message-time",
-          this.chatStopping ? "正在停止" : "正在生成",
+          this.chatStopping ? "Stopping" : "Generating",
         ),
       );
       typing.append(
@@ -5301,7 +5301,7 @@ class PromptBrowser {
         createElement(
           "div",
           "astral-am-chat-message-content",
-          this.chatStopping ? "正在结束当前操作..." : "正在等待模型回复...",
+          this.chatStopping ? "Stopping the current operation..." : "Waiting for the model reply...",
         ),
       );
       fragment.append(typing);
@@ -5324,21 +5324,21 @@ class PromptBrowser {
     const role = createElement(
       "span",
       "astral-am-chat-role",
-      message.role === "user" ? "你" : "AI",
+      message.role === "user" ? "You" : "AI",
     );
     const timestamp = formatMessageTimestamp(message.timestamp);
     let timeLabel = "";
     if (message.pendingState === "stopped") {
       timeLabel = timestamp
-        ? `已发送 ${timestamp} · 已停止`
-        : "已停止";
+        ? `Sent ${timestamp} · Stopped`
+        : "Stopped";
     } else if (message.pendingState === "sending") {
       timeLabel = timestamp
-        ? `已发送 ${timestamp} · 等待回复`
-        : "正在发送";
+        ? `Sent ${timestamp} · Waiting for reply`
+        : "Sending";
     } else if (timestamp) {
       timeLabel = `${
-        message.role === "user" ? "已发送" : "已接收"
+        message.role === "user" ? "Sent" : "Received"
       } ${timestamp}`;
     }
     if (timeLabel) {
@@ -5392,10 +5392,10 @@ class PromptBrowser {
       const copyButton = createElement(
         "button",
         "astral-am-chat-message-action",
-        "复制",
+        "Copy",
       );
       copyButton.type = "button";
-      copyButton.title = "复制这条消息";
+      copyButton.title = "Copy this message";
       copyButton.addEventListener("click", () => {
         void this.copyChatMessage(message);
       });
@@ -5405,10 +5405,10 @@ class PromptBrowser {
       const deleteButton = createElement(
         "button",
         "astral-am-chat-message-action is-danger",
-        "删除",
+        "Delete",
       );
       deleteButton.type = "button";
-      deleteButton.title = "删除这条消息（不可恢复）";
+      deleteButton.title = "Delete this message (cannot be undone)";
       deleteButton.disabled = this.chatGenerating;
       deleteButton.addEventListener("click", () => {
         void this.deleteChatMessage(message);
@@ -5443,10 +5443,10 @@ class PromptBrowser {
       link.href = assetMediaUrl(attachment, false);
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.title = attachment.name || attachment.path || "生成图片";
+      link.title = attachment.name || attachment.path || "Generated image";
       const image = createElement("img");
       image.src = assetMediaUrl(attachment, false);
-      image.alt = attachment.name || attachment.path || "AI 生成图片";
+      image.alt = attachment.name || attachment.path || "AI-generated image";
       image.loading = "lazy";
       image.decoding = "async";
       image.draggable = false;
@@ -5481,22 +5481,22 @@ class PromptBrowser {
   async copyChatMessage(message) {
     try {
       const value = this.chatMessageCopyValue(message);
-      if (!value) throw new Error("这条消息没有可复制的内容");
+      if (!value) throw new Error("This message has no copyable content.");
       await copyText(value);
-      this.setChatStatus("消息内容已复制。", "success");
+      this.setChatStatus("Message copied.", "success");
     } catch (error) {
-      this.setChatStatus(`复制失败：${error.message || error}`, "error");
+      this.setChatStatus(`Copy failed: ${error.message || error}`, "error");
     }
   }
 
   async deleteChatMessage(message) {
     const conversationId = this.activeConversation?.id;
     if (!conversationId || !message?.id || this.chatGenerating) return;
-    const roleLabel = message.role === "user" ? "用户" : "AI";
+    const roleLabel = message.role === "user" ? "User" : "AI";
     const confirmed = await showAstralConfirm({
-      title: "删除消息",
-      message: `确定删除这条${roleLabel}消息吗？删除后不可恢复。`,
-      confirmLabel: "删除消息",
+      title: "Delete Message",
+      message: `Delete this ${roleLabel} message? This cannot be undone.`,
+      confirmLabel: "Delete Message",
     });
     if (!confirmed) return;
     try {
@@ -5516,9 +5516,9 @@ class PromptBrowser {
       }
       this.renderConversation();
       await this.refreshConversationSummaries();
-      this.setChatStatus("消息已删除，且不可恢复。", "success");
+      this.setChatStatus("Message deleted permanently.", "success");
     } catch (error) {
-      this.setChatStatus(`删除消息失败：${error.message || error}`, "error");
+      this.setChatStatus(`Failed to delete message: ${error.message || error}`, "error");
     }
   }
 
@@ -5562,8 +5562,8 @@ class PromptBrowser {
         ok: false,
         retainedItems,
         message: retainedItems.length
-          ? `当前对话已达到 ${limit} 个素材上限，请先移除部分素材后再试。`
-          : "勾选的素材已经在当前对话中。",
+          ? `This conversation has reached the limit of ${limit} assets; remove some before trying again.`
+          : "The selected assets are already in this conversation.",
       };
     }
 
@@ -5576,9 +5576,9 @@ class PromptBrowser {
       added,
       retainedItems,
       message:
-        `已将 ${added} 个素材加入当前对话，当前共 ${nextAttachments.length}/${limit} 个。` +
+        `Added ${added} assets to the current conversation, now ${nextAttachments.length}/${limit} in total.` +
         (retainedItems.length
-          ? `已达到上限，另有 ${retainedItems.length} 个未加入并保持勾选。`
+          ? ` Reached the limit; ${retainedItems.length} more were not added and stay selected.`
           : ""),
     };
   }
@@ -5593,15 +5593,15 @@ class PromptBrowser {
       const chip = createElement(
         "span",
         "astral-am-chip is-system-prompt",
-        `系统提示词: ${
-          this.pendingSystemPromptTemplate.title || "系统提示词"
+        `System prompt: ${
+          this.pendingSystemPromptTemplate.title || "System Prompt"
         }`,
       );
       chip.tabIndex = 0;
       chip.setAttribute(
         "aria-label",
-        `已加载系统提示词：${
-          this.pendingSystemPromptTemplate.title || "系统提示词"
+        `Loaded system prompt: ${
+          this.pendingSystemPromptTemplate.title || "System Prompt"
         }`,
       );
       chip.addEventListener("pointerenter", () => {
@@ -5626,7 +5626,7 @@ class PromptBrowser {
       });
       const remove = createElement("button", "astral-am-chip-remove", "×");
       remove.type = "button";
-      remove.title = "移除系统提示词";
+      remove.title = "Remove system prompt";
       remove.addEventListener("click", () => {
         this.pendingSystemPromptTemplate = null;
         this.renderChatSelection();
@@ -5661,7 +5661,7 @@ class PromptBrowser {
       }
       const remove = createElement("button", "astral-am-chip-remove", "×");
       remove.type = "button";
-      remove.title = "移除 Skill";
+      remove.title = "Remove Skill";
       remove.addEventListener("click", () => {
         this.pendingSkillIds = this.pendingSkillIds.filter(
           (item) => item !== skillId,
@@ -5695,14 +5695,14 @@ class PromptBrowser {
     }
     this.chatSelectionTray.replaceChildren(fragment);
     this.attachmentButton.textContent = this.pendingAttachments.length
-      ? `上传素材 (${this.pendingAttachments.length})`
-      : "上传素材";
+      ? `Attach Assets (${this.pendingAttachments.length})`
+      : "Attach Assets";
     this.skillButton.textContent = this.pendingSkillIds.length
-      ? "加载 Skill (1)"
-      : "加载 Skill";
+      ? "Load Skill (1)"
+      : "Load Skill";
     this.systemPromptButton.textContent = this.pendingSystemPromptTemplate
-      ? "加载系统提示词 (1)"
-      : "加载系统提示词";
+      ? "Load System Prompt (1)"
+      : "Load System Prompt";
     this.updateSkillChatButtons();
   }
 
@@ -5717,25 +5717,25 @@ class PromptBrowser {
     )) {
       const joined = joinedSkillIds.has(button.dataset.chatSkillId);
       button.textContent = joined
-        ? "当前会话 Skill"
+        ? "Current Session Skill"
         : hasCurrentContext
-          ? "切换到此 Skill"
-          : "加入会话";
+          ? "Switch to this Skill"
+          : "Add to Conversation";
       button.disabled = joined;
       button.title = joined
-        ? "当前会话已经加载这个 Skill"
+        ? "This Skill is already loaded in the session."
         : this.pendingSystemPromptTemplate
-          ? "切换后会替换当前会话中的系统提示词"
+          ? "Switching replaces the system prompt in the current conversation."
           : hasJoinedSkill
-          ? "切换后会替换当前会话中的 Skill"
-          : "将此 Skill 加入当前会话";
+          ? "Switching replaces the Skill in the current conversation."
+          : "Add this Skill to the current conversation.";
     }
   }
 
   async addSkillToChat(skillId) {
     const skill = this.skills.find((item) => item.id === skillId);
     if (!skill) {
-      this.setSkillStatus("未找到要加入会话的 Skill。", "warning");
+      this.setSkillStatus("The Skill to add could not be found.", "warning");
       return;
     }
     if (!this.chatLoaded) {
@@ -5750,12 +5750,12 @@ class PromptBrowser {
       }
     }
     if (!this.activeConversation?.id) {
-      this.setSkillStatus("无法创建或读取当前会话，请稍后重试。", "error");
+      this.setSkillStatus("Could not create or read the current conversation. Try again later.", "error");
       return;
     }
     const previousSkillId = this.pendingSkillIds[0] || "";
     if (previousSkillId === skill.id) {
-      this.setSkillStatus(`“${skill.name}”已经在当前会话中。`, "warning");
+      this.setSkillStatus(`"${skill.name}" is already in the current conversation.`, "warning");
       this.updateSkillChatButtons();
       return;
     }
@@ -5771,16 +5771,16 @@ class PromptBrowser {
     }
     const saved = await this.persistConversationSettings();
     const action = previousSystemPrompt
-      ? `已将当前会话的系统提示词“${
-          previousSystemPrompt.title || "系统提示词"
-        }”切换为 Skill“${skill.name}”。`
+      ? `Switched the current conversation's system prompt "${
+          previousSystemPrompt.title || "System Prompt"
+        }" to Skill "${skill.name}".`
       : previousSkillId
-      ? `已将当前会话的 Skill 从“${
+      ? `Switched the current conversation's Skill from "${
           previousSkill?.name || previousSkillId
-        }”切换为“${skill.name}”。`
-      : `已将“${skill.name}”加入当前会话。`;
+        }" to "${skill.name}".`
+      : `Added "${skill.name}" to the current conversation.`;
     this.setSkillStatus(
-      saved ? action : `${action}会话保存失败。`,
+      saved ? action : `${action} Failed to save the conversation.`,
       saved ? "success" : "error",
     );
   }
@@ -5810,7 +5810,7 @@ class PromptBrowser {
       return true;
     } catch (error) {
       this.setChatStatus(
-        `保存会话设置失败：${error.message || error}`,
+        `Failed to save conversation settings: ${error.message || error}`,
         "error",
       );
       return false;
@@ -5832,7 +5832,7 @@ class PromptBrowser {
   async addSystemPromptToChat(template) {
     const content = String(template?.prompt || "").trim();
     if (!template?.id || !content) {
-      this.setTemplateStatus("这份系统提示词没有可加载的内容。", "warning");
+      this.setTemplateStatus("This system prompt has no loadable content.", "warning");
       return;
     }
     if (!this.chatLoaded) {
@@ -5847,7 +5847,7 @@ class PromptBrowser {
       }
     }
     if (!this.activeConversation?.id) {
-      this.setTemplateStatus("无法创建或读取当前会话，请稍后重试。", "error");
+      this.setTemplateStatus("Could not create or read the current conversation. Try again later.", "error");
       return;
     }
 
@@ -5858,19 +5858,19 @@ class PromptBrowser {
     this.pendingSkillIds = [];
     this.pendingSystemPromptTemplate = {
       id: String(template.id),
-      title: String(template.title || "系统提示词"),
+      title: String(template.title || "System Prompt"),
       content,
     };
     this.renderChatSelection();
     this.renderTemplates();
     const saved = await this.persistConversationSettings();
     const message = previousSkillId
-      ? `已将当前会话的 Skill“${
+      ? `Switched the current conversation's Skill "${
           previousSkill?.name || previousSkillId
-        }”切换为系统提示词“${this.pendingSystemPromptTemplate.title}”。`
-      : `已将“${this.pendingSystemPromptTemplate.title}”加载到当前会话。`;
+        }" to system prompt "${this.pendingSystemPromptTemplate.title}".`
+      : `Loaded "${this.pendingSystemPromptTemplate.title}" into the current conversation.`;
     this.setTemplateStatus(
-      saved ? message : `${message}会话保存失败。`,
+      saved ? message : `${message} Failed to save the conversation.`,
       saved ? "success" : "error",
     );
     this.setChatStatus(message, saved ? "success" : "error");
@@ -5927,7 +5927,7 @@ class PromptBrowser {
           body: JSON.stringify({ requestId }),
         }).catch((error) => {
           this.setChatStatus(
-            `停止请求已发送，但服务端未确认：${error.message || error}`,
+            `Stop request sent, but the server did not confirm: ${error.message || error}`,
             "warning",
           );
           return null;
@@ -5954,7 +5954,7 @@ class PromptBrowser {
     this.setChatGenerationState(false);
     this.renderConversation();
     this.setChatStatus(
-      "操作已停止。已停止的消息会继续显示。",
+      "Generation stopped. The stopped message remains visible.",
       "warning",
     );
   }
@@ -5975,11 +5975,11 @@ class PromptBrowser {
     const translationEnabled = Boolean(this.translationCheckbox.checked);
     const useLocal = activeTask.id === LOCAL_CHAT_MODE_DEFINITION.id;
     if (translationEnabled && !message) {
-      this.setChatStatus("请先输入要翻译的消息。", "warning");
+      this.setChatStatus("Enter a message to translate.", "warning");
       return;
     }
     if (!translationEnabled && !message && !attachmentSnapshot.length) {
-      this.setChatStatus("请先输入消息或选择素材。", "warning");
+      this.setChatStatus("Enter a message or select assets first.", "warning");
       return;
     }
     if (!translationEnabled) {
@@ -5992,11 +5992,11 @@ class PromptBrowser {
       this.setChatStatus(
         translationEnabled
           ? useLocal
-            ? "本地翻译需要先在“本地 LLM 配置”中选择 GGUF 模型。"
-            : "翻译模式使用纯文本 API。请先在 API配置的“纯文本模式”中选择模型。"
+            ? "Select a GGUF model in Local LLM Configuration before using local translation."
+            : "Translation Mode uses the text-only API. Select a model under Text-only Mode in API Configuration first."
           : useLocal
-            ? "本地模式尚未选择 GGUF 模型，请先打开“本地 LLM 配置”。"
-            : `“${activeTask.label}”尚未配置模型，请先在 API配置中为这个模式选择模型。`,
+            ? "No GGUF model is selected for Local Mode. Open Local LLM Configuration first."
+            : `"${activeTask.label}" has no model configured yet. Select a model for this mode in API Configuration first.`,
         "warning",
       );
       return;
@@ -6005,14 +6005,14 @@ class PromptBrowser {
       (language) => language.value === this.translationLanguageSelect.value,
     );
     if (translationEnabled && !targetLanguage) {
-      this.setChatStatus("请选择翻译目标语言。", "warning");
+      this.setChatStatus("Select a translation target language.", "warning");
       return;
     }
     if (!this.activeConversation?.id) {
       await this.createConversation(true);
     }
     if (!this.activeConversation?.id) {
-      this.setChatStatus("无法创建当前会话，请稍后重试。", "error");
+      this.setChatStatus("Could not create the current conversation. Try again later.", "error");
       return;
     }
     const requestId = createChatRequestId();
@@ -6065,12 +6065,12 @@ class PromptBrowser {
           };
     this.setChatStatus(
       translationEnabled
-        ? `正在将本次段落翻译为“${targetLanguage.label}”；历史、系统提示词、Skill 和素材不会发送。`
+        ? `Translating this passage to "${targetLanguage.label}"; history, system prompt, Skills and assets will not be sent.`
         : useLocal
-          ? `正在使用本地模型“${activeModel.split("/").pop()}”推理。首次加载可能较慢。`
-          : `正在使用“${activeTask.label}”和模型“${activeModel}”请求 API。${
+          ? `Running inference with local model "${activeModel.split("/").pop()}". First load may be slow.`
+          : `Requesting the API with "${activeTask.label}" and model "${activeModel}". ${
               attachmentSnapshot.length
-                ? "视频附件会先抽帧，较大素材可能需要更久。"
+                ? "Video attachments are sampled into frames; larger files may take longer."
                 : ""
             }`,
       "loading",
@@ -6098,10 +6098,10 @@ class PromptBrowser {
       await this.refreshConversationSummaries();
       this.setChatStatus(
         translationEnabled
-          ? "翻译结果已收到并保存到当前会话。"
+          ? "Translation received and saved to the conversation."
           : useLocal
-            ? "本地模型回复已收到并保存到当前会话。"
-            : "回复已收到并保存到会话。",
+            ? "The local model reply was received and saved."
+            : "Reply received and saved to the conversation.",
         "success",
       );
     } catch (error) {
@@ -6116,7 +6116,7 @@ class PromptBrowser {
       this.chatAbortController = null;
       this.setChatGenerationState(false);
       this.renderConversation();
-      this.setChatStatus(`对话失败：${error.message || error}`, "error");
+      this.setChatStatus(`Chat failed: ${error.message || error}`, "error");
     } finally {
       if (this.chatActiveRequestId === requestId) {
         this.chatActiveRequestId = "";
@@ -6128,15 +6128,15 @@ class PromptBrowser {
 
   async deleteActiveConversation() {
     if (this.chatGenerating) {
-      this.setChatStatus("请先停止当前生成，再删除会话。", "warning");
+      this.setChatStatus("Stop the current generation before deleting a conversation.", "warning");
       return;
     }
     const conversation = this.activeConversation;
     if (!conversation?.id) return;
     const confirmed = await showAstralConfirm({
-      title: "删除会话",
-      message: `确定删除会话“${conversation.title || conversation.id}”吗？`,
-      confirmLabel: "删除会话",
+      title: "Delete Conversation",
+      message: `Delete conversation "${conversation.title || conversation.id}"?`,
+      confirmLabel: "Delete Conversation",
     });
     if (!confirmed) return;
     try {
@@ -6151,9 +6151,9 @@ class PromptBrowser {
       this.pendingSkillIds = [];
       this.pendingSystemPromptTemplate = null;
       await this.loadConversations();
-      this.setChatStatus("会话已删除。", "success");
+      this.setChatStatus("Conversation deleted.", "success");
     } catch (error) {
-      this.setChatStatus(`删除会话失败：${error.message || error}`, "error");
+      this.setChatStatus(`Failed to delete conversation: ${error.message || error}`, "error");
     }
   }
 
@@ -6164,11 +6164,11 @@ class PromptBrowser {
         : this.conversations.find((item) => item.id === conversationId);
     if (!conversation?.id) return;
     const title = await showAstralPrompt({
-      title: "重命名会话",
-      message: "输入新的会话标题。",
-      label: "会话名称",
-      initialValue: conversation.title || "新会话",
-      confirmLabel: "保存名称",
+      title: "Rename Conversation",
+      message: "Enter a new conversation title.",
+      label: "Conversation name",
+      initialValue: conversation.title || "New Conversation",
+      confirmLabel: "Save Name",
     });
     if (title === null || !title.trim() || title.trim() === conversation.title) {
       return;
@@ -6185,9 +6185,9 @@ class PromptBrowser {
       );
       await this.refreshConversationSummaries();
       await this.selectConversation(updatedConversation.id);
-      this.setChatStatus("会话标题已更新。", "success");
+      this.setChatStatus("Conversation title updated.", "success");
     } catch (error) {
-      this.setChatStatus(`重命名失败：${error.message || error}`, "error");
+      this.setChatStatus(`Rename failed: ${error.message || error}`, "error");
     }
   }
 
@@ -6259,7 +6259,7 @@ class PromptBrowser {
     this.selectedInspirationTagIds.clear();
     this.renderInspirationSelection();
     this.renderSkillTagManager();
-    this.setSkillTagStatus("已清空灵感标签选择。", "");
+    this.setSkillTagStatus("Inspiration tag selection cleared.", "");
   }
 
   randomizeInspirationTags() {
@@ -6272,7 +6272,7 @@ class PromptBrowser {
       }))
       .filter((group) => group.tags.length);
     if (!groups.length) {
-      this.setSkillTagStatus("当前没有可用于随机组合的标签。", "warning");
+      this.setSkillTagStatus("No tags are available for random combination.", "warning");
       return;
     }
     for (let index = groups.length - 1; index > 0; index -= 1) {
@@ -6294,7 +6294,7 @@ class PromptBrowser {
     this.renderInspirationSelection();
     this.renderSkillTagManager();
     this.setSkillTagStatus(
-      `已从 ${groupCount} 个不同分类随机组合灵感标签，再次点击可换一批。`,
+      `Randomly mixed inspiration tags from ${groupCount} different categories; click again for another batch.`,
       "success",
     );
   }
@@ -6303,7 +6303,7 @@ class PromptBrowser {
     if (!this.inspirationSelectionCount) return;
     const selected = this.selectedInspirationTags();
     this.inspirationSelectionCount.textContent =
-      `已选 ${selected.length} 个灵感标签`;
+      `${selected.length} inspiration tags selected`;
     this.inspirationClearButton.disabled = !selected.length;
     this.inspirationRandomButton.disabled =
       !this.skillTagState.tags.length || this.inspirationGenerating;
@@ -6313,7 +6313,7 @@ class PromptBrowser {
         createElement(
           "span",
           "astral-am-inspiration-empty",
-          "点击下方标签加入灵感，或点击“随机组合”跨分类抽取。",
+          "Click tags below to add inspiration, or use Random Mix to draw across categories.",
         ),
       );
     } else {
@@ -6328,7 +6328,7 @@ class PromptBrowser {
         );
         chip.type = "button";
         chip.style.setProperty("--tag-color", tag.color);
-        chip.title = `${this.skillTagPath(tag)} · 点击移出灵感`;
+        chip.title = `${this.skillTagPath(tag)} · Click to remove from inspiration`;
         chip.append(
           createElement("span", "astral-am-tag-color-dot"),
           createElement(
@@ -6337,7 +6337,7 @@ class PromptBrowser {
             `${
               [category?.name, subcategory?.name]
                 .filter(Boolean)
-                .join(" / ") || "未分类"
+                .join(" / ") || "Uncategorized"
             } / ${tag.name}`,
           ),
           createElement("span", "astral-am-inspiration-chip-remove", "×"),
@@ -6378,8 +6378,8 @@ class PromptBrowser {
     const useLocal = this.inspirationModeInput?.value === "local";
     if (this.inspirationResultHint) {
       this.inspirationResultHint.textContent = useLocal
-        ? "结果可直接编辑，使用 API配置中的本地 GGUF 模型"
-        : "结果可直接编辑，使用 API配置中的纯文本模式模型";
+        ? "The result is editable and uses the local GGUF model from API Configuration."
+        : "The result is editable and uses the text-only model from API Configuration.";
     }
   }
 
@@ -6390,7 +6390,7 @@ class PromptBrowser {
       this.inspirationModeInput.value === "local" ? "local" : "api";
     const tags = this.selectedInspirationTags().map((tag) => {
       const categoryName =
-        this.skillTagCategoryById(tag.categoryId)?.name || "灵感";
+        this.skillTagCategoryById(tag.categoryId)?.name || "Inspiration";
       const subcategoryName =
         this.skillTagSubcategoryById(tag.subcategoryId)?.name || "";
       return {
@@ -6402,21 +6402,21 @@ class PromptBrowser {
     });
     if (!basePrompt && !tags.length) {
       this.setInspirationStatus(
-        "请先输入基础画面想法，或选择至少一个灵感标签。",
+        "Enter a base scene idea or select at least one inspiration tag.",
         "warning",
       );
       return;
     }
     this.inspirationGenerating = true;
     this.inspirationGenerateButton.disabled = true;
-    this.inspirationGenerateButton.textContent = "正在生成...";
+    this.inspirationGenerateButton.textContent = "Generating...";
     this.inspirationModeInput.disabled = true;
     this.inspirationResultInput.value = "";
     this.updateInspirationResultActions();
     this.setInspirationStatus(
       mode === "local"
-        ? "正在使用本地 GGUF 模型扩写提示词..."
-        : "正在使用纯文本模式 API 扩写提示词...",
+        ? "Expanding the prompt with a local GGUF model..."
+        : "Expanding the prompt with the text-only API...",
       "loading",
     );
     try {
@@ -6436,16 +6436,16 @@ class PromptBrowser {
       );
       this.inspirationResultInput.value = String(payload?.text || "").trim();
       this.updateInspirationResultActions();
-      this.setInspirationStatus("灵感提示词已生成。", "success");
+      this.setInspirationStatus("Inspiration prompt generated.", "success");
     } catch (error) {
       this.setInspirationStatus(
-        `生成失败：${error.message || error}`,
+        `Generation failed: ${error.message || error}`,
         "error",
       );
     } finally {
       this.inspirationGenerating = false;
       this.inspirationGenerateButton.disabled = false;
-      this.inspirationGenerateButton.textContent = "生成灵感提示词";
+      this.inspirationGenerateButton.textContent = "Generate Inspiration Prompt";
       this.inspirationModeInput.disabled = false;
       this.renderInspirationSelection();
     }
@@ -6456,10 +6456,10 @@ class PromptBrowser {
     if (!result) return;
     try {
       await copyText(result);
-      this.setInspirationStatus("提示词已复制到剪贴板。", "success");
+      this.setInspirationStatus("Prompt copied to the clipboard.", "success");
     } catch (error) {
       this.setInspirationStatus(
-        `复制失败：${error.message || error}`,
+        `Copy failed: ${error.message || error}`,
         "error",
       );
     }
@@ -6471,7 +6471,7 @@ class PromptBrowser {
     this.inspirationBasePromptInput.value = result;
     this.inspirationBasePromptInput.focus();
     this.setInspirationStatus(
-      "已将扩写结果放回基础画面想法，可继续调整后再次生成。",
+      "The expanded result was moved back to the base scene idea. Adjust it and generate again.",
       "success",
     );
   }
@@ -6487,7 +6487,7 @@ class PromptBrowser {
     this.chatInput.dispatchEvent(new Event("input", { bubbles: true }));
     this.chatInput.focus();
     this.setChatStatus(
-      "灵感提示词已加入对话输入框，可继续补充要求后发送。",
+      "The inspiration prompt was added to the chat input. Add further instructions before sending.",
       "success",
     );
   }
@@ -6559,16 +6559,16 @@ class PromptBrowser {
 
   async loadSkillTags() {
     if (this.skillTagsPromise) return this.skillTagsPromise;
-    this.setSkillTagStatus("正在读取标签数据...", "loading");
+    this.setSkillTagStatus("Loading tag data...", "loading");
     this.skillTagsPromise = fetchJson("/assets-astral/skill-tags")
       .then((payload) => {
         this.applySkillTagState(payload);
-        this.setSkillTagStatus("标签已加载。", "success");
+        this.setSkillTagStatus("Tags loaded.", "success");
       })
       .catch((error) => {
         this.skillTagsPromise = null;
         this.setSkillTagStatus(
-          `读取标签失败：${error.message || error}`,
+          `Failed to read tags: ${error.message || error}`,
           "error",
         );
       });
@@ -6630,7 +6630,7 @@ class PromptBrowser {
     const selectedVisibleCount = [...this.batchSelectedSkillTagIds].filter(
       (tagId) => manageableIds.has(tagId),
     ).length;
-    this.skillTagBatchCount.textContent = `已勾选 ${selectedCount} 个标签`;
+    this.skillTagBatchCount.textContent = `${selectedCount} tags checked`;
     this.skillTagBatchBar.classList.toggle(
       "has-selection",
       selectedCount > 0,
@@ -6661,7 +6661,7 @@ class PromptBrowser {
     for (const tag of tags) this.batchSelectedSkillTagIds.add(tag.id);
     this.renderSkillTagManager();
     this.setSkillTagStatus(
-      `已勾选当前结果中的 ${tags.length} 个标签。`,
+      `Checked ${tags.length} tags in the current results.`,
       "success",
     );
   }
@@ -6669,7 +6669,7 @@ class PromptBrowser {
   clearSkillTagBatchSelection() {
     this.batchSelectedSkillTagIds.clear();
     this.renderSkillTagManager();
-    this.setSkillTagStatus("已清空批量勾选。", "");
+    this.setSkillTagStatus("Bulk selection cleared.", "");
   }
 
   renderSkillTagManager() {
@@ -6679,7 +6679,7 @@ class PromptBrowser {
     const subcategories = this.skillTagState.subcategories || [];
     const tags = this.skillTagState.tags || [];
     this.skillTagAllCategoryButton.replaceChildren(
-      createElement("span", "", "全部标签"),
+      createElement("span", "", "All Tags"),
       createElement("span", "astral-am-tag-category-count", tags.length),
     );
     this.skillTagAllCategoryButton.classList.toggle(
@@ -6687,7 +6687,7 @@ class PromptBrowser {
       this.activeSkillTagCategoryId === "all",
     );
     this.skillTagFavoriteCategoryButton.replaceChildren(
-      createElement("span", "", "★ 收藏"),
+      createElement("span", "", "★ Favorites"),
       createElement(
         "span",
         "astral-am-tag-category-count",
@@ -6698,7 +6698,7 @@ class PromptBrowser {
       "is-active",
       this.activeSkillTagCategoryId === "favorites",
     );
-    this.skillTagCategoryCount.textContent = `分类 · ${categories.length}`;
+    this.skillTagCategoryCount.textContent = `Categories · ${categories.length}`;
 
     const categoryRows = document.createDocumentFragment();
     categories.forEach((category, index) => {
@@ -6718,11 +6718,11 @@ class PromptBrowser {
         isCollapsed ? "▸" : "▾",
       );
       toggle.type = "button";
-      toggle.title = isCollapsed ? "展开二级分类" : "收起二级分类";
+      toggle.title = isCollapsed ? "Expand subcategories" : "Collapse subcategories";
       toggle.setAttribute("aria-expanded", String(!isCollapsed));
       toggle.setAttribute(
         "aria-label",
-        `${isCollapsed ? "展开" : "收起"}${category.name}二级分类`,
+        `${isCollapsed ? "Expand" : "Collapse"} ${category.name} subcategories`,
       );
       const button = createElement(
         "button",
@@ -6740,7 +6740,7 @@ class PromptBrowser {
         createElement("span", "astral-am-tag-category-name", category.name),
         createElement("span", "astral-am-tag-category-count", count),
       );
-      button.title = `${category.name} · ${count} 个标签\n右键管理分类`;
+      button.title = `${category.name} · ${count} tags\nRight-click to manage categories`;
       button.addEventListener("click", () => {
         this.activeSkillTagCategoryId = category.id;
         this.activeSkillTagSubcategoryId = "";
@@ -6761,19 +6761,19 @@ class PromptBrowser {
       );
       addSubcategory.type = "button";
       addSubcategory.title =
-        `在“${category.name}”下新建子分类或批量新增标签`;
+        `Create a subcategory under "${category.name}" or bulk-add tags`;
       addSubcategory.setAttribute(
         "aria-label",
-        `在${category.name}下新建子分类或批量新增标签`,
+        `Create a subcategory under ${category.name} or bulk-add tags`,
       );
       addSubcategory.addEventListener("click", (event) => {
         this.showSkillTagContextMenu(event, [
           {
-            label: "新建子分类",
+            label: "New Subcategory",
             action: () => this.createSkillTagSubcategory(category),
           },
           {
-            label: "批量新增标签",
+            label: "Bulk Add Tags",
             action: () => this.createSkillTagsBatch(category.id),
           },
         ]);
@@ -6781,19 +6781,19 @@ class PromptBrowser {
       button.addEventListener("contextmenu", (event) =>
         this.showSkillTagContextMenu(event, [
           {
-            label: "新建子分类",
+            label: "New Subcategory",
             action: () => this.createSkillTagSubcategory(category),
           },
           {
-            label: "批量新增标签",
+            label: "Bulk Add Tags",
             action: () => this.createSkillTagsBatch(category.id),
           },
           {
-            label: "重命名分类",
+            label: "Rename Category",
             action: () => this.renameSkillTagCategory(category),
           },
           {
-            label: "删除分类",
+            label: "Delete Category",
             danger: true,
             action: () => this.deleteSkillTagCategory(category),
           },
@@ -6841,7 +6841,7 @@ class PromptBrowser {
         );
         subcategoryButton.title =
           `${category.name} / ${subcategory.name} · ` +
-          `${subcategoryCount} 个标签\n右键管理二级分类`;
+          `${subcategoryCount} tags\nRight-click to manage subcategories`;
         subcategoryButton.addEventListener("click", () => {
           this.activeSkillTagCategoryId = category.id;
           this.activeSkillTagSubcategoryId = subcategory.id;
@@ -6850,16 +6850,16 @@ class PromptBrowser {
         subcategoryButton.addEventListener("contextmenu", (event) =>
           this.showSkillTagContextMenu(event, [
             {
-              label: "批量新增标签",
+              label: "Bulk Add Tags",
               action: () =>
                 this.createSkillTagsBatch(category.id, subcategory.id),
             },
             {
-              label: "重命名二级分类",
+              label: "Rename Subcategory",
               action: () => this.renameSkillTagSubcategory(subcategory),
             },
             {
-              label: "删除二级分类",
+              label: "Delete Subcategory",
               danger: true,
               action: () =>
                 this.deleteSkillTagSubcategory(subcategory),
@@ -6884,10 +6884,10 @@ class PromptBrowser {
         );
         addChildTag.type = "button";
         addChildTag.title =
-          `在“${subcategory.name}”下批量新增标签`;
+          `Bulk-add tags under "${subcategory.name}"`;
         addChildTag.setAttribute(
           "aria-label",
-          `在${subcategory.name}下批量新增标签`,
+          `Bulk-add tags under ${subcategory.name}`,
         );
         addChildTag.addEventListener("click", (event) => {
           event.stopPropagation();
@@ -6912,7 +6912,7 @@ class PromptBrowser {
             this.activeSkillTagSubcategoryId === "__unclassified__",
         );
         unclassified.append(
-          createElement("span", "astral-am-tag-category-name", "未分类"),
+          createElement("span", "astral-am-tag-category-name", "Uncategorized"),
           createElement(
             "span",
             "astral-am-tag-category-count",
@@ -6920,7 +6920,7 @@ class PromptBrowser {
           ),
         );
         unclassified.title =
-          `${category.name} / 未分类 · ${unclassifiedCount} 个标签`;
+          `${category.name} / Uncategorized · ${unclassifiedCount} tags`;
         unclassified.addEventListener("click", () => {
           this.activeSkillTagCategoryId = category.id;
           this.activeSkillTagSubcategoryId = "__unclassified__";
@@ -6944,25 +6944,25 @@ class PromptBrowser {
     );
     this.skillTagHeading.textContent =
       this.activeSkillTagCategoryId === "favorites"
-        ? "收藏标签"
+        ? "Favorite tags"
         : activeCategory
           ? activeSubcategory
             ? `${activeCategory.name} / ${activeSubcategory.name}`
             : this.activeSkillTagSubcategoryId === "__unclassified__"
-              ? `${activeCategory.name} / 未分类`
-              : `${activeCategory.name} / 全部`
-          : "全部标签";
+              ? `${activeCategory.name} / Uncategorized`
+              : `${activeCategory.name} / All`
+          : "All Tags";
     let visibleTags = this.visibleSkillTags();
     this.skillTagSummary.textContent =
-      `${visibleTags.length} / ${tags.length} 个标签`;
+      `${visibleTags.length} / ${tags.length} tags`;
 
     const fragment = document.createDocumentFragment();
     const editingTag = this.skillTagById(this.editingSkillTagId);
     if (editingTag) fragment.append(this.buildSkillTagEditor(editingTag));
     if (!visibleTags.length) {
       const message = this.skillTagQuery
-        ? `没有匹配“${this.skillTagQuery}”的标签。`
-        : "当前分类还没有标签。点击分类旁的“+”新建子分类或子标签。";
+        ? `No tags match "${this.skillTagQuery}".`
+        : "This category has no tags yet. Use + beside the category to add a subcategory or tag.";
       fragment.append(
         createElement("p", "astral-am-skill-tag-empty", message),
       );
@@ -6990,9 +6990,9 @@ class PromptBrowser {
       card.setAttribute("aria-pressed", String(selected));
       card.setAttribute(
         "aria-label",
-        `${this.skillTagPath(tag)}，${
-          selected ? "已加入灵感" : "点击加入灵感"
-        }，右键查看更多操作`,
+        `${this.skillTagPath(tag)}, ${
+          selected ? "Added to inspiration" : "Click to add to inspiration"
+        }, right-click for more actions`,
       );
       const header = createElement("div", "astral-am-skill-tag-card-header");
       const title = createElement("div", "astral-am-skill-tag-card-title");
@@ -7003,10 +7003,10 @@ class PromptBrowser {
       batchCheckbox.type = "checkbox";
       batchCheckbox.checked = batchSelected;
       batchCheckbox.draggable = false;
-      batchCheckbox.title = "勾选后批量删除或移动分类";
+      batchCheckbox.title = "Select to batch-delete or move categories.";
       batchCheckbox.setAttribute(
         "aria-label",
-        `勾选标签“${tag.name}”用于批量管理`,
+        `Check tag "${tag.name}" for bulk management`,
       );
       batchCheckbox.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -7028,7 +7028,7 @@ class PromptBrowser {
         tag.favorite ? "★" : "☆",
       );
       favorite.type = "button";
-      favorite.title = tag.favorite ? "取消收藏" : "收藏标签";
+      favorite.title = tag.favorite ? "Remove Favorite" : "Favorite tags";
       favorite.setAttribute(
         "aria-pressed",
         String(Boolean(tag.favorite)),
@@ -7047,7 +7047,7 @@ class PromptBrowser {
         createElement(
           "span",
           "astral-am-chip",
-          category?.name || "未分类",
+          category?.name || "Uncategorized",
         ),
         ...(subcategory
           ? [
@@ -7064,7 +7064,7 @@ class PromptBrowser {
         createElement(
           "span",
           "astral-am-muted",
-          selected ? "✓ 已加入灵感" : "点击加入灵感",
+          selected ? "✓ Added to inspiration" : "Click to add to inspiration",
         ),
       );
       const actions = createElement(
@@ -7074,17 +7074,17 @@ class PromptBrowser {
       const edit = createElement(
         "button",
         "astral-am-button is-small",
-        "编辑",
+        "Edit",
       );
       const selectTag = createElement(
         "button",
         "astral-am-button is-small",
-        selected ? "移出灵感" : "加入灵感",
+        selected ? "Remove from Inspiration" : "Add to Inspiration",
       );
       const remove = createElement(
         "button",
         "astral-am-button is-small is-danger",
-        "删除",
+        "Delete",
       );
       edit.type = "button";
       selectTag.type = "button";
@@ -7118,19 +7118,19 @@ class PromptBrowser {
       card.addEventListener("contextmenu", (event) =>
         this.showSkillTagContextMenu(event, [
           {
-            label: selected ? "移出灵感" : "加入灵感",
+            label: selected ? "Remove from Inspiration" : "Add to Inspiration",
             action: () => this.toggleInspirationTag(tag.id),
           },
           {
-            label: "编辑标签",
+            label: "Edit Tag",
             action: () => this.openSkillTagEditor(tag),
           },
           {
-            label: tag.favorite ? "取消收藏" : "收藏标签",
+            label: tag.favorite ? "Remove Favorite" : "Favorite tags",
             action: () => this.toggleSkillTagFavorite(tag),
           },
           {
-            label: "删除标签",
+            label: "Delete Tag",
             danger: true,
             action: () => this.deleteSkillTag(tag),
           },
@@ -7153,7 +7153,7 @@ class PromptBrowser {
       "div",
       "astral-am-skill-tag-editor-heading",
     );
-    heading.append(createElement("strong", "", "编辑标签"));
+    heading.append(createElement("strong", "", "Edit Tag"));
     const name = createElement("input", "astral-am-input");
     name.required = true;
     name.maxLength = 80;
@@ -7172,7 +7172,7 @@ class PromptBrowser {
       const emptyOption = createElement(
         "option",
         "",
-        "未分类",
+        "Uncategorized",
       );
       emptyOption.value = "";
       subcategory.replaceChildren(emptyOption);
@@ -7215,29 +7215,29 @@ class PromptBrowser {
     const favorite = createElement("input");
     favorite.type = "checkbox";
     favorite.checked = Boolean(tag.favorite);
-    favoriteLabel.append(favorite, createElement("span", "", "收藏"));
+    favoriteLabel.append(favorite, createElement("span", "", "Favorite"));
     const grid = createElement("div", "astral-am-skill-tag-editor-grid");
     grid.append(
-      this.createField("标签名称", name),
-      this.createField("所属分类", category),
-      this.createField("二级分类", subcategory),
-      this.createField("标签颜色", color),
+      this.createField("Tag Name", name),
+      this.createField("Category", category),
+      this.createField("Subcategory", subcategory),
+      this.createField("Tag color", color),
       favoriteLabel,
     );
     const actions = createElement("div", "astral-am-skill-tag-editor-actions");
     const save = createElement(
       "button",
       "astral-am-button is-primary",
-      "保存",
+      "Save",
     );
     save.type = "submit";
     const remove = createElement(
       "button",
       "astral-am-button is-danger",
-      "删除标签",
+      "Delete Tag",
     );
     remove.type = "button";
-    const cancel = createElement("button", "astral-am-button", "取消");
+    const cancel = createElement("button", "astral-am-button", "Cancel");
     cancel.type = "button";
     actions.append(save, remove, cancel);
     form.append(heading, grid, actions);
@@ -7271,11 +7271,11 @@ class PromptBrowser {
 
   async createSkillTagCategory() {
     const name = await showAstralPrompt({
-      title: "新建标签分类",
-      message: "分类用于组织标签，例如“绘画”“视频”“工具”。",
-      label: "分类名称",
-      confirmLabel: "创建分类",
-      placeholder: "输入分类名称",
+      title: "New Tag Category",
+      message: "Categories organize tags, such as Art, Video, and Tools.",
+      label: "Category name",
+      confirmLabel: "Create Category",
+      placeholder: "Enter a category name",
     });
     if (name === null || !String(name).trim()) return;
     try {
@@ -7293,10 +7293,10 @@ class PromptBrowser {
         this.activeSkillTagSubcategoryId = "";
         this.renderSkillTagManager();
       }
-      this.setSkillTagStatus("标签分类已创建。", "success");
+      this.setSkillTagStatus("Tag category created.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `创建分类失败：${error.message || error}`,
+        `Failed to create category: ${error.message || error}`,
         "error",
       );
     }
@@ -7304,10 +7304,10 @@ class PromptBrowser {
 
   async renameSkillTagCategory(category) {
     const name = await showAstralPrompt({
-      title: "重命名分类",
-      label: "分类名称",
+      title: "Rename Category",
+      label: "Category name",
       initialValue: category.name,
-      confirmLabel: "保存名称",
+      confirmLabel: "Save Name",
     });
     if (
       name === null ||
@@ -7329,10 +7329,10 @@ class PromptBrowser {
         },
       );
       this.applySkillTagState(payload);
-      this.setSkillTagStatus("分类名称已更新。", "success");
+      this.setSkillTagStatus("Category name updated.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `重命名分类失败：${error.message || error}`,
+        `Failed to rename category: ${error.message || error}`,
         "error",
       );
     }
@@ -7340,11 +7340,11 @@ class PromptBrowser {
 
   async createSkillTagSubcategory(category) {
     const name = await showAstralPrompt({
-      title: "新建二级分类",
-      message: `二级分类会放在“${category.name}”下，例如数量、性别或发型。`,
-      label: "二级分类名称",
-      confirmLabel: "创建二级分类",
-      placeholder: "输入二级分类名称",
+      title: "New Subcategory",
+      message: `Subcategories are placed under "${category.name}", e.g. count, gender or hairstyle.`,
+      label: "Subcategory name",
+      confirmLabel: "Create Subcategory",
+      placeholder: "Enter a subcategory name",
     });
     if (name === null || !String(name).trim()) return;
     try {
@@ -7364,10 +7364,10 @@ class PromptBrowser {
       this.activeSkillTagSubcategoryId =
         payload?.subcategory?.id || "";
       this.applySkillTagState(payload);
-      this.setSkillTagStatus("二级分类已创建。", "success");
+      this.setSkillTagStatus("Subcategory created.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `创建二级分类失败：${error.message || error}`,
+        `Failed to create subcategory: ${error.message || error}`,
         "error",
       );
     }
@@ -7375,10 +7375,10 @@ class PromptBrowser {
 
   async renameSkillTagSubcategory(subcategory) {
     const name = await showAstralPrompt({
-      title: "重命名二级分类",
-      label: "二级分类名称",
+      title: "Rename Subcategory",
+      label: "Subcategory name",
       initialValue: subcategory.name,
-      confirmLabel: "保存名称",
+      confirmLabel: "Save Name",
     });
     if (
       name === null ||
@@ -7400,10 +7400,10 @@ class PromptBrowser {
         },
       );
       this.applySkillTagState(payload);
-      this.setSkillTagStatus("二级分类名称已更新。", "success");
+      this.setSkillTagStatus("Subcategory name updated.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `重命名二级分类失败：${error.message || error}`,
+        `Failed to rename subcategory: ${error.message || error}`,
         "error",
       );
     }
@@ -7417,11 +7417,11 @@ class PromptBrowser {
       (tag) => tag.subcategoryId === subcategory.id,
     ).length;
     const confirmed = await showAstralConfirm({
-      title: "删除二级分类",
+      title: "Delete Subcategory",
       message:
-        `将删除二级分类“${subcategory.name}”。其中 ${tagCount} 个标签` +
-        `会移回“${category?.name || "父分类"} / 未分类”，标签本身不会删除。`,
-      confirmLabel: "删除二级分类",
+        `Subcategory "${subcategory.name}" will be deleted. Its ${tagCount} tags` +
+        ` will move back to "${category?.name || "Parent category"} / Uncategorized"; the tags themselves are not deleted.`,
+      confirmLabel: "Delete Subcategory",
     });
     if (!confirmed) return;
     try {
@@ -7440,12 +7440,12 @@ class PromptBrowser {
       }
       this.applySkillTagState(payload);
       this.setSkillTagStatus(
-        "二级分类已删除，原有标签已移回未分类。",
+        "Subcategory deleted. Its tags were moved back to Uncategorized.",
         "success",
       );
     } catch (error) {
       this.setSkillTagStatus(
-        `删除二级分类失败：${error.message || error}`,
+        `Failed to delete subcategory: ${error.message || error}`,
         "error",
       );
     }
@@ -7456,9 +7456,9 @@ class PromptBrowser {
       (tag) => tag.categoryId === category.id,
     ).length;
     const confirmed = await showAstralConfirm({
-      title: "删除标签分类",
-      message: `将删除“${category.name}”及其中 ${tagCount} 个灵感标签。`,
-      confirmLabel: "删除分类",
+      title: "Delete Tag Category",
+      message: `"${category.name}" and its ${tagCount} inspiration tags will be deleted.`,
+      confirmLabel: "Delete Category",
     });
     if (!confirmed) return;
     try {
@@ -7473,10 +7473,10 @@ class PromptBrowser {
       this.activeSkillTagCategoryId = "all";
       this.activeSkillTagSubcategoryId = "";
       this.applySkillTagState(payload);
-      this.setSkillTagStatus("分类及其标签已删除。", "success");
+      this.setSkillTagStatus("Category and its tags deleted.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `删除分类失败：${error.message || error}`,
+        `Failed to delete category: ${error.message || error}`,
         "error",
       );
     }
@@ -7495,7 +7495,7 @@ class PromptBrowser {
       activeCategory ||
       this.skillTagState.categories[0];
     if (!category) {
-      this.setSkillTagStatus("请先新建一个标签分类。", "warning");
+      this.setSkillTagStatus("Create a tag category first.", "warning");
       return;
     }
     let subcategory = this.skillTagSubcategoryById(
@@ -7517,13 +7517,13 @@ class PromptBrowser {
       ? `${category.name} / ${subcategory.name}`
       : category.name;
     const rawNames = await showAstralPrompt({
-      title: "批量新增标签",
+      title: "Bulk Add Tags",
       message:
-        `标签将新增到“${categoryPath}”。` +
-        "每行一个标签，也支持英文逗号、中文逗号或分号分隔。",
-      label: "标签列表",
-      confirmLabel: "批量新增",
-      placeholder: "银发\n雨夜\n复古夹克\n机械翅膀",
+        `Tags will be added to "${categoryPath}". ` +
+        "Enter one tag per line, or separate tags with commas or semicolons.",
+      label: "Tag List",
+      confirmLabel: "Bulk Add",
+      placeholder: "Silver hair\nRainy night\nVintage jacket\nMechanical wings",
       multiline: true,
     });
     if (rawNames === null) return;
@@ -7532,7 +7532,7 @@ class PromptBrowser {
       .map((name) => name.trim())
       .filter(Boolean);
     if (!names.length) {
-      this.setSkillTagStatus("没有可新增的标签。", "warning");
+      this.setSkillTagStatus("No tags can be added.", "warning");
       return;
     }
     try {
@@ -7557,7 +7557,7 @@ class PromptBrowser {
       const warnings = Array.isArray(payload?.warnings)
         ? payload.warnings.filter(Boolean)
         : [];
-      let message = `新增 ${created} 个，跳过 ${skipped} 个重复标签。`;
+      let message = `Added ${created}, skipped ${skipped} duplicate tags.`;
       if (warnings.length) message += ` ${warnings[0]}`;
       this.setSkillTagStatus(
         message,
@@ -7565,7 +7565,7 @@ class PromptBrowser {
       );
     } catch (error) {
       this.setSkillTagStatus(
-        `批量新增标签失败：${error.message || error}`,
+        `Failed to bulk-add tags: ${error.message || error}`,
         "error",
       );
     }
@@ -7574,7 +7574,7 @@ class PromptBrowser {
   async saveSkillTagEditor(tag, changes) {
     const name = String(changes.name || "").trim();
     if (!name) {
-      this.setSkillTagStatus("标签名称不能为空。", "warning");
+      this.setSkillTagStatus("Tag name cannot be empty.", "warning");
       return;
     }
     try {
@@ -7592,10 +7592,10 @@ class PromptBrowser {
       });
       this.editingSkillTagId = "";
       this.applySkillTagState(payload);
-      this.setSkillTagStatus("标签已保存。", "success");
+      this.setSkillTagStatus("Tag saved.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `保存标签失败：${error.message || error}`,
+        `Failed to save tag: ${error.message || error}`,
         "error",
       );
     }
@@ -7613,12 +7613,12 @@ class PromptBrowser {
       });
       this.applySkillTagState(payload);
       this.setSkillTagStatus(
-        tag.favorite ? "已取消收藏。" : "已加入收藏。",
+        tag.favorite ? "Removed from favorites." : "Added to favorites.",
         "success",
       );
     } catch (error) {
       this.setSkillTagStatus(
-        `更新收藏失败：${error.message || error}`,
+        `Failed to update favorite: ${error.message || error}`,
         "error",
       );
     }
@@ -7626,9 +7626,9 @@ class PromptBrowser {
 
   async deleteSkillTag(tag) {
     const confirmed = await showAstralConfirm({
-      title: "删除标签",
-      message: `确定删除灵感标签“${tag.name}”吗？此操作不会影响任何 Skill。`,
-      confirmLabel: "删除标签",
+      title: "Delete Tag",
+      message: `Delete inspiration tag "${tag.name}"? This will not affect any Skill.`,
+      confirmLabel: "Delete Tag",
     });
     if (!confirmed) return;
     try {
@@ -7639,10 +7639,10 @@ class PromptBrowser {
       });
       if (this.editingSkillTagId === tag.id) this.editingSkillTagId = "";
       this.applySkillTagState(payload);
-      this.setSkillTagStatus("标签已删除。", "success");
+      this.setSkillTagStatus("Tag deleted.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `删除标签失败：${error.message || error}`,
+        `Failed to delete tag: ${error.message || error}`,
         "error",
       );
     }
@@ -7654,21 +7654,21 @@ class PromptBrowser {
       .map((tagId) => this.skillTagById(tagId))
       .filter(Boolean);
     if (!selectedTags.length) {
-      this.setSkillTagStatus("请先勾选要删除的标签。", "warning");
+      this.setSkillTagStatus("Select tags to delete first.", "warning");
       return;
     }
     const previewNames = selectedTags
       .slice(0, 6)
-      .map((tag) => `“${tag.name}”`)
-      .join("、");
+      .map((tag) => `"${tag.name}"`)
+      .join(", ");
     const remaining = selectedTags.length - 6;
     const confirmed = await showAstralConfirm({
-      title: "批量删除标签",
+      title: "Bulk Delete Tags",
       message:
-        `确定删除已勾选的 ${selectedTags.length} 个标签吗？\n` +
-        `${previewNames}${remaining > 0 ? ` 等 ${selectedTags.length} 个标签` : ""}\n` +
-        "删除后无法撤销，但不会删除任何 Skill 文件。",
-      confirmLabel: `删除 ${selectedTags.length} 个标签`,
+        `Delete the ${selectedTags.length} checked tags?\n` +
+        `${previewNames}${remaining > 0 ? ` and ${selectedTags.length} tags in total` : ""}\n` +
+        "This cannot be undone, but no Skill files will be deleted.",
+      confirmLabel: `Delete ${selectedTags.length} tags`,
     });
     if (!confirmed) return;
     try {
@@ -7691,9 +7691,9 @@ class PromptBrowser {
       this.applySkillTagState(payload);
       const deletedCount = Number(payload?.deletedCount) || 0;
       const missingCount = Number(payload?.missingCount) || 0;
-      let message = `已删除 ${deletedCount} 个标签。`;
+      let message = `Deleted ${deletedCount} tags.`;
       if (missingCount > 0) {
-        message += ` 另有 ${missingCount} 个标签已不存在，已忽略。`;
+        message += ` ${missingCount} more tags no longer exist and were ignored.`;
       }
       this.setSkillTagStatus(
         message,
@@ -7701,7 +7701,7 @@ class PromptBrowser {
       );
     } catch (error) {
       this.setSkillTagStatus(
-        `批量删除标签失败：${error.message || error}`,
+        `Failed to bulk-delete tags: ${error.message || error}`,
         "error",
       );
     }
@@ -7710,14 +7710,14 @@ class PromptBrowser {
   async moveSkillTagsBatch() {
     const tagIds = [...this.batchSelectedSkillTagIds];
     if (!tagIds.length) {
-      this.setSkillTagStatus("请先勾选要移动的标签。", "warning");
+      this.setSkillTagStatus("Select tags to move first.", "warning");
       return;
     }
     const options = [];
     for (const category of this.skillTagState.categories || []) {
       options.push({
         value: JSON.stringify([category.id, ""]),
-        label: `${category.name} / 未分类`,
+        label: `${category.name} / Uncategorized`,
       });
       for (const subcategory of this.skillTagSubcategories(category.id)) {
         options.push({
@@ -7727,7 +7727,7 @@ class PromptBrowser {
       }
     }
     if (!options.length) {
-      this.setSkillTagStatus("没有可用的目标分类。", "warning");
+      this.setSkillTagStatus("No destination category is available.", "warning");
       return;
     }
     const activeCategory = this.skillTagCategoryById(
@@ -7745,14 +7745,14 @@ class PromptBrowser {
         : "",
     ]);
     const selectedValue = await showAstralSelect({
-      title: "移动标签分类",
+      title: "Move Tag Category",
       message:
-        `将已勾选的 ${tagIds.length} 个标签移动到指定分类或二级分类。` +
-        "目标分类中已有同名标签时会自动跳过。",
-      label: "目标分类",
+        `Move the ${tagIds.length} checked tags to a category or subcategory. ` +
+        "Tags with the same name in the destination category are skipped automatically.",
+      label: "Destination category",
       options,
       initialValue,
-      confirmLabel: "移动标签",
+      confirmLabel: "Move Tags",
     });
     if (selectedValue === null) return;
     let targetCategoryId = "";
@@ -7760,12 +7760,12 @@ class PromptBrowser {
     try {
       const parsed = JSON.parse(String(selectedValue));
       if (!Array.isArray(parsed) || parsed.length < 2) {
-        throw new Error("目标分类格式错误");
+        throw new Error("Invalid destination category.");
       }
       [targetCategoryId, targetSubcategoryId] = parsed.map(String);
     } catch (error) {
       this.setSkillTagStatus(
-        `移动分类失败：${error.message || error}`,
+        `Failed to move tags: ${error.message || error}`,
         "error",
       );
       return;
@@ -7810,22 +7810,22 @@ class PromptBrowser {
       const missingCount = Number(payload?.missingCount) || 0;
       const targetPath = [
         targetCategory?.name,
-        targetSubcategory?.name || "未分类",
+        targetSubcategory?.name || "Uncategorized",
       ]
         .filter(Boolean)
         .join(" / ");
-      let message = `已将 ${movedCount} 个标签移动到“${targetPath}”。`;
+      let message = `Moved ${movedCount} tags to "${targetPath}".`;
       if (skippedCount > 0) {
         message +=
-          ` 跳过 ${skippedCount} 个同名标签` +
+          ` Skipped ${skippedCount} duplicate-name tags` +
           (skippedNames.length
-            ? `：${skippedNames.slice(0, 5).join("、")}${
-                skippedNames.length > 5 ? " 等" : ""
-              }。`
-            : "。");
+            ? `: ${skippedNames.slice(0, 5).join(", ")}${
+                skippedNames.length > 5 ? " etc." : ""
+              }.`
+            : ".");
       }
       if (missingCount > 0) {
-        message += ` 另有 ${missingCount} 个标签已不存在，已忽略。`;
+        message += ` ${missingCount} more tags no longer exist and were ignored.`;
       }
       this.setSkillTagStatus(
         message,
@@ -7833,7 +7833,7 @@ class PromptBrowser {
       );
     } catch (error) {
       this.setSkillTagStatus(
-        `批量移动标签失败：${error.message || error}`,
+        `Failed to bulk-move tags: ${error.message || error}`,
         "error",
       );
     }
@@ -7972,10 +7972,10 @@ class PromptBrowser {
         body: JSON.stringify({ kind, orderedIds }),
       });
       this.applySkillTagState(payload);
-      this.setSkillTagStatus("排序已保存。", "success");
+      this.setSkillTagStatus("Order saved.", "success");
     } catch (error) {
       this.setSkillTagStatus(
-        `保存排序失败：${error.message || error}`,
+        `Failed to save order: ${error.message || error}`,
         "error",
       );
       await this.loadSkillTags(true);
@@ -7997,7 +7997,7 @@ class PromptBrowser {
     this.hideSkillPreview();
     if (force) this.skillContentCache.clear();
     this.skillRefreshButton.disabled = true;
-    this.setSkillStatus("正在扫描 custom_nodes 与 input 目录...", "loading");
+    this.setSkillStatus("Scanning custom_nodes and input...", "loading");
     this.skillsPromise = fetchJson("/assets-astral/skills")
       .then((payload) => {
         this.skills = Array.isArray(payload?.items) ? payload.items : [];
@@ -8006,16 +8006,16 @@ class PromptBrowser {
           : payload?.root
             ? [String(payload.root)]
             : [];
-        this.skillRoot = this.skillRoots.join("；") || payload?.root || "";
+        this.skillRoot = this.skillRoots.join("; ") || payload?.root || "";
         this.skillRootLabel.textContent = this.skillRoots.length
-          ? `Skill 扫描目录：${this.skillRoots.join("；")}`
+          ? `Skill scan directories: ${this.skillRoots.join("; ")}`
           : "";
-        this.skillSummary.textContent = `共 ${this.skills.length} 个 Skill`;
+        this.skillSummary.textContent = `${this.skills.length} Skills`;
         this.renderSkills(preserveScroll);
         this.setSkillStatus(
           this.skills.length
             ? ""
-            : "没有找到 Skill。可在 custom_nodes 节点包或 input 目录中创建 SKILL.md。",
+            : "No Skills found. Add SKILL.md files to a custom_nodes package or the input directory.",
           this.skills.length ? "" : "empty",
         );
         this.skillsLoaded = true;
@@ -8023,7 +8023,7 @@ class PromptBrowser {
       })
       .catch((error) => {
         this.skillsPromise = null;
-        this.setSkillStatus(`读取 Skill 失败：${error.message || error}`, "error");
+        this.setSkillStatus(`Failed to read Skills: ${error.message || error}`, "error");
       })
       .finally(() => {
         this.skillRefreshButton.disabled = false;
@@ -8047,7 +8047,7 @@ class PromptBrowser {
     };
     this.hideSkillPreview();
     if (!this.skills.length) {
-      this.skillSummary.textContent = "共 0 个 Skill";
+      this.skillSummary.textContent = "0 Skills";
       replaceList();
       return;
     }
@@ -8057,14 +8057,14 @@ class PromptBrowser {
     );
     this.skillSummary.textContent =
       query
-        ? `找到 ${matchingSkills.length} / 共 ${this.skills.length} 个 Skill`
-        : `共 ${this.skills.length} 个 Skill`;
+        ? `Found ${matchingSkills.length} / ${this.skills.length} Skills`
+        : `${this.skills.length} Skills`;
     if (!matchingSkills.length) {
       replaceList(
         createElement(
           "p",
           "astral-am-skill-search-empty",
-          `没有匹配“${query}”的 Skill，请调整关键词。`,
+          `No Skills match "${query}". Try a different keyword.`,
         ),
       );
       return;
@@ -8085,12 +8085,12 @@ class PromptBrowser {
       const description = createElement(
         "p",
         "astral-am-skill-description",
-        skill.description || "此 Skill 没有提供 frontmatter description。",
+        skill.description || "This Skill has no frontmatter description.",
       );
       const meta = createElement("div", "astral-am-skill-meta");
       meta.append(
         ...(skill.source
-          ? [createElement("span", "astral-am-chip", `来源：${skill.source}`)]
+          ? [createElement("span", "astral-am-chip", `Source: ${skill.source}`)]
           : []),
         createElement("span", "astral-am-chip", skill.fileName),
         ...(Array.isArray(skill.references)
@@ -8103,12 +8103,12 @@ class PromptBrowser {
       const preview = createElement(
         "button",
         "astral-am-button is-small",
-        "查看 SKILL",
+        "View SKILL",
       );
       const openDirectory = createElement(
         "button",
         "astral-am-button is-small",
-        "打开目录",
+        "Open folder",
       );
       const isCurrentSkill = this.pendingSkillIds.includes(skill.id);
       const hasCurrentSkill = this.pendingSkillIds.length > 0;
@@ -8116,22 +8116,22 @@ class PromptBrowser {
         "button",
         "astral-am-button is-small is-primary",
         isCurrentSkill
-          ? "当前会话 Skill"
+          ? "Current Session Skill"
           : hasCurrentSkill
-            ? "切换到此 Skill"
-            : "加入会话",
+            ? "Switch to this Skill"
+            : "Add to Conversation",
       );
       preview.type = "button";
       openDirectory.type = "button";
       addToChat.type = "button";
-    openDirectory.title = "在系统文件管理器中打开此 Skill 所在目录并选中文件";
+    openDirectory.title = "Open this Skill's folder in the system file manager and select it.";
       addToChat.dataset.chatSkillId = skill.id;
       addToChat.disabled = isCurrentSkill;
       addToChat.title = isCurrentSkill
-        ? "当前会话已经加载这个 Skill"
+        ? "This Skill is already loaded in the session."
         : hasCurrentSkill
-          ? "切换后会替换当前会话中的 Skill"
-          : "将此 Skill 加入当前会话";
+          ? "Switching replaces the Skill in the current conversation."
+          : "Add this Skill to the current conversation.";
       card.dataset.skillId = skill.id;
       card.classList.toggle("is-current", isCurrentSkill);
       preview.addEventListener("click", () => void this.showSkillContent(skill));
@@ -8151,7 +8151,7 @@ class PromptBrowser {
   }
 
   async openSkillDirectory(skill) {
-    this.setSkillStatus(`正在定位“${skill.name}”...`, "loading");
+    this.setSkillStatus(`Locating "${skill.name}"...`, "loading");
     try {
       const result = await fetchJson("/assets-astral/skills/open", {
         method: "POST",
@@ -8160,13 +8160,13 @@ class PromptBrowser {
       });
       this.setSkillStatus(
         result?.revealMode === "selected"
-          ? `已在系统文件管理器中选中 ${skill.fileName}。`
-          : `已打开“${skill.name}”所在目录；当前文件管理器未确认自动选中 ${skill.fileName}。`,
+          ? `Selected ${skill.fileName} in system file manager.`
+          : `Opened the folder containing "${skill.name}"; the current file manager did not confirm automatic selection of ${skill.fileName}.`,
         "success",
       );
     } catch (error) {
       this.setSkillStatus(
-        `打开 Skill 目录失败：${error.message || error}`,
+        `Failed to open Skill directory: ${error.message || error}`,
         "error",
       );
     }
@@ -8250,7 +8250,7 @@ class PromptBrowser {
     content,
     anchor,
     state = "",
-    previewLabel = "悬停预览 · 正文节选",
+    previewLabel = "Hover Preview · Excerpt",
   ) {
     const preview = this.ensureSkillPreviewElement();
     const header = createElement("div", "astral-am-skill-preview-header");
@@ -8259,7 +8259,7 @@ class PromptBrowser {
       createElement(
         "span",
         "",
-        state === "loading" ? "正在读取正文…" : previewLabel,
+        state === "loading" ? "Loading content..." : previewLabel,
       ),
     );
     const body = createElement(
@@ -8296,7 +8296,7 @@ class PromptBrowser {
       }
       this.renderSkillPreview(
         skill,
-        "正在读取 Skill 正文…",
+        "Loading Skill content...",
         anchor,
         "loading",
       );
@@ -8324,7 +8324,7 @@ class PromptBrowser {
           }
           this.renderSkillPreview(
             skill,
-            `预览失败：${error.message || error}`,
+            `Preview failed: ${error.message || error}`,
             anchor,
             "error",
           );
@@ -8345,11 +8345,11 @@ class PromptBrowser {
         return;
       }
       this.renderSkillPreview(
-        { name: template.title || "系统提示词" },
+        { name: template.title || "System Prompt" },
         skillPreviewExcerpt(template.content),
         anchor,
         "",
-        "系统提示词 · 悬停预览",
+        "System Prompt · Hover to Preview",
       );
     }, 320);
   }
@@ -8416,7 +8416,7 @@ class PromptBrowser {
       dialog.addEventListener("close", () => dialog.remove());
       dialog.showModal();
     } catch (error) {
-      this.setSkillStatus(`读取 Skill 内容失败：${error.message || error}`, "error");
+      this.setSkillStatus(`Failed to read Skill content: ${error.message || error}`, "error");
     }
   }
 }
@@ -8449,24 +8449,24 @@ class LoraSourceBrowser {
 
     const search = createElement("input", "astral-am-search");
     search.type = "search";
-    search.placeholder = "搜索本地 LoRA 文件";
+    search.placeholder = "Search local LoRA files";
     search.autocomplete = "off";
-    search.setAttribute("aria-label", "搜索 LoRA");
+    search.setAttribute("aria-label", "Search LoRAs");
 
-    const querySelected = createElement("button", "astral-am-button is-primary", "批量查询选中");
+    const querySelected = createElement("button", "astral-am-button is-primary", "Query Selected");
     querySelected.type = "button";
     querySelected.disabled = true;
 
-    const selectAll = createElement("button", "astral-am-button", "全选");
+    const selectAll = createElement("button", "astral-am-button", "Select All");
     selectAll.type = "button";
-    const invertSelection = createElement("button", "astral-am-button", "反选");
+    const invertSelection = createElement("button", "astral-am-button", "Invert");
     invertSelection.type = "button";
 
     const thumbnailToggle = createElement("label", "astral-am-check");
     const thumbnailCheckbox = createElement("input");
     thumbnailCheckbox.type = "checkbox";
     thumbnailCheckbox.checked = showLoraThumbnails();
-    thumbnailToggle.append(thumbnailCheckbox, document.createTextNode("显示缩略图"));
+    thumbnailToggle.append(thumbnailCheckbox, document.createTextNode("Show thumbnails"));
     toolbar.append(
       search,
       selectAll,
@@ -8491,22 +8491,22 @@ class LoraSourceBrowser {
     const clearSelection = createElement(
       "button",
       "astral-am-button is-small",
-      "清除选择",
+      "Clear Selection",
     );
     const moveSelected = createElement(
       "button",
       "astral-am-button is-small",
-      "移到文件夹",
+      "Move to Folder",
     );
     const insertSelected = createElement(
       "button",
       "astral-am-button is-small",
-      "放入画布",
+      "Add to Canvas",
     );
     const deleteSelected = createElement(
       "button",
       "astral-am-button is-small is-danger",
-      "删除选中",
+      "Delete Selected",
     );
     for (const button of [
       clearSelection,
@@ -8516,10 +8516,10 @@ class LoraSourceBrowser {
     ]) {
       button.type = "button";
     }
-    moveSelected.title = "把勾选的 LoRA 移动到另一个 LoRA 文件夹";
+    moveSelected.title = "Move selected LoRAs to another LoRA folder.";
     insertSelected.title =
-      `用官方 LoRA Loader 节点把勾选的 LoRA 放入当前画布；一次最多 ${MAX_LORA_CANVAS_BATCH} 个`;
-    deleteSelected.title = "将勾选的 LoRA 移到 Windows 回收站";
+      `Place the checked LoRAs on the current canvas using the official LoRA Loader node; up to ${MAX_LORA_CANVAS_BATCH} at a time`;
+    deleteSelected.title = "Move selected LoRAs to the Windows Recycle Bin.";
     fileActions.append(
       clearSelection,
       moveSelected,
@@ -8606,7 +8606,7 @@ class LoraSourceBrowser {
       this.selectionLoading;
     this.querySelected.disabled =
       busy || count === 0 || this.loadingSources.size > 0;
-    this.querySelected.textContent = count ? `查询选中 (${count})` : "批量查询选中";
+    this.querySelected.textContent = count ? `Query Selected (${count})` : "Query Selected";
     const hasItems = this.total > 0;
     const allSelected =
       hasItems &&
@@ -8620,26 +8620,26 @@ class LoraSourceBrowser {
     this.insertSelectedButton.disabled = busy || count === 0;
     this.deleteSelectedButton.disabled = busy || count === 0;
     this.selectAll.textContent = this.selectionLoading
-      ? "正在全选..."
+      ? "Selecting all..."
       : hasItems
-        ? `全选 (${this.total})`
-        : "全选";
+        ? `Select All (${this.total})`
+        : "Select All";
     this.moveSelectedButton.textContent = count
-      ? `移到文件夹 (${count})`
-      : "移到文件夹";
+      ? `Move to Folder (${count})`
+      : "Move to Folder";
     this.insertSelectedButton.textContent =
       count > MAX_LORA_CANVAS_BATCH
-        ? `放入画布 (前 ${MAX_LORA_CANVAS_BATCH}/${count})`
+        ? `Add to Canvas (first ${MAX_LORA_CANVAS_BATCH}/${count})`
         : count
-          ? `放入画布 (${count})`
-          : "放入画布";
+          ? `Add to Canvas (${count})`
+          : "Add to Canvas";
     this.deleteSelectedButton.textContent = count
-      ? `删除选中 (${count})`
-      : "删除选中";
+      ? `Delete Selected (${count})`
+      : "Delete Selected";
     this.actionBar.dataset.selectedCount = String(count);
     this.summary.textContent =
-      `当前目录及子目录共 ${this.total} 个 LoRA，已显示 ${this.items.length} 个` +
-      (count ? ` · 已选 ${count} 个` : "");
+      `${this.total} LoRAs in the current folder and subfolders, showing ${this.items.length}` +
+      (count ? ` · ${count} selected` : "");
   }
 
   syncSelectionRows() {
@@ -8705,7 +8705,7 @@ class LoraSourceBrowser {
     }
     this.selectionLoading = true;
     this.updateSelectionButtons();
-    this.setStatus("正在读取当前目录及子目录的全部 LoRA...", "loading");
+    this.setStatus("Loading every LoRA in the current folder and its subdirectories...", "loading");
     try {
       const items = await this.fetchSelectionScope();
       if (!items) return;
@@ -8716,11 +8716,11 @@ class LoraSourceBrowser {
       this.selected = new Map(this.selectionPool);
       this.syncSelectionRows();
       this.setStatus(
-        `已全选当前目录及子目录的 ${this.selected.size} 个 LoRA，包括尚未加载显示的文件。`,
+        `Selected all ${this.selected.size} LoRAs in the current folder and subfolders, including files not yet loaded.`,
         "success",
       );
     } catch (error) {
-      this.setStatus(`全选失败：${error.message || error}`, "error");
+      this.setStatus(`Select All failed: ${error.message || error}`, "error");
     } finally {
       this.selectionLoading = false;
       this.updateSelectionButtons();
@@ -8737,7 +8737,7 @@ class LoraSourceBrowser {
     }
     this.selectionLoading = true;
     this.updateSelectionButtons();
-    this.setStatus("正在读取当前目录及子目录的全部 LoRA...", "loading");
+    this.setStatus("Loading every LoRA in the current folder and its subdirectories...", "loading");
     try {
       const items = await this.fetchSelectionScope();
       if (!items) return;
@@ -8752,11 +8752,11 @@ class LoraSourceBrowser {
       }
       this.syncSelectionRows();
       this.setStatus(
-        `反选完成，当前选中 ${this.selected.size} 个 LoRA。`,
+        `Inverted selection, ${this.selected.size} LoRAs selected.`,
         "success",
       );
     } catch (error) {
-      this.setStatus(`反选失败：${error.message || error}`, "error");
+      this.setStatus(`Invert failed: ${error.message || error}`, "error");
     } finally {
       this.selectionLoading = false;
       this.updateSelectionButtons();
@@ -8781,7 +8781,7 @@ class LoraSourceBrowser {
       this.selectionScopeComplete = false;
       if (!scrollState) this.list.replaceChildren();
     }
-    this.setStatus(reset ? "正在读取 LoRA..." : "正在加载更多 LoRA...", "loading");
+    this.setStatus(reset ? "Loading LoRAs..." : "Loading more LoRAs...", "loading");
     try {
       const payload = await fetchJson(
         `/assets-astral/loras?${queryString({
@@ -8806,8 +8806,8 @@ class LoraSourceBrowser {
       }
       if (!this.hasMore) this.selectionScopeComplete = true;
       this.summary.textContent =
-        `当前目录及子目录共 ${this.total} 个 LoRA，已显示 ${this.items.length} 个` +
-        (this.selected.size ? ` · 已选 ${this.selected.size} 个` : "");
+        `${this.total} LoRAs in the current folder and subfolders, showing ${this.items.length}` +
+        (this.selected.size ? ` · ${this.selected.size} selected` : "");
       if (reset) {
         this.renderList(scrollState);
       } else {
@@ -8821,9 +8821,9 @@ class LoraSourceBrowser {
         );
         this.updateSelectionButtons();
       }
-      this.setStatus(page.length ? "" : this.items.length ? "没有更多 LoRA" : "没有找到 LoRA", "empty");
+      this.setStatus(page.length ? "" : this.items.length ? "No more LoRAs" : "No LoRAs found", "empty");
     } catch (error) {
-      if (requestId === this.requestId) this.setStatus(`读取失败：${error.message || error}`, "error");
+      if (requestId === this.requestId) this.setStatus(`Read failed: ${error.message || error}`, "error");
     } finally {
       if (requestId === this.requestId) {
         this.loading = false;
@@ -8862,7 +8862,7 @@ class LoraSourceBrowser {
 
   async loadTree() {
     this.tree.replaceChildren(
-      createElement("span", "astral-am-muted", "正在读取 LoRA 目录..."),
+      createElement("span", "astral-am-muted", "Loading LoRA folders..."),
     );
     try {
       const primaryPayload = await fetchJson(
@@ -8905,7 +8905,7 @@ class LoraSourceBrowser {
         createElement(
           "span",
           "astral-am-source-error",
-          `LoRA 目录读取失败：${error.message || error}`,
+          `Failed to read LoRA directory: ${error.message || error}`,
         ),
       );
     }
@@ -8956,7 +8956,7 @@ class LoraSourceBrowser {
         "astral-am-location-path",
         this.currentPath
           ? `${currentRootPath} / ${this.currentPath}`
-          : `${currentRootPath}（根目录）`,
+          : `${currentRootPath} (root)`,
       );
       this.breadcrumb.append(locationLine);
     }
@@ -8995,7 +8995,7 @@ class LoraSourceBrowser {
       );
       const openRoot = createElement("button", "astral-am-tree-open", "📁");
       openRoot.type = "button";
-    openRoot.title = `在系统文件管理器中打开 ${rootPath}${treePath ? ` / ${treePath}` : ""}`;
+    openRoot.title = `Open ${rootPath}${treePath ? ` / ${treePath}` : ""} in system file manager`;
       openRoot.addEventListener(
         "click",
         () => void this.openLocation(rootIndex, treePath, false),
@@ -9020,7 +9020,7 @@ class LoraSourceBrowser {
             createElement(
               "span",
               "astral-am-muted astral-am-tree-empty",
-              "没有子目录",
+              "No subdirectories",
             ),
           );
         } else {
@@ -9049,7 +9049,7 @@ class LoraSourceBrowser {
               "📁",
             );
             openDirectory.type = "button";
-    openDirectory.title = `在系统文件管理器中打开 ${directory.path}`;
+    openDirectory.title = `Open ${directory.path} in system file manager`;
             openDirectory.addEventListener(
               "click",
               () =>
@@ -9083,13 +9083,13 @@ class LoraSourceBrowser {
       });
       this.setStatus(
         result?.revealMode === "selected"
-          ? `已在系统文件管理器中定位：${path}`
-          : `已打开：${result?.absolutePath || path || "LoRA 根目录"}`,
+          ? `Revealed in system file manager: ${path}`
+          : `Opened: ${result?.absolutePath || path || "LoRA root"}`,
         "success",
       );
     } catch (error) {
       this.setStatus(
-        `打开 LoRA 目录失败：${error.message || error}`,
+        `Failed to open LoRA directory: ${error.message || error}`,
         "error",
       );
     }
@@ -9139,7 +9139,7 @@ class LoraSourceBrowser {
     const checkbox = createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = selected;
-    checkbox.setAttribute("aria-label", `选择 ${item.name}`);
+    checkbox.setAttribute("aria-label", `Select ${item.name}`);
     checkbox.addEventListener("change", () => {
       if (checkbox.checked) this.selected.set(key, item);
       else this.selected.delete(key);
@@ -9160,19 +9160,19 @@ class LoraSourceBrowser {
     const refresh = createElement(
       "button",
       "astral-am-button is-small",
-      this.loadingSources.has(item.file) ? "查询中..." : "刷新来源",
+      this.loadingSources.has(item.file) ? "Checking..." : "Refresh Sources",
     );
     refresh.type = "button";
     refresh.disabled = this.loadingSources.has(item.file);
-    refresh.title = "重新请求 C站、Hugging Face 和魔搭";
+    refresh.title = "Query Civitai, Hugging Face, and ModelScope again.";
     refresh.addEventListener("click", () => void this.queryFiles([item.file], true));
     const insert = createElement(
       "button",
       "astral-am-button is-small",
-      "放入画布",
+      "Add to Canvas",
     );
     insert.type = "button";
-    insert.title = "使用官方 LoRA Loader 节点放入当前画布";
+    insert.title = "Add to the current canvas using the official LoRA Loader node.";
     insert.addEventListener("click", () => this.insertItemsToCanvas([item]));
     rowActions.append(refresh, insert);
     const thumbnail = this.createThumbnail(item);
@@ -9182,9 +9182,9 @@ class LoraSourceBrowser {
     const result = this.results.get(item.file);
     const loading = this.loadingSources.has(item.file);
     sources.append(
-      this.createSourceCard("civitai", "C站", item, result, loading),
+      this.createSourceCard("civitai", "Civitai", item, result, loading),
       this.createSourceCard("huggingface", "Hugging Face", item, result, loading),
-      this.createSourceCard("modelscope", "魔搭社区", item, result, loading),
+      this.createSourceCard("modelscope", "ModelScope", item, result, loading),
     );
     content.append(header, sources);
     row.classList.toggle("has-thumbnail", Boolean(thumbnail));
@@ -9204,12 +9204,12 @@ class LoraSourceBrowser {
     const wrapper = createElement("div", "astral-am-lora-thumbnail");
     const image = createElement("img");
     image.src = sourceThumbnailUrl(result, null);
-    image.alt = `${item.name} 模型缩略图`;
+    image.alt = `${item.name} model thumbnail`;
     image.loading = "lazy";
     image.decoding = "async";
     image.title = result.thumbnailSource
-      ? `${result.thumbnailSource} 缩略图`
-      : "LoRA 缩略图";
+      ? `${result.thumbnailSource} thumbnail`
+      : "LoRA thumbnail";
     image.addEventListener("error", () => {
       const row = wrapper.closest(".astral-am-lora-row");
       row?.classList.remove("has-thumbnail");
@@ -9231,18 +9231,18 @@ class LoraSourceBrowser {
         createElement(
           "span",
           "astral-am-source-mode",
-          exact ? "SHA256 精确匹配" : "名称/元数据候选",
+          exact ? "Exact SHA256 match" : "Name/metadata candidate",
         ),
       );
     }
     card.append(heading);
 
     if (loading) {
-      card.append(createElement("span", "astral-am-muted", "正在查询..."));
+      card.append(createElement("span", "astral-am-muted", "Checking..."));
       return card;
     }
     if (!result) {
-      card.append(createElement("span", "astral-am-muted", "尚未查询"));
+      card.append(createElement("span", "astral-am-muted", "Not checked yet"));
       return card;
     }
     if (result.error) {
@@ -9251,43 +9251,43 @@ class LoraSourceBrowser {
     }
     const source = result.sources?.[sourceName];
     if (!source) {
-      card.append(createElement("span", "astral-am-source-error", "没有返回此来源的数据"));
+      card.append(createElement("span", "astral-am-source-error", "This source returned no data."));
       return card;
     }
     if (!source.ok) {
-      card.append(createElement("span", "astral-am-source-error", source.error || "查询失败"));
+      card.append(createElement("span", "astral-am-source-error", source.error || "Query failed"));
       if (sourceName === "civitai") this.appendAggregateModelInfo(card, result, source);
       return card;
     }
 
     if (sourceName === "civitai") {
-      if (source.url) card.append(sourceLink(source.url, "打开 C站模型"));
-      else card.append(createElement("span", "astral-am-muted", "C站未提供公开链接"));
+      if (source.url) card.append(sourceLink(source.url, "Open Civitai model"));
+      else card.append(createElement("span", "astral-am-muted", "Civitai did not provide a public link."));
       this.appendAggregateModelInfo(card, result, source);
       return card;
     }
 
     const candidates = Array.isArray(source.candidates) ? source.candidates : [];
     if (!candidates.length) {
-      card.append(createElement("span", "astral-am-muted", `未找到“${source.query || item.name}”候选`));
+      card.append(createElement("span", "astral-am-muted", `No candidates found for "${source.query || item.name}"`));
       return card;
     }
     card.append(sourceLink(source.url, candidates[0].name || candidates[0].id));
     const primary = candidates[0];
     const matchLabel =
-      primary.matchLabel || source.matchLabel || "名称候选，未经文件哈希确认";
+      primary.matchLabel || source.matchLabel || "Name candidate; not confirmed by file hash";
     card.append(
       createElement(
         "span",
         primary.matchType === "sha256" ? "astral-am-source-match" : "astral-am-muted",
         primary.matchedFile
-          ? `${matchLabel}：${primary.matchedFile}`
-          : `${matchLabel}；按“${source.query}”找到 ${candidates.length} 个候选`,
+          ? `${matchLabel}: ${primary.matchedFile}`
+          : `${matchLabel}; found ${candidates.length} candidates for "${source.query}"`,
       ),
     );
     if (candidates.length > 1) {
       const more = createElement("details", "astral-am-candidates");
-      more.append(createElement("summary", "", "查看其他候选"));
+      more.append(createElement("summary", "", "View other candidates"));
       for (const candidate of candidates.slice(1)) {
         more.append(sourceLink(candidate.url, candidate.name || candidate.id));
       }
@@ -9300,13 +9300,13 @@ class LoraSourceBrowser {
     const recommendation = result?.recommendedStrength || source?.recommendedStrength;
     const strength = createElement("div", "astral-am-source-detail");
     strength.append(
-      createElement("span", "astral-am-source-label", "推荐强度"),
+      createElement("span", "astral-am-source-label", "Recommended strength"),
       createElement(
         "span",
         "",
         recommendation?.text
           ? `${recommendation.text}${recommendation.source ? ` · ${recommendation.source}` : ""}`
-          : "未找到可靠推荐",
+          : "No reliable recommendation found",
       ),
     );
     card.append(strength);
@@ -9322,14 +9322,14 @@ class LoraSourceBrowser {
         triggerWrap.append(createElement("span", "astral-am-trigger", trigger));
       }
       if (triggers.length > 12) {
-        triggerWrap.append(createElement("span", "astral-am-muted", `另 ${triggers.length - 12} 个`));
+        triggerWrap.append(createElement("span", "astral-am-muted", `${triggers.length - 12} more`));
       }
       const triggersSource = result?.triggersSource || source?.triggersSource;
       if (triggersSource) {
-        triggerWrap.append(createElement("span", "astral-am-muted", `触发词来源：${triggersSource}`));
+        triggerWrap.append(createElement("span", "astral-am-muted", `Trigger word source: ${triggersSource}`));
       }
     } else {
-      triggerWrap.append(createElement("span", "astral-am-muted", "未找到可靠触发词"));
+      triggerWrap.append(createElement("span", "astral-am-muted", "No reliable trigger words found"));
     }
     card.append(triggerWrap);
   }
@@ -9355,7 +9355,7 @@ class LoraSourceBrowser {
     const loadedCount = this.items.length;
     this.operationBusy = true;
     this.updateSelectionButtons();
-    this.setStatus(`正在${label} LoRA...`, "loading");
+    this.setStatus(`${label} LoRA...`, "loading");
     try {
       const result = await fetchJson(endpoint, {
         method: "POST",
@@ -9365,11 +9365,11 @@ class LoraSourceBrowser {
       this.selected.clear();
       await this.reloadPreservingLoadedCount(loadedCount, true);
       this.setStatus(
-        `${label}完成，共处理 ${Number(result?.count) || 0} 个 LoRA。`,
+        `${label} complete, processed ${Number(result?.count) || 0} LoRAs.`,
         "success",
       );
     } catch (error) {
-      this.setStatus(`${label}失败：${error.message || error}`, "error");
+      this.setStatus(`${label} failed: ${error.message || error}`, "error");
     } finally {
       this.operationBusy = false;
       this.updateSelectionButtons();
@@ -9379,14 +9379,14 @@ class LoraSourceBrowser {
   async moveSelectedItems() {
     const items = this.selectedItems();
     if (!items.length || this.operationBusy) return;
-    this.setStatus("正在读取可用的 LoRA 目标文件夹...", "loading");
+    this.setStatus("Loading available LoRA destination folders...", "loading");
     try {
       const payload = await fetchJson("/assets-astral/loras/directories");
       const directories = Array.isArray(payload?.directories)
         ? payload.directories
         : [];
       if (!directories.length) {
-        throw new Error("没有可用的 LoRA 目标文件夹");
+        throw new Error("No destination LoRA folder is available.");
       }
       const sourceDirectories = new Set(
         items.map((item) => {
@@ -9404,23 +9404,23 @@ class LoraSourceBrowser {
         const rootName = pathBasename(directory.rootPath);
         return {
           value: JSON.stringify({ rootIndex, path }),
-          label: path ? `${rootName} / ${path}` : `${rootName}（根目录）`,
+          label: path ? `${rootName} / ${path}` : `${rootName} (root)`,
           disabled: sourceDirectories.has(JSON.stringify([rootIndex, path])),
         };
       });
       const initial = options.find((option) => !option.disabled)?.value || "";
       const selected = await showAstralSelect({
-        title: "移动 LoRA",
-        message: `将选中的 ${items.length} 个 LoRA 移动到哪个文件夹？同名文件不会被覆盖。`,
-        label: "目标文件夹",
+        title: "Move LoRA",
+        message: `Which folder should the selected ${items.length} LoRAs be moved to? Files with the same name are not overwritten.`,
+        label: "Destination folder",
         options,
         initialValue: initial,
-        confirmLabel: "移动",
+        confirmLabel: "Move",
       });
       if (!selected) return;
       const target = JSON.parse(selected);
       await this.runLoraOperation(
-        "移动",
+        "Move",
         "/assets-astral/loras/move",
         {
           items: loraSelectionPayload(items),
@@ -9428,7 +9428,7 @@ class LoraSourceBrowser {
         },
       );
     } catch (error) {
-      this.setStatus(`移动失败：${error.message || error}`, "error");
+      this.setStatus(`Move failed: ${error.message || error}`, "error");
     }
   }
 
@@ -9436,15 +9436,15 @@ class LoraSourceBrowser {
     const items = this.selectedItems();
     if (!items.length || this.operationBusy) return;
     const confirmed = await showAstralConfirm({
-      title: "LoRA 移至回收站",
+      title: "Move LoRA to Recycle Bin",
       message:
-        `将选中的 ${items.length} 个 LoRA 移到 Windows 回收站？\n\n` +
-        "文件会进入回收站，但相关工作流可能因此失效。",
-      confirmLabel: "移至回收站",
+        `Move the selected ${items.length} LoRAs to the Windows Recycle Bin?\n\n` +
+        "Files go to the Recycle Bin, but related workflows may stop working.",
+      confirmLabel: "Move to Recycle Bin",
     });
     if (!confirmed) return;
     await this.runLoraOperation(
-      "删除",
+      "Delete",
       "/assets-astral/loras/recycle",
       {
         items: loraSelectionPayload(items),
@@ -9470,7 +9470,7 @@ class LoraSourceBrowser {
         typeof app === "undefined" ||
         !app?.graph
       ) {
-        throw new Error("当前 ComfyUI 画布尚未就绪");
+        throw new Error("The current ComfyUI canvas is not ready.");
       }
       const canvas = app.canvas;
       const canvasElement = canvas?.canvas;
@@ -9501,11 +9501,11 @@ class LoraSourceBrowser {
       const nodes = [];
       for (const item of wanted) {
         const loader = LiteGraph.createNode("LoraLoader");
-        if (!loader) throw new Error("当前 ComfyUI 未注册官方节点 LoraLoader");
+        if (!loader) throw new Error("ComfyUI has not registered the official LoraLoader node.");
         const widget = loader.widgets?.find((entry) => entry.name === "lora_name");
-        if (!widget) throw new Error("LoraLoader 中未找到 lora_name 输入");
+        if (!widget) throw new Error("The lora_name input was not found in LoraLoader.");
         const value = item.nativeFile || item.file || item.relativePath;
-        if (!value) throw new Error(`${item.name || "LoRA"} 缺少文件路径`);
+        if (!value) throw new Error(`${item.name || "LoRA"} is missing a file path`);
         widget.value = value;
         if (
           Array.isArray(widget.options?.values) &&
@@ -9534,12 +9534,12 @@ class LoraSourceBrowser {
       }
       this.setStatus(
         skippedCount
-          ? `已将前 ${nodes.length} 个 LoRA Loader 放入当前画布；一次最多放入 ${MAX_LORA_CANVAS_BATCH} 个，其余 ${skippedCount} 个未放入。`
-          : `已将 ${nodes.length} 个 LoRA Loader 放入当前画布显示区域。`,
+          ? `Placed the first ${nodes.length} LoRA Loaders on the current canvas; up to ${MAX_LORA_CANVAS_BATCH} at a time, so the other ${skippedCount} were not placed.`
+          : `Placed ${nodes.length} LoRA Loaders in the current canvas view.`,
         skippedCount ? "warning" : "success",
       );
     } catch (error) {
-      this.setStatus(`放入画布失败：${error.message || error}`, "error");
+      this.setStatus(`Failed to place on canvas: ${error.message || error}`, "error");
     }
   }
 
@@ -9561,7 +9561,7 @@ class LoraSourceBrowser {
     for (const file of wanted) this.loadingSources.add(file);
     this.updateRowsPreservingScroll(wanted, scrollState);
     this.setStatus(
-      `${refresh ? "正在强制刷新" : "正在读取或查询"} ${wanted.length} 个 LoRA 的来源...`,
+      `${refresh ? "Force-refreshing" : "Reading or querying"} the sources of ${wanted.length} LoRAs...`,
       "loading",
     );
     let completed = 0;
@@ -9582,7 +9582,7 @@ class LoraSourceBrowser {
           (payload?.items || []).map((result) => result.file),
           scrollState,
         );
-        this.setStatus(`已查询 ${completed}/${wanted.length} 个 LoRA...`, "loading");
+        this.setStatus(`Queried ${completed}/${wanted.length} LoRAs...`, "loading");
       }
       const failures = wanted.filter((file) => {
         const result = this.results.get(file);
@@ -9590,14 +9590,14 @@ class LoraSourceBrowser {
       }).length;
       this.setStatus(
         failures
-          ? `来源查询完成，${failures} 个 LoRA 未能完整查询，请查看各行失败原因。`
+          ? `Source query complete; ${failures} LoRAs could not be fully queried. Check the failure reason on each row.`
           : refresh
-            ? "来源刷新完成，并已保存到 LoRA 同目录。"
-            : "来源查询完成；已有结果已优先使用 LoRA 同目录中的本地缓存。",
+            ? "Source refresh complete and saved beside the LoRA file."
+            : "Source query complete; existing results were prioritized from the local cache beside each LoRA.",
         failures ? "warning" : "success",
       );
     } catch (error) {
-      this.setStatus(`来源查询失败：${error.message || error}`, "error");
+      this.setStatus(`Source query failed: ${error.message || error}`, "error");
     } finally {
       this.loadingSources.clear();
       this.updateRowsPreservingScroll(wanted, scrollState);
@@ -9610,11 +9610,11 @@ const MISSING_MODEL_FILE_PATTERN =
 const SHA256_VALUE_PATTERN = /^[0-9a-f]{64}$/i;
 const MISSING_MODEL_RESOLVE_CHUNK_SIZE = 250;
 const MISSING_MODEL_STATE_LABELS = {
-  match: "可靠匹配",
-  candidate: "同名候选",
-  ambiguous: "多个同名",
-  conflict: "哈希冲突",
-  missing: "未找到",
+  match: "Reliable match",
+  candidate: "Same-name candidate",
+  ambiguous: "Multiple same-name matches",
+  conflict: "Hash conflict",
+  missing: "Not Found",
 };
 
 function normalizedModelValue(value) {
@@ -9872,13 +9872,13 @@ class ModelManagerBrowser {
   build() {
     const section = createElement("section", "astral-am-pane astral-am-models-pane");
     const modeTabs = createElement("nav", "astral-am-subtabs");
-    modeTabs.setAttribute("aria-label", "模型管理工具");
-    this.loraModeButton = createElement("button", "astral-am-subtab is-active", "LoRA 管理");
-    this.duplicateModeButton = createElement("button", "astral-am-subtab", "重复模型清理");
+    modeTabs.setAttribute("aria-label", "Model management tools");
+    this.loraModeButton = createElement("button", "astral-am-subtab is-active", "LoRA Management");
+    this.duplicateModeButton = createElement("button", "astral-am-subtab", "Duplicate Model Cleanup");
     this.missingModeButton = createElement(
       "button",
       "astral-am-subtab",
-      "填充缺失模型",
+      "Fill Missing Models",
     );
     this.duplicateModeButton.type = "button";
     this.loraModeButton.type = "button";
@@ -9911,10 +9911,10 @@ class ModelManagerBrowser {
     pane.hidden = true;
     const toolbar = createElement("div", "astral-am-toolbar");
     const scope = createCustomDropdown("astral-am-category-dropdown");
-    scope.element.setAttribute("aria-label", "重复扫描范围");
-    const scan = createElement("button", "astral-am-button is-primary", "扫描重复模型");
+    scope.element.setAttribute("aria-label", "Duplicate scan scope");
+    const scan = createElement("button", "astral-am-button is-primary", "Scan Duplicate Models");
     scan.type = "button";
-    const cancel = createElement("button", "astral-am-button is-danger", "取消扫描");
+    const cancel = createElement("button", "astral-am-button is-danger", "Cancel Scan");
     cancel.type = "button";
     cancel.hidden = true;
     toolbar.append(scope.element, scan, cancel);
@@ -9922,7 +9922,7 @@ class ModelManagerBrowser {
     const note = createElement(
       "p",
       "astral-am-note",
-      "先按文件大小分组，再计算 SHA256。删除只会把普通模型文件移到 Windows 回收站，并在操作前显示确认；不会删除模型目录。",
+      "Group files by size, then calculate SHA256. Deleting only moves regular model files to the Windows Recycle Bin after confirmation; model directories are never removed.",
     );
     const status = createElement("div", "astral-am-status");
     const progress = createElement("div", "astral-am-duplicate-progress");
@@ -9930,7 +9930,7 @@ class ModelManagerBrowser {
     const progressBar = document.createElement("progress");
     progressBar.max = 1;
     progressBar.value = 0;
-    progressBar.setAttribute("aria-label", "重复模型扫描进度");
+    progressBar.setAttribute("aria-label", "Duplicate model scan progress");
     const progressText = createElement("div", "astral-am-duplicate-progress-text");
     const currentFile = createElement("div", "astral-am-duplicate-current-file");
     progress.append(progressBar, progressText, currentFile);
@@ -9960,7 +9960,7 @@ class ModelManagerBrowser {
     const scan = createElement(
       "button",
       "astral-am-button is-primary",
-      "扫描当前工作流缺失模型",
+      "Scan Current Workflow for Missing Models",
     );
     scan.type = "button";
     const autoFill = createElement(
@@ -9968,23 +9968,23 @@ class ModelManagerBrowser {
       "astral-am-check astral-am-missing-autofill",
     );
     autoFill.title =
-      "扫描后自动填充 SHA256 或原路径一致的模型，以及本地唯一同名模型";
+      "After scanning, auto-fill models matching by SHA256 or original path, plus unique local same-name matches.";
     const autoFillCheckbox = createElement("input");
     autoFillCheckbox.type = "checkbox";
     autoFillCheckbox.checked = this.autoFillMissingModels;
-    autoFillCheckbox.setAttribute("aria-label", "扫描后自动填充");
+    autoFillCheckbox.setAttribute("aria-label", "Auto-fill after scan");
     autoFill.append(
       autoFillCheckbox,
-      document.createTextNode("扫描后自动填充"),
+      document.createTextNode("Auto-fill after scan"),
     );
     toolbar.append(scan, autoFill);
 
     const note = createElement(
       "p",
       "astral-am-note",
-      "扫描当前工作流中已经失效的模型下拉项。有 SHA256 时只按内容匹配，不会用同名文件替代不同模型；" +
-        "勾选“扫描后自动填充”时，只自动填充哈希/原路径一致或本地唯一同名的模型；" +
-        "多个同名和哈希冲突仍需人工确认。填充只修改当前工作流，不复制、移动或删除本地模型文件。",
+      "Find stale model dropdown values in the current workflow. When SHA256 is available, match by content only and never replace a different model by name; " +
+        "When Auto-fill after scan is enabled, only models matching by hash, original path, or a unique local name are filled automatically." +
+        "Multiple same-name matches and hash conflicts still require confirmation. Filling only changes the current workflow; it does not copy, move, or delete local model files.",
     );
     const status = createElement("div", "astral-am-status");
     const summary = createElement("div", "astral-am-summary");
@@ -10058,8 +10058,8 @@ class ModelManagerBrowser {
           widget,
           widgetIndex,
           nodeId: String(node?.id ?? ""),
-          nodeTitle: String(node?.title || node?.type || "未命名节点"),
-          widgetName: String(widget?.name || `控件 ${widgetIndex + 1}`),
+          nodeTitle: String(node?.title || node?.type || "Untitled Node"),
+          widgetName: String(widget?.name || `Widget ${widgetIndex + 1}`),
           value,
           categories,
           sha256: hashRecord?.sha256 || "",
@@ -10074,8 +10074,8 @@ class ModelManagerBrowser {
     this.missingScanButton.disabled = Boolean(active);
     this.missingAutoFillCheckbox.disabled = Boolean(active);
     this.missingScanButton.textContent = active
-      ? "正在扫描…"
-      : "扫描当前工作流缺失模型";
+      ? "Scanning..."
+      : "Scan Current Workflow for Missing Models";
   }
 
   async scanMissingModels() {
@@ -10088,7 +10088,7 @@ class ModelManagerBrowser {
       null,
       "data-missing-key",
     );
-    this.setMissingModelStatus("正在读取当前工作流中的模型引用…", "loading");
+    this.setMissingModelStatus("Reading model references in the current workflow...", "loading");
 
     try {
       const references = this.collectMissingModelReferences();
@@ -10102,14 +10102,14 @@ class ModelManagerBrowser {
         this.missingModelScanned = true;
         this.renderMissingModels();
         this.setMissingModelStatus(
-          "当前工作流没有检测到本地模型下拉列表之外的模型引用。",
+          "No model references outside the local model dropdowns were found in the current workflow.",
           "success",
         );
         return;
       }
 
       this.setMissingModelStatus(
-        `正在匹配 ${references.length} 个缺失模型引用…`,
+        `Matching ${references.length} missing model references...`,
         "loading",
       );
       const rawResults = [];
@@ -10208,21 +10208,21 @@ class ModelManagerBrowser {
         : null;
       this.renderMissingModels();
       const statusParts = [
-        `扫描完成：${reliable} 个可靠匹配，${candidates} 个唯一同名候选，` +
-          `${ambiguous} 个多个同名，${conflicts} 个哈希冲突，${missing} 个未找到。`,
+        `Scan complete: ${reliable} reliable matches, ${candidates} unique same-name candidates, ` +
+          `${ambiguous} multiple same-name, ${conflicts} hash conflicts, ${missing} not found.`,
       ];
       if (autoFillResult) {
         if (autoFillResult.failures.length) {
           statusParts.push(
-            `已自动填充 ${autoFillResult.filled} 个，${autoFillResult.failures.length} 项失败：` +
-              autoFillResult.failures.join("；"),
+            `Auto-filled ${autoFillResult.filled}, ${autoFillResult.failures.length} failed: ` +
+              autoFillResult.failures.join("; "),
           );
         } else if (autoFillResult.filled) {
           statusParts.push(
-            `已自动填充 ${autoFillResult.filled} 个同哈希、原路径一致或唯一同名模型。`,
+            `Auto-filled ${autoFillResult.filled} models with the same hash, matching original path, or a unique same-name.`,
           );
         } else {
-          statusParts.push("已开启扫描后自动填充，但没有可安全自动填充的模型。");
+          statusParts.push("Auto-fill after scan is enabled, but no model can be filled safely.");
         }
       }
       this.setMissingModelStatus(
@@ -10235,7 +10235,7 @@ class ModelManagerBrowser {
       if (scanToken !== this.missingModelScanToken) return;
       this.missingModelScanned = false;
       this.setMissingModelStatus(
-        `扫描缺失模型失败：${error.message || error}`,
+        `Scan for missing models failed: ${error.message || error}`,
         "error",
       );
     } finally {
@@ -10288,7 +10288,7 @@ class ModelManagerBrowser {
           result.filled += 1;
         } catch (error) {
           result.failures.push(
-            `${entry.nodeTitle} · ${entry.widgetName}：${error.message || error}`,
+            `${entry.nodeTitle} · ${entry.widgetName}: ${error.message || error}`,
           );
         }
       }
@@ -10328,10 +10328,10 @@ class ModelManagerBrowser {
       return;
     }
     this.missingModelSummary.textContent =
-      `当前工作流有 ${entries.length} 个缺失模型引用：` +
-      `${reliable} 个可可靠填充，${candidates} 个唯一同名候选，` +
-      `${ambiguous} 个多个同名，${conflicts} 个哈希冲突，${missing} 个未找到` +
-      (filled ? `；已填充 ${filled} 个。` : "。");
+      `The current workflow has ${entries.length} missing model references: ` +
+      `${reliable} reliably fillable, ${candidates} unique same-name candidates, ` +
+      `${ambiguous} multiple same-name, ${conflicts} hash conflicts, ${missing} not found` +
+      (filled ? `; ${filled} filled.` : ".");
 
     const fragment = document.createDocumentFragment();
     for (const entry of entries) {
@@ -10352,24 +10352,24 @@ class ModelManagerBrowser {
       entry.result.candidates.length &&
       !entry.candidateTargets?.length
     ) {
-      return "本地已经找到模型，但当前节点的下拉列表里没有该值；请刷新模型列表后重新扫描。";
+      return "The model exists locally, but its value is missing from this node's dropdown. Refresh the model list and scan again.";
     }
     if (state === "match" && entry.result?.via === "sha256") {
-      return "工作流记录的 SHA256 与本地文件一致，可以安全填充。";
+      return "The workflow SHA256 matches the local file and can be filled safely.";
     }
     if (state === "match" && entry.result?.via === "path") {
-      return "缺失值的规范相对路径与本地模型一致，可以安全填充。";
+      return "The missing value's canonical relative path matches the local model and can be filled safely.";
     }
     if (state === "candidate") {
-      return "工作流没有可用哈希，本地只有一个同名文件；请确认后填充。";
+      return "The workflow has no usable hash and only one local file has this name. Confirm before filling.";
     }
     if (state === "ambiguous") {
-      return "工作流没有可用哈希，本地有多个同名文件；必须选择一个。";
+      return "The workflow has no usable hash and multiple local files have this name. Select one.";
     }
     if (state === "conflict") {
-      return "本地找到同名文件，但 SHA256 与工作流记录不一致，已阻止按名称替代。";
+      return "A local file has the same name, but its SHA256 differs from the workflow record. Name-based replacement was blocked.";
     }
-    return "本地模型目录中没有找到与哈希或名称匹配的文件。";
+    return "No local model matched by hash or name.";
   }
 
   createMissingModelRow(entry) {
@@ -10389,28 +10389,28 @@ class ModelManagerBrowser {
       createElement(
         "span",
         "astral-am-muted",
-        `节点 #${entry.nodeId || "?"} · 控件 ${entry.widgetName}`,
+        `Node #${entry.nodeId || "?"} · Widget ${entry.widgetName}`,
       ),
     );
     const badge = createElement(
       "span",
       "astral-am-missing-badge",
       state === "filled"
-        ? "已填充"
-        : MISSING_MODEL_STATE_LABELS[state] || "未找到",
+        ? "Filled"
+        : MISSING_MODEL_STATE_LABELS[state] || "Not Found",
     );
     header.append(heading, badge);
 
     const reference = createElement("div", "astral-am-missing-reference");
     reference.append(
-      createElement("span", "", "原值"),
+      createElement("span", "", "Original value"),
       markUntranslated(createElement("code", "", entry.value)),
     );
     const description = createElement(
       "p",
       "astral-am-missing-description",
       entry.filledTarget
-        ? `当前工作流已改为 ${entry.filledTarget}。`
+        ? `The current workflow has been changed to ${entry.filledTarget}.`
         : this.missingModelStateDescription(entry),
     );
     row.append(header, reference, description);
@@ -10460,12 +10460,12 @@ class ModelManagerBrowser {
       const select = createCustomDropdown(
         "astral-am-missing-candidate-dropdown",
       );
-      select.element.setAttribute("aria-label", `${entry.widgetName} 的替代模型`);
+      select.element.setAttribute("aria-label", `Replacement model for ${entry.widgetName}`);
       select.setOptions(
         availableTargets.map(({ candidate, target }) => ({
           value: target,
           label: `${candidate.category} / ${candidate.relativePath}`,
-          title: `将 ${entry.value} 替换为 ${target}`,
+          title: `Replace ${entry.value} with ${target}`,
         })),
         entry.selectedTarget,
       );
@@ -10486,10 +10486,10 @@ class ModelManagerBrowser {
     const fill = createElement(
       "button",
       "astral-am-button is-small is-primary",
-      state === "candidate" ? "确认填充" : "填充",
+      state === "candidate" ? "Confirm Fill" : "Fill",
     );
     fill.type = "button";
-    fill.title = `仅修改当前工作流中的 ${entry.nodeTitle} · ${entry.widgetName}`;
+    fill.title = `Only changes ${entry.nodeTitle} · ${entry.widgetName} in the current workflow`;
     fill.addEventListener("click", () =>
       void this.fillMissingModelEntry(entry),
     );
@@ -10508,22 +10508,22 @@ class ModelManagerBrowser {
           ? entry.node
           : null;
     if (!liveNode || liveNode !== entry.node) {
-      throw new Error("节点已不在当前画布中，请重新扫描");
+      throw new Error("The node is no longer on the current canvas. Scan again.");
     }
     const widgetIndex = Array.isArray(liveNode.widgets)
       ? liveNode.widgets.indexOf(entry.widget)
       : -1;
     if (widgetIndex < 0) {
-      throw new Error("模型控件已经变化，请重新扫描");
+      throw new Error("The model widget changed. Scan again.");
     }
     if (entry.widget.value !== entry.value) {
-      throw new Error("模型值在扫描后被修改，请重新扫描");
+      throw new Error("The model value changed after scanning. Scan again.");
     }
     const option = modelComboValues(entry.widget).find(
       (value) => value === target || similarModelPath(value, target),
     );
     if (!option) {
-      throw new Error("目标模型已经不在节点下拉列表中，请刷新模型列表后重新扫描");
+      throw new Error("The target model is no longer in the node dropdown. Refresh the model list and scan again.");
     }
     const oldValue = entry.widget.value;
     entry.widget.value = option;
@@ -10558,7 +10558,7 @@ class ModelManagerBrowser {
   async fillMissingModelEntry(entry) {
     const target = entry.selectedTarget;
     if (!target) {
-      this.setMissingModelStatus("请先选择一个可用的本地模型。", "warning");
+      this.setMissingModelStatus("Select an available local model first.", "warning");
       return false;
     }
     const graph = app?.graph;
@@ -10568,7 +10568,7 @@ class ModelManagerBrowser {
       applied = this.applyMissingModelTarget(entry, target);
     } catch (error) {
       this.setMissingModelStatus(
-        `填充失败：${error.message || error}`,
+        `Fill failed: ${error.message || error}`,
         "error",
       );
       return false;
@@ -10578,8 +10578,8 @@ class ModelManagerBrowser {
     graph?.setDirtyCanvas?.(true, true);
     this.renderMissingModels();
     this.setMissingModelStatus(
-      `${entry.nodeTitle} · ${entry.widgetName} 已填充为 ${applied}。` +
-        " 只修改了当前工作流，尚未保存工作流。",
+      `${entry.nodeTitle} · ${entry.widgetName} filled with ${applied}.` +
+        " Only the current workflow was modified; the workflow has not been saved.",
       "success",
     );
     return true;
@@ -10647,13 +10647,13 @@ class ModelManagerBrowser {
         this.categories = [...uniqueCategories.values()];
         this.updateDuplicateScopes();
         if (!this.categories.length) {
-          this.setDuplicateStatus("ComfyUI 没有返回可清理的模型分类。", "error");
+          this.setDuplicateStatus("ComfyUI did not return any model categories to clean up.", "error");
         }
         return this.categories;
       })
       .catch((error) => {
         this.categoriesPromise = null;
-        this.setDuplicateStatus(`读取模型分类失败：${error.message || error}`, "error");
+        this.setDuplicateStatus(`Failed to read model categories: ${error.message || error}`, "error");
         return [];
       });
     return this.categoriesPromise;
@@ -10663,7 +10663,7 @@ class ModelManagerBrowser {
     const previous = this.duplicateScope.value;
     this.duplicateScope.setOptions(
       [
-        { value: "", label: "全部分类" },
+        { value: "", label: "All Categories" },
         ...this.categories.map((category) => ({
           value: category.name,
           label: category.name,
@@ -10677,14 +10677,14 @@ class ModelManagerBrowser {
   async recycleModel(item) {
     const label = `${item.category} / ${item.relativePath}`;
     const confirmed = await showAstralConfirm({
-      title: "模型移至回收站",
+      title: "Move Model to Recycle Bin",
       message:
-        `确定将以下模型移至 Windows 回收站吗？\n\n${label}\n\n` +
-        "文件会进入回收站，但相关工作流可能因此失效。",
-      confirmLabel: "移至回收站",
+        `Move the following model to the Windows Recycle Bin?\n\n${label}\n\n` +
+        "Files go to the Recycle Bin, but related workflows may stop working.",
+      confirmLabel: "Move to Recycle Bin",
     });
     if (!confirmed) return false;
-    this.setDuplicateStatus(`正在将 ${item.name} 移至回收站...`, "loading");
+    this.setDuplicateStatus(`Moving ${item.name} to the Recycle Bin...`, "loading");
     try {
       await fetchJson("/assets-astral/models/recycle", {
         method: "POST",
@@ -10699,13 +10699,13 @@ class ModelManagerBrowser {
       const removedFromResults = this.removeDuplicateResultItem(item);
       this.setDuplicateStatus(
         removedFromResults
-          ? `${label} 已移至 Windows 回收站，当前结果已更新。需要重新核对时请手动点击扫描。`
-          : `${label} 已移至 Windows 回收站。`,
+          ? `${label} moved to the Windows Recycle Bin; the current results were updated. Click Scan manually to re-verify.`
+          : `${label} moved to the Windows Recycle Bin.`,
         "success",
       );
       return true;
     } catch (error) {
-      this.setDuplicateStatus(`删除失败：${error.message || error}`, "error");
+      this.setDuplicateStatus(`Delete failed: ${error.message || error}`, "error");
       return false;
     }
   }
@@ -10753,7 +10753,7 @@ class ModelManagerBrowser {
     this.duplicateSummary.textContent = "";
     this.setScanControls(true);
     this.setDuplicateStatus(
-      "正在启动后台扫描。扫描会继续运行，即使关闭资产管理器也不会中断。",
+      "Starting a background scan. It continues even if Asset Manager is closed.",
       "loading",
     );
     try {
@@ -10764,10 +10764,10 @@ class ModelManagerBrowser {
         body: JSON.stringify({ category: this.duplicateScope.value }),
       });
       const task = payload?.task;
-      if (!task?.taskId) throw new Error("后端没有返回扫描任务");
+      if (!task?.taskId) throw new Error("The backend did not return a scan task.");
       if (!payload.started) {
         this.setDuplicateStatus(
-          "已有一个扫描任务在后台运行，正在接入该任务的实时进度。",
+          "A scan is already running in the background. Attaching to its live progress.",
           "warning",
         );
       }
@@ -10775,17 +10775,17 @@ class ModelManagerBrowser {
     } catch (error) {
       this.stopDuplicateMonitoring();
       this.setScanControls(false);
-      this.setDuplicateStatus(`扫描失败：${error.message || error}`, "error");
+      this.setDuplicateStatus(`Scan failed: ${error.message || error}`, "error");
     }
   }
 
   setScanControls(active, cancelling = false) {
     this.scanButton.disabled = Boolean(active);
-    this.scanButton.textContent = active ? "正在后台扫描…" : "扫描重复模型";
+    this.scanButton.textContent = active ? "Scanning in background..." : "Scan Duplicate Models";
     this.duplicateScope.setDisabled(Boolean(active));
     this.cancelScanButton.hidden = !active;
     this.cancelScanButton.disabled = Boolean(cancelling);
-    this.cancelScanButton.textContent = cancelling ? "正在取消…" : "取消扫描";
+    this.cancelScanButton.textContent = cancelling ? "Cancelling..." : "Cancel Scan";
     this.duplicateProgress.hidden = !active;
   }
 
@@ -10833,7 +10833,7 @@ class ModelManagerBrowser {
       );
       if (generation !== this.scanPollGeneration) return;
       const task = payload?.task;
-      if (!task) throw new Error("后端没有返回扫描任务状态");
+      if (!task) throw new Error("The backend did not return a scan task status.");
       this.scanPollFailures = 0;
       this.applyDuplicateTaskProgress(task);
       if (["queued", "running", "cancelling"].includes(String(task.status))) {
@@ -10848,13 +10848,13 @@ class ModelManagerBrowser {
         this.stopDuplicateMonitoring();
         this.setScanControls(false);
         this.setDuplicateStatus(
-          `暂时无法读取后台扫描进度：${error.message || error}。扫描可能仍在后台继续，稍后重新进入此页面可再次接入。`,
+          `Unable to read background scan progress for now: ${error.message || error}. The scan may still be running; re-enter this page later to reconnect.`,
           "warning",
         );
         return;
       }
       this.setDuplicateStatus(
-        `读取扫描进度失败，正在重试（${this.scanPollFailures}/4）…`,
+        `Failed to read scan progress, retrying (${this.scanPollFailures}/4)...`,
         "warning",
       );
       this.scheduleDuplicatePoll(1500);
@@ -10875,7 +10875,7 @@ class ModelManagerBrowser {
         this.duplicateScope.value = String(task.category || "");
         this.renderDuplicates(task.result);
         this.setDuplicateStatus(
-          "已恢复上次完成的重复模型扫描结果。",
+          "Restored the last completed duplicate-model scan.",
           "success",
         );
       }
@@ -10892,10 +10892,10 @@ class ModelManagerBrowser {
 
     if (status === "queued" || phase === "starting") {
       this.duplicateProgressBar.removeAttribute("value");
-      this.duplicateProgressText.textContent = "正在准备后台扫描任务…";
+      this.duplicateProgressText.textContent = "Preparing the background scan...";
       this.duplicateCurrentFile.textContent = "";
       this.duplicateCurrentFile.title = "";
-      this.setDuplicateStatus("扫描任务已启动，正在准备文件列表。", "loading");
+      this.setDuplicateStatus("Scan started and is preparing the file list.", "loading");
       return;
     }
 
@@ -10903,24 +10903,24 @@ class ModelManagerBrowser {
       const progress = Math.max(0, Math.min(1, Number(task?.progress) || 0));
       this.duplicateProgressBar.value = progress;
       this.duplicateProgressText.textContent =
-        `正在安全停止扫描，已完成 ${Math.round(progress * 100)}%…`;
+        `Safely stopping the scan, ${Math.round(progress * 100)}% done...`;
       this.duplicateCurrentFile.textContent = "";
       this.duplicateCurrentFile.title = "";
-      this.setDuplicateStatus("正在取消后台扫描，请稍候…", "warning");
+      this.setDuplicateStatus("Cancelling the background scan. Please wait...", "warning");
       return;
     }
 
     if (phase === "discovering" || phase === "queued") {
       this.duplicateProgressBar.removeAttribute("value");
       this.duplicateProgressText.textContent =
-        `正在扫描模型目录，已发现 ${Number(task.scannedFiles) || 0} 个模型文件…`;
+        `Scanning model directories, found ${Number(task.scannedFiles) || 0} model files...`;
       const currentLabel = task.currentFile
-        ? `当前：${task.currentFile.category} / ${task.currentFile.relativePath}`
+        ? `Current: ${task.currentFile.category} / ${task.currentFile.relativePath}`
         : "";
       this.duplicateCurrentFile.textContent = currentLabel;
       this.duplicateCurrentFile.title = currentLabel;
       this.setDuplicateStatus(
-        "正在后台整理文件大小，随后会计算重复候选的 SHA256。",
+        "Organizing file sizes in the background, then calculating SHA256 for duplicate candidates.",
         "loading",
       );
       return;
@@ -10935,29 +10935,29 @@ class ModelManagerBrowser {
       const totalBytes = Math.max(0, Number(task.totalBytesToHash) || 0);
       const hashedBytes = Math.max(0, Number(task.hashedBytes) || 0);
       const details = [];
-      if (fileCount) details.push(`已计算 ${hashedCount}/${fileCount} 个文件`);
-      if (failedCount) details.push(`${failedCount} 个文件读取失败`);
+      if (fileCount) details.push(`${hashedCount}/${fileCount} files hashed`);
+      if (failedCount) details.push(`${failedCount} files could not be read`);
       if (totalBytes) {
         details.push(`${formatBytes(hashedBytes)} / ${formatBytes(totalBytes)}`);
       }
       details.push(`${Math.round(progress * 100)}%`);
       if (Number(task.bytesPerSecond) > 0) {
-        details.push(`${formatBytes(task.bytesPerSecond)}/秒`);
+        details.push(`${formatBytes(task.bytesPerSecond)}/s`);
       }
       if (Number(task.etaSeconds) > 0 && progress < 1) {
-        details.push(`预计剩余 ${formatDuration(task.etaSeconds)}`);
+        details.push(`${formatDuration(task.etaSeconds)} remaining`);
       }
       this.duplicateProgressText.textContent = details.join(" · ");
       const current = task.currentFile;
       const currentLabel = current
-        ? `当前：${current.category} / ${current.relativePath}`
+        ? `Current: ${current.category} / ${current.relativePath}`
         : phase === "finalizing"
-          ? "正在整理重复分组…"
+          ? "Organizing duplicate groups..."
           : "";
       this.duplicateCurrentFile.textContent = currentLabel;
       this.duplicateCurrentFile.title = currentLabel;
       this.setDuplicateStatus(
-        "正在后台计算 SHA256。你可以关闭资产管理器，扫描会继续运行。",
+        "Calculating SHA256 in the background. You may close Asset Manager; the scan will continue.",
         "loading",
       );
     }
@@ -10967,27 +10967,27 @@ class ModelManagerBrowser {
     this.stopDuplicateMonitoring();
     this.setScanControls(false);
     if (task?.status === "cancelled") {
-      this.setDuplicateStatus("扫描已取消，可以重新开始。", "warning");
+      this.setDuplicateStatus("Scan cancelled. You can start again.", "warning");
       return;
     }
     if (task?.status === "failed") {
       this.setDuplicateStatus(
-        `扫描失败：${task.error || "后端扫描任务异常结束"}`,
+        `Scan failed: ${task.error || "The backend scan ended unexpectedly."}`,
         "error",
       );
       return;
     }
     const result = task?.result;
     if (!result) {
-      this.setDuplicateStatus("扫描结束，但后端没有返回结果。", "error");
+      this.setDuplicateStatus("Scan ended, but the backend returned no result.", "error");
       return;
     }
     this.duplicateResult = result;
     this.renderDuplicates(result);
     this.setDuplicateStatus(
       result.groupCount
-        ? "扫描完成。建议每组保留一份，删除其余副本。"
-        : "扫描完成，没有发现内容相同的模型文件。",
+        ? "Scan complete. Keep one file per group and remove the other copies."
+        : "Scan complete. No model files with identical content were found.",
       result.groupCount ? "success" : "empty",
     );
   }
@@ -11006,7 +11006,7 @@ class ModelManagerBrowser {
     if (!this.scanTaskId || this.cancelScanButton.disabled) return;
     const taskId = this.scanTaskId;
     this.setScanControls(true, true);
-    this.setDuplicateStatus("正在请求取消后台扫描…", "warning");
+    this.setDuplicateStatus("Requesting background scan cancellation...", "warning");
     try {
       const payload = await fetchJson(
         "/assets-astral/models/duplicates/cancel",
@@ -11017,7 +11017,7 @@ class ModelManagerBrowser {
         },
       );
       const task = payload?.task;
-      if (!task) throw new Error("后端没有返回扫描任务");
+      if (!task) throw new Error("The backend did not return a scan task.");
       this.applyDuplicateTaskProgress(task);
       if (["succeeded", "failed", "cancelled"].includes(String(task.status))) {
         if (this.scanTaskId === taskId) this.finishDuplicateTask(task);
@@ -11027,7 +11027,7 @@ class ModelManagerBrowser {
     } catch (error) {
       this.setScanControls(true);
       this.setDuplicateStatus(
-        `取消扫描失败：${error.message || error}。扫描仍在后台运行。`,
+        `Failed to cancel scan: ${error.message || error}. The scan is still running in the background.`,
         "error",
       );
     }
@@ -11037,9 +11037,9 @@ class ModelManagerBrowser {
     const groups = Array.isArray(result?.groups) ? result.groups : [];
     const failedFiles = Math.max(0, Number(result?.failedFiles) || 0);
     this.duplicateSummary.textContent =
-      `扫描 ${Number(result?.scannedFiles) || 0} 个模型，计算 ${Number(result?.hashedFiles) || 0} 个文件的哈希；` +
-      (failedFiles ? `${failedFiles} 个文件读取失败；` : "") +
-      `发现 ${groups.length} 组重复，可回收 ${formatBytes(result?.reclaimableBytes)}。`;
+      `Scanned ${Number(result?.scannedFiles) || 0} models and hashed ${Number(result?.hashedFiles) || 0} files; ` +
+      (failedFiles ? `${failedFiles} files could not be read; ` : "") +
+      `found ${groups.length} duplicate groups, reclaimable ${formatBytes(result?.reclaimableBytes)}.`;
     const fragment = document.createDocumentFragment();
     for (const group of groups) fragment.append(this.createDuplicateGroup(group));
     replaceChildrenPreservingScroll(
@@ -11055,7 +11055,7 @@ class ModelManagerBrowser {
     const header = createElement("div", "astral-am-duplicate-header");
     const heading = createElement("div", "astral-am-duplicate-heading");
     heading.append(
-      createElement("strong", "", `${group.items.length} 个相同文件`),
+      createElement("strong", "", `${group.items.length} identical files`),
       createElement("span", "astral-am-muted", `SHA256 ${String(group.sha256).slice(0, 16)}…`),
     );
     header.append(
@@ -11063,7 +11063,7 @@ class ModelManagerBrowser {
       createElement(
         "span",
         "astral-am-duplicate-size",
-        `${formatBytes(group.size)} / 可回收 ${formatBytes(group.size * (group.items.length - 1))}`,
+        `${formatBytes(group.size)} / reclaimable ${formatBytes(group.size * (group.items.length - 1))}`,
       ),
     );
     card.append(header);
@@ -11075,10 +11075,10 @@ class ModelManagerBrowser {
         createElement("span", "astral-am-model-path", `${item.category} / ${item.relativePath}`),
       );
       const actions = createElement("div", "astral-am-model-actions");
-      const locate = createElement("button", "astral-am-button is-small", "定位");
+      const locate = createElement("button", "astral-am-button is-small", "Locate");
       locate.type = "button";
       locate.addEventListener("click", () => void this.openLocation(item));
-      const remove = createElement("button", "astral-am-button is-small is-danger", "移至回收站");
+      const remove = createElement("button", "astral-am-button is-small is-danger", "Move to Recycle Bin");
       remove.type = "button";
       remove.addEventListener("click", () => void this.recycleModel(item));
       actions.append(locate, remove);
@@ -11090,7 +11090,7 @@ class ModelManagerBrowser {
 
   async openLocation(item) {
     const label = `${item.category} / ${item.relativePath}`;
-    this.setDuplicateStatus(`正在系统文件管理器中定位 ${item.name}...`, "loading");
+    this.setDuplicateStatus(`Locating ${item.name} in system file manager...`, "loading");
     try {
       const result = await fetchJson("/assets-astral/models/open", {
         method: "POST",
@@ -11103,12 +11103,12 @@ class ModelManagerBrowser {
       });
       this.setDuplicateStatus(
         result?.revealMode === "selected"
-          ? `已在系统文件管理器中定位：${label}`
-          : `已打开文件所在目录：${label}`,
+          ? `Revealed in system file manager: ${label}`
+          : `Opened containing folder: ${label}`,
         "success",
       );
     } catch (error) {
-      this.setDuplicateStatus(`定位失败：${error.message || error}`, "error");
+      this.setDuplicateStatus(`Locate failed: ${error.message || error}`, "error");
     }
   }
 }
@@ -11129,7 +11129,7 @@ class MediaViewer {
     const title = createElement("div", "astral-am-viewer-title");
     const close = createElement("button", "astral-am-icon-button", "×");
     close.type = "button";
-    close.title = "关闭预览";
+    close.title = "Close preview";
     close.addEventListener("click", () => dialog.close());
     header.append(title, close);
 
@@ -11161,7 +11161,7 @@ class MediaViewer {
       createElement("strong", "", asset.name),
       createElement("span", "", `${asset.root}/${asset.path}`),
     );
-    this.preview.replaceChildren(createElement("div", "astral-am-loading", "正在读取素材信息..."));
+    this.preview.replaceChildren(createElement("div", "astral-am-loading", "Loading asset information..."));
     this.sidebar.replaceChildren();
     if (!this.dialog.open) this.dialog.showModal();
     try {
@@ -11174,7 +11174,7 @@ class MediaViewer {
       this.render();
     } catch (error) {
       this.preview.replaceChildren(
-        createElement("div", "astral-am-error-box", `读取失败：${error.message || error}`),
+        createElement("div", "astral-am-error-box", `Read failed: ${error.message || error}`),
       );
     }
   }
@@ -11207,30 +11207,30 @@ class MediaViewer {
 
     const info = createElement("section", "astral-am-view-section");
     info.append(
-      createElement("h3", "", "素材信息"),
-      this.createDefinition("位置", `${asset.root}/${asset.path}`),
-      this.createDefinition("大小", formatBytes(asset.size)),
-      this.createDefinition("修改时间", formatDate(asset.modified)),
-      this.createDefinition("格式", asset.mime || detail?.properties?.format || "未知"),
+      createElement("h3", "", "Asset Information"),
+      this.createDefinition("Location", `${asset.root}/${asset.path}`),
+      this.createDefinition("Size", formatBytes(asset.size)),
+      this.createDefinition("Modified", formatDate(asset.modified)),
+      this.createDefinition("Format", asset.mime || detail?.properties?.format || "Unknown"),
     );
 
     const promptSection = createElement("section", "astral-am-view-section");
     const promptHeader = createElement("div", "astral-am-section-header");
-    promptHeader.append(createElement("h3", "", "提示词"));
+    promptHeader.append(createElement("h3", "", "Prompt"));
     const promptText = createElement(
       "pre",
       "astral-am-prompt",
-      detail?.prompt || "未在素材中找到可靠的提示词元数据。",
+      detail?.prompt || "No reliable prompt metadata was found in this asset.",
     );
     if (detail?.prompt) {
-      const copyPrompt = createElement("button", "astral-am-button is-small", "复制提示词");
+      const copyPrompt = createElement("button", "astral-am-button is-small", "Copy Prompt");
       copyPrompt.type = "button";
       copyPrompt.addEventListener("click", async () => {
         try {
           await copyText(detail.prompt);
-          this.setActionStatus("提示词已复制。", "success");
+          this.setActionStatus("Prompt copied.", "success");
         } catch (error) {
-          this.setActionStatus(`复制失败：${error.message || error}`, "error");
+          this.setActionStatus(`Copy failed: ${error.message || error}`, "error");
         }
       });
       promptHeader.append(copyPrompt);
@@ -11239,50 +11239,50 @@ class MediaViewer {
 
     const metadata = createElement("section", "astral-am-view-section");
     const fields = detail?.metadata?.fields || [];
-    metadata.append(createElement("h3", "", "内嵌数据"));
+    metadata.append(createElement("h3", "", "Embedded Data"));
     const badges = createElement("div", "astral-am-detail-badges");
     badges.append(
-      this.createBadge(detail?.metadata?.hasPrompt ? "提示词" : "无提示词", detail?.metadata?.hasPrompt),
-      this.createBadge(detail?.metadata?.hasWorkflow ? "可加载工作流" : "无 UI 工作流", detail?.metadata?.hasWorkflow),
-      this.createBadge(detail?.metadata?.hasApiPrompt ? "API 工作流" : "无 API 工作流", detail?.metadata?.hasApiPrompt),
+      this.createBadge(detail?.metadata?.hasPrompt ? "Prompt" : "No prompt", detail?.metadata?.hasPrompt),
+      this.createBadge(detail?.metadata?.hasWorkflow ? "Loadable workflow" : "No UI workflow", detail?.metadata?.hasWorkflow),
+      this.createBadge(detail?.metadata?.hasApiPrompt ? "API workflow" : "No API workflow", detail?.metadata?.hasApiPrompt),
     );
     metadata.append(badges);
     if (fields.length) {
-      metadata.append(createElement("p", "astral-am-muted", `元数据字段：${fields.join("、")}`));
+      metadata.append(createElement("p", "astral-am-muted", `Metadata fields: ${fields.join(", ")}`));
     }
     if (detail?.metadata?.sidecars?.length) {
       metadata.append(
-        createElement("p", "astral-am-muted", `读取了同名元数据文件：${detail.metadata.sidecars.join("、")}`),
+        createElement("p", "astral-am-muted", `Same-name metadata files read: ${detail.metadata.sidecars.join(", ")}`),
       );
     }
 
     const actions = createElement("section", "astral-am-view-section astral-am-actions");
-    const copyPath = createElement("button", "astral-am-button", "复制文件路径");
+    const copyPath = createElement("button", "astral-am-button", "Copy File Path");
     copyPath.type = "button";
     copyPath.addEventListener("click", async () => {
       try {
         await copyText(asset.absolutePath);
-        this.setActionStatus("绝对路径已复制。", "success");
+        this.setActionStatus("Absolute path copied.", "success");
       } catch (error) {
-        this.setActionStatus(`复制失败：${error.message || error}`, "error");
+        this.setActionStatus(`Copy failed: ${error.message || error}`, "error");
       }
     });
 
     const copyMedia = createElement(
       "button",
       "astral-am-button",
-      asset.kind === "video" ? "复制视频" : "复制图片",
+      asset.kind === "video" ? "Copy Video" : "Copy Image",
     );
     copyMedia.type = "button";
     copyMedia.addEventListener("click", () => void this.copyMedia(asset, copyMedia));
 
-    const loadWorkflow = createElement("button", "astral-am-button", "加载内嵌工作流");
+    const loadWorkflow = createElement("button", "astral-am-button", "Load Embedded Workflow");
     loadWorkflow.type = "button";
     loadWorkflow.disabled = !detail?.workflow?.available;
-    loadWorkflow.title = "加载后会替换当前画布中的工作流";
+    loadWorkflow.title = "Loading replaces the workflow currently on the canvas.";
     loadWorkflow.addEventListener("click", () => void this.loadWorkflow(detail.workflow?.data));
 
-    const insertNode = createElement("button", "astral-am-button is-primary", "放入画布");
+    const insertNode = createElement("button", "astral-am-button is-primary", "Add to Canvas");
     insertNode.type = "button";
     insertNode.addEventListener("click", () => this.insertLoader(asset));
 
@@ -11298,7 +11298,7 @@ class MediaViewer {
 
   createDefinition(label, value) {
     const row = createElement("div", "astral-am-definition");
-    row.append(createElement("span", "", label), createElement("strong", "", value || "未知"));
+    row.append(createElement("span", "", label), createElement("strong", "", value || "Unknown"));
     return row;
   }
 
@@ -11321,14 +11321,14 @@ class MediaViewer {
   ) {
     const original = button.textContent;
     button.disabled = true;
-    button.textContent = "正在复制...";
+    button.textContent = "Copying...";
     report("");
     try {
       const response = await api.fetchApi(assetMediaUrl(asset, false), { cache: "no-store" });
-      if (!response.ok) throw new Error(`读取媒体失败（HTTP ${response.status}）`);
+      if (!response.ok) throw new Error(`Failed to read media (HTTP ${response.status})`);
       let blob = await response.blob();
       if (!window.ClipboardItem || !navigator.clipboard?.write) {
-        throw new Error("当前浏览器不支持媒体剪贴板写入");
+        throw new Error("This browser does not support writing media to the clipboard.");
       }
 
       if (asset.kind === "image") {
@@ -11345,7 +11345,7 @@ class MediaViewer {
             new window.ClipboardItem({ [blob.type || "image/png"]: blob }),
           ]);
         } catch (error) {
-          throw new Error(`浏览器拒绝写入图片剪贴板：${error.message || error}`);
+          throw new Error(`The browser refused to write the image to the clipboard: ${error.message || error}`);
         }
       } else {
         try {
@@ -11354,16 +11354,16 @@ class MediaViewer {
           ]);
         } catch (error) {
           throw new Error(
-            `浏览器通常不允许复制视频文件：${error.message || error}`,
+            `Browsers usually do not allow copying video files: ${error.message || error}`,
           );
         }
       }
       report(
-        asset.kind === "video" ? "视频已复制到剪贴板。" : "图片已复制到剪贴板。",
+        asset.kind === "video" ? "Video copied to the clipboard." : "Image copied to the clipboard.",
         "success",
       );
     } catch (error) {
-      report(`复制失败：${error.message || error}`, "error");
+      report(`Copy failed: ${error.message || error}`, "error");
     } finally {
       button.disabled = false;
       button.textContent = original;
@@ -11372,7 +11372,7 @@ class MediaViewer {
 
   async loadWorkflow(workflow) {
     if (!workflow) {
-      this.setActionStatus("该素材中没有可加载的 UI 工作流。", "error");
+      this.setActionStatus("This asset contains no loadable UI workflow.", "error");
       return;
     }
     try {
@@ -11380,13 +11380,13 @@ class MediaViewer {
         (typeof app.loadGraphData === "function" && app.loadGraphData.bind(app)) ||
         (typeof app.workflowManager?.loadGraphData === "function" &&
           app.workflowManager.loadGraphData.bind(app.workflowManager));
-      if (!loadGraphData) throw new Error("当前 ComfyUI 前端没有提供工作流加载接口");
+      if (!loadGraphData) throw new Error("The current ComfyUI frontend does not expose a workflow-loading API.");
       await loadGraphData(workflow);
-      this.setActionStatus("工作流已加载。", "success");
+      this.setActionStatus("Workflow loaded.", "success");
       this.dialog.close();
       this.managerRoot.close();
     } catch (error) {
-      this.setActionStatus(`加载工作流失败：${error.message || error}`, "error");
+      this.setActionStatus(`Failed to load workflow: ${error.message || error}`, "error");
     }
   }
 
@@ -11404,9 +11404,9 @@ class MediaViewer {
       const widgetName =
         asset.kind === "video" ? "file" : asset.kind === "audio" ? "audio" : "image";
       const loader = LiteGraph.createNode(nodeType);
-      if (!loader) throw new Error(`当前 ComfyUI 未注册官方节点 ${nodeType}`);
+      if (!loader) throw new Error(`The current ComfyUI has not registered the official node ${nodeType}`);
       const widget = loader.widgets?.find((item) => item.name === widgetName);
-      if (!widget) throw new Error(`${nodeType} 中未找到 ${widgetName} 输入`);
+      if (!widget) throw new Error(`${widgetName} input not found in ${nodeType}`);
       const value = asset.root === "output" ? `${asset.path} [output]` : asset.path;
       widget.value = value;
       if (Array.isArray(widget.options?.values) && !widget.options.values.includes(value)) {
@@ -11455,27 +11455,27 @@ class MediaViewer {
       this.dialog.close();
       this.managerRoot.close();
     } catch (error) {
-      report(`插入节点失败：${error.message || error}`, "error");
+      report(`Failed to insert node: ${error.message || error}`, "error");
     }
   }
 }
 
 async function imageBlobToPng(blob) {
   if (typeof createImageBitmap !== "function") {
-    throw new Error("当前浏览器不支持把该图片转换为 PNG");
+    throw new Error("This browser cannot convert the image to PNG.");
   }
   const bitmap = await createImageBitmap(blob);
   const canvas = document.createElement("canvas");
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("无法创建图片转换画布");
+  if (!context) throw new Error("Could not create an image conversion canvas.");
   context.drawImage(bitmap, 0, 0);
   bitmap.close?.();
   const png = await new Promise((resolve, reject) => {
     canvas.toBlob((value) => {
       if (value) resolve(value);
-      else reject(new Error("图片转为 PNG 失败"));
+      else reject(new Error("Failed to convert the image to PNG."));
     }, "image/png");
   });
   return png;
@@ -11495,9 +11495,9 @@ class WorkspaceBrowser {
       "astral-am-pane astral-am-workspace-pane",
     );
     const toolbar = createElement("div", "astral-am-toolbar");
-    const back = createElement("button", "astral-am-button is-small", "上一级");
+    const back = createElement("button", "astral-am-button is-small", "Up One Level");
     back.type = "button";
-    const refresh = createElement("button", "astral-am-button is-small", "重新读取");
+    const refresh = createElement("button", "astral-am-button is-small", "Reload");
     refresh.type = "button";
     const location = markUntranslated(
       createElement("div", "astral-am-workspace-location"),
@@ -11549,7 +11549,7 @@ class WorkspaceBrowser {
     const requestId = this.requestId;
     this.refreshButton.disabled = true;
     this.backButton.disabled = !this.path;
-    this.setStatus("正在读取目录...", "loading");
+    this.setStatus("Loading folders...", "loading");
     try {
       const payload = await fetchJson(
         `/assets-astral/workspace/entries?${queryString({
@@ -11562,13 +11562,13 @@ class WorkspaceBrowser {
       this.path = payload?.path || "";
       this.render(payload, preserveScroll);
       this.setStatus(
-        payload?.items?.length ? "" : "此文件夹为空",
+        payload?.items?.length ? "" : "This folder is empty.",
         payload?.items?.length ? "" : "empty",
       );
     } catch (error) {
       if (requestId === this.requestId) {
         if (!preserveScroll) this.list.replaceChildren();
-        this.setStatus(`读取目录失败：${error.message || error}`, "error");
+        this.setStatus(`Failed to read directory: ${error.message || error}`, "error");
       }
     } finally {
       if (requestId === this.requestId) {
@@ -11580,11 +11580,11 @@ class WorkspaceBrowser {
 
   render(payload, preserveScroll = false) {
     const items = Array.isArray(payload?.items) ? payload.items : [];
-    this.location.textContent = `${this.root} / ${this.path || "（根目录）"}`;
+    this.location.textContent = `${this.root} / ${this.path || "(root)"}`;
     this.location.title = payload?.absolutePath || this.location.textContent;
     this.summary.textContent =
-      `${Number(payload?.directoryCount) || 0} 个文件夹，` +
-      `${Number(payload?.fileCount) || 0} 个文件`;
+      `${Number(payload?.directoryCount) || 0} folders, ` +
+      `${Number(payload?.fileCount) || 0} files`;
 
     const fragment = document.createDocumentFragment();
     for (const item of items) {
@@ -11599,7 +11599,7 @@ class WorkspaceBrowser {
         button.append(
           createElement("span", "astral-am-workspace-icon", "📁"),
           createElement("strong", "", item.name),
-          createElement("span", "astral-am-muted", "文件夹"),
+          createElement("span", "astral-am-muted", "Folder"),
         );
         button.addEventListener("click", () => {
           void this.navigate(this.root, item.path);
@@ -11660,10 +11660,10 @@ class AssetManager {
     backdrop.hidden = true;
     const windowElement = createElement("section", "astral-am-window");
     windowElement.setAttribute("role", "dialog");
-    windowElement.setAttribute("aria-label", "Astral 素材管理器");
+    windowElement.setAttribute("aria-label", "Astral Asset Manager");
 
     const header = createElement("header", "astral-am-header");
-    header.title = "拖动标题栏移动窗口";
+    header.title = "Drag the title bar to move the window.";
     const heading = createElement("div", "astral-am-heading");
     const headingLinks = createElement("h2", "astral-am-heading-links");
     const authorLink = createElement(
@@ -11674,17 +11674,17 @@ class AssetManager {
     authorLink.href = "https://space.bilibili.com/176339505";
     authorLink.target = "_blank";
     authorLink.rel = "noopener noreferrer";
-    authorLink.title = "访问 Astral星芒的 B 站主页";
+    authorLink.title = "Visit Astral星芒 on Bilibili";
     const starLink = createElement(
       "a",
       "astral-am-heading-link astral-am-heading-star",
-      "更新下载",
+      "Download updates",
     );
     starLink.href = "https://pan.quark.cn/s/7626ec1f29c7";
     starLink.target = "_blank";
     starLink.rel = "noopener noreferrer";
-    starLink.title = "更新下载：访问夸克网盘下载页";
-    starLink.setAttribute("aria-label", "更新下载，访问夸克网盘下载页");
+    starLink.title = "Download updates from Quark Drive";
+    starLink.setAttribute("aria-label", "Download updates from Quark Drive");
     this.languageToggleButton = createElement(
       "button",
       "astral-am-language-toggle",
@@ -11724,14 +11724,14 @@ class AssetManager {
       "https://github.com/Astral-xm/ComfyUI-Astral-Manage/releases";
     projectLink.target = "_blank";
     projectLink.rel = "noopener noreferrer";
-    projectLink.title = "打开 ComfyUI-Astral-Manage 的 GitHub 发布页";
+    projectLink.title = "Open the GitHub release page for ComfyUI-Astral-Manage";
     heading.append(projectLink, headingLinks);
     const headerActions = createElement("div", "astral-am-header-actions");
     headerActions.append(
       createElement(
         "span",
         "astral-am-directory-prompt",
-        "快速打开用户目录",
+        "Quick Open User Folders",
       ),
     );
     this.directoryButtons = new Map();
@@ -11748,8 +11748,8 @@ class AssetManager {
       );
       button.type = "button";
       button.dataset.pathLabel = root;
-      button.setAttribute("aria-label", `打开 ${root} 文件夹`);
-    button.title = `立即在系统文件管理器中显示 ${root} 文件夹`;
+      button.setAttribute("aria-label", `Open the ${root} folder`);
+    button.title = `Show the ${root} folder in system file manager now`;
       markUntranslated(button);
       button.addEventListener("click", () => void this.openDirectory(root));
       this.directoryButtons.set(root, button);
@@ -11758,7 +11758,7 @@ class AssetManager {
     this.shortcutButtonLabel = createElement(
       "span",
       "astral-am-shortcut-button-label",
-      "快捷键",
+      "Shortcut",
     );
     this.shortcutButton = createElement(
       "button",
@@ -11773,10 +11773,10 @@ class AssetManager {
     this.refreshButton = createElement(
       "button",
       "astral-am-header-button is-primary",
-      "刷新",
+      "Refresh",
     );
     this.refreshButton.type = "button";
-    this.refreshButton.title = "刷新 ComfyUI 节点定义、模型和工作流列表（等同于按 R）";
+    this.refreshButton.title = "Refresh ComfyUI node definitions, models, and workflows (same as R).";
     this.refreshButton.addEventListener(
       "click",
       () => void this.refreshComfyRegistries(),
@@ -11785,15 +11785,15 @@ class AssetManager {
     headerActions.append(this.refreshButton);
     const close = createElement("button", "astral-am-icon-button", "×");
     close.type = "button";
-    close.title = "关闭";
+    close.title = "Close";
     close.addEventListener("click", () => this.close());
     header.append(heading, headerActions, close);
 
     const tabs = createElement("nav", "astral-am-tabs");
-    tabs.setAttribute("aria-label", "资产管理器页签");
-    this.promptTab = createElement("button", "astral-am-tab is-active", "提示词管理");
-    this.assetTab = createElement("button", "astral-am-tab", "媒体管理");
-    this.modelTab = createElement("button", "astral-am-tab", "模型管理");
+    tabs.setAttribute("aria-label", "Asset manager tabs");
+    this.promptTab = createElement("button", "astral-am-tab is-active", "Prompt Management");
+    this.assetTab = createElement("button", "astral-am-tab", "Media Management");
+    this.modelTab = createElement("button", "astral-am-tab", "Model Management");
     this.promptTab.type = "button";
     this.assetTab.type = "button";
     this.modelTab.type = "button";
@@ -11862,10 +11862,10 @@ class AssetManager {
     this.languageToggleButton.setAttribute("aria-pressed", String(isEnglish));
     this.languageToggleButton.title = isEnglish
       ? "Switch to Chinese"
-      : "切换为英文";
+      : "Switch to English";
     this.languageToggleButton.setAttribute(
       "aria-label",
-      isEnglish ? "Switch to Chinese" : "切换为英文",
+      isEnglish ? "Switch to Chinese" : "Switch to English",
     );
     if (this.windowElement) {
       this.windowElement.lang = isEnglish ? "en" : "zh-CN";
@@ -11874,14 +11874,9 @@ class AssetManager {
 
   syncShortcutButton() {
     if (!this.shortcutButton) return;
-    const isEnglish = getLanguage() === "en";
     const shortcutLabel = formatShortcut(getAssetManagerShortcut());
-    this.shortcutButtonLabel.textContent = isEnglish
-      ? "Shortcut"
-      : "快捷键";
-    const description = isEnglish
-      ? `Customize the Asset Manager shortcut (current: ${shortcutLabel})`
-      : `自定义打开资产管理器的快捷键（当前：${shortcutLabel}）`;
+    this.shortcutButtonLabel.textContent = "Shortcut";
+    const description = `Customize the Asset Manager shortcut (current: ${shortcutLabel})`;
     this.shortcutButton.title = description;
     this.shortcutButton.setAttribute("aria-label", description);
   }
@@ -11889,9 +11884,9 @@ class AssetManager {
   async openShortcutEditor() {
     const currentShortcut = getAssetManagerShortcut();
     const nextShortcut = await showAstralShortcutRecorder({
-      title: "自定义面板快捷键",
+      title: "Customize Panel Shortcut",
       message:
-        "设置打开资产管理器的快捷键。保存后立即生效，关闭面板后也可以使用。",
+        "Set the shortcut that opens the Asset Manager. It takes effect immediately and works while the panel is closed.",
       initialShortcut: currentShortcut,
       defaultShortcut: DEFAULT_ASSET_MANAGER_SHORTCUT,
       shortcutFromEvent: shortcutFromKeyboardEvent,
@@ -11903,9 +11898,9 @@ class AssetManager {
     this.syncShortcutButton();
     if (!saveAssetManagerShortcut(nextShortcut)) {
       await showAstralAlert({
-        title: "无法保存快捷键",
+        title: "Unable to Save Shortcut",
         message:
-          "浏览器拒绝写入本地存储；新的快捷键在本次会话中仍然有效，刷新页面后会恢复默认值。",
+          "The browser denied local storage access. The new shortcut remains active for this session and resets to the default after a page refresh.",
         tone: "warning",
       });
     }
@@ -12104,7 +12099,7 @@ class AssetManager {
       });
     } catch (error) {
       await showAstralAlert({
-        title: `无法打开 ${root}`,
+        title: `Unable to open ${root}`,
         message: String(error.message || error),
         tone: "warning",
       });
@@ -12116,7 +12111,7 @@ class AssetManager {
   async refreshComfyRegistries() {
     if (this.refreshButton.disabled) return;
     this.refreshButton.disabled = true;
-    this.refreshButton.textContent = "刷新中";
+    this.refreshButton.textContent = "Refreshing";
     try {
       const command = app.extensionManager?.command;
       if (typeof command?.execute === "function") {
@@ -12124,7 +12119,7 @@ class AssetManager {
       } else if (typeof app.refreshComboInNodes === "function") {
         await app.refreshComboInNodes();
       } else {
-        throw new Error("当前 ComfyUI 前端没有提供刷新接口");
+        throw new Error("The current ComfyUI frontend does not expose a refresh API.");
       }
 
       this.modelBrowser.categoriesPromise = null;
@@ -12148,13 +12143,13 @@ class AssetManager {
       }
     } catch (error) {
       await showAstralAlert({
-        title: "刷新 ComfyUI 数据失败",
+        title: "Failed to Refresh ComfyUI Data",
         message: String(error.message || error),
         tone: "warning",
       });
     } finally {
       this.refreshButton.disabled = false;
-      this.refreshButton.textContent = "刷新";
+      this.refreshButton.textContent = "Refresh";
     }
   }
 }
@@ -12207,9 +12202,9 @@ function installAstralMenuButton(attempt = 0) {
   group.dataset.assetsAstralMenuButton = "true";
   const button = createElement("button", "astral-am-menu-button");
   button.type = "button";
-  button.title = "Astral 资产管理器";
-  button.setAttribute("aria-label", "打开或关闭 Astral 资产管理器");
-  button.textContent = "资产管理";
+  button.title = "Astral Asset Manager";
+  button.setAttribute("aria-label", "Open or close Astral Asset Manager");
+  button.textContent = "Assets";
   markUntranslated(button);
   registerLocalizationRoot(button);
   button.addEventListener("click", () => {

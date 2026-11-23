@@ -34,7 +34,76 @@ class SkillTagTests(unittest.TestCase):
     )
 
   def _default_category_id(self) -> str:
-    return self._category_id("人物")
+    return self._category_id("Characters")
+
+  def _legacy_default_state(self) -> dict:
+    category_legacy = {
+      english: chinese
+      for chinese, english in skill_tags.BUILTIN_DISPLAY_RENAMES["category"].items()
+    }
+    subcategory_legacy = {
+      key: {
+        english: chinese
+        for chinese, english in renames.items()
+      }
+      for key, renames in skill_tags.BUILTIN_DISPLAY_RENAMES[
+        "subcategory"
+      ].items()
+    }
+    tag_legacy = {
+      key: {
+        english: chinese
+        for chinese, english in renames.items()
+      }
+      for key, renames in skill_tags.BUILTIN_DISPLAY_RENAMES["tag"].items()
+    }
+    categories = []
+    subcategories = []
+    tags = []
+    for category_index, (key, name, color, tag_names) in enumerate(
+      skill_tags.DEFAULT_SKILL_TAG_GROUPS
+    ):
+      category_id = skill_tags._builtin_category_id(key)
+      categories.append(
+        {
+          "id": category_id,
+          "name": category_legacy[name],
+          "order": category_index,
+        }
+      )
+      for subcategory_index, subcategory_name in enumerate(
+        skill_tags.DEFAULT_SUBCATEGORY_GROUPS[key]
+      ):
+        legacy_name = subcategory_legacy[key][subcategory_name]
+        subcategories.append(
+          {
+            "id": skill_tags._builtin_subcategory_id(key, legacy_name),
+            "categoryId": category_id,
+            "name": legacy_name,
+            "order": subcategory_index,
+          }
+        )
+      for tag_name in tag_names:
+        legacy_name = tag_legacy[key][tag_name]
+        tags.append(
+          {
+            "id": skill_tags._builtin_tag_id(key, legacy_name),
+            "name": legacy_name,
+            "categoryId": category_id,
+            "subcategoryId": "",
+            "color": color,
+            "favorite": False,
+            "order": len(tags),
+          }
+        )
+    return {
+      "version": 1,
+      "defaultsVersion": 1,
+      "categories": categories,
+      "subcategories": subcategories,
+      "tags": tags,
+      "assignments": {},
+    }
 
   def _subcategory_id(self, category_name: str, name: str) -> str:
     state = skill_tags.get_skill_tag_state(str(self.temp_path))
@@ -50,10 +119,10 @@ class SkillTagTests(unittest.TestCase):
 
     self.assertTrue(self._state_path().is_file())
     self.assertEqual(state["version"], 2)
-    self.assertEqual(state["defaultsVersion"], 3)
+    self.assertEqual(state["defaultsVersion"], 4)
     self.assertEqual(
       [item["name"] for item in state["categories"]],
-      ["人物", "场景", "服饰", "道具"],
+      ["Characters", "Scenes", "Clothing", "Props"],
     )
     self.assertEqual(len(state["tags"]), 48)
     self.assertEqual(len(state["subcategories"]), 18)
@@ -65,18 +134,18 @@ class SkillTagTests(unittest.TestCase):
     }
     self.assertTrue(
       {
-        "数量",
-        "性别",
-        "年龄",
-        "肤色",
-        "身材",
-        "发型",
-        "表情",
-        "动作",
-        "鞋",
-        "天气",
-        "镜头视角",
-        "地点",
+        "Count",
+        "Gender",
+        "Age",
+        "Skin Tone",
+        "Body Type",
+        "Hairstyle",
+        "Expression",
+        "Pose",
+        "Shoes",
+        "Weather",
+        "Camera Angle",
+        "Location",
       }.issubset(subcategory_names)
     )
     self.assertFalse({"男装", "女装"}.intersection(subcategory_names))
@@ -93,7 +162,9 @@ class SkillTagTests(unittest.TestCase):
         12,
       )
     tag_names = {item["name"] for item in state["tags"]}
-    self.assertTrue({"单人", "星空", "水手服", "猫耳"}.issubset(tag_names))
+    self.assertTrue(
+      {"Solo", "Starry Sky", "Sailor Uniform", "Cat Ears"}.issubset(tag_names)
+    )
     self.assertEqual(state["assignments"], {})
     self.assertEqual(
       skill_tags.get_skill_tag_state(str(self.temp_path)),
@@ -125,11 +196,11 @@ class SkillTagTests(unittest.TestCase):
 
     self.assertEqual(
       [item["name"] for item in state["categories"]],
-      ["人物", "场景", "服饰", "道具"],
+      ["Characters", "Scenes", "Clothing", "Props"],
     )
     self.assertEqual(len(state["tags"]), 48)
     persisted = json.loads(self._state_path().read_text("utf-8"))
-    self.assertEqual(persisted["defaultsVersion"], 3)
+    self.assertEqual(persisted["defaultsVersion"], 4)
     self.assertEqual(len(persisted["subcategories"]), 18)
 
   def test_custom_state_keeps_user_data_and_defaults_are_not_restored(self):
@@ -167,17 +238,22 @@ class SkillTagTests(unittest.TestCase):
     migrated = skill_tags.get_skill_tag_state(str(self.temp_path))
     category_names = [item["name"] for item in migrated["categories"]]
     self.assertIn("我的分类", category_names)
-    self.assertTrue({"人物", "场景", "服饰", "道具"}.issubset(category_names))
+    self.assertTrue(
+      {"Characters", "Scenes", "Clothing", "Props"}.issubset(category_names)
+    )
     self.assertTrue(
       any(item["id"] == custom_tag_id for item in migrated["tags"])
     )
 
     skill_tags.delete_tag_category(
       str(self.temp_path),
-      self._category_id("人物"),
+      self._category_id("Characters"),
     )
     after_delete = skill_tags.get_skill_tag_state(str(self.temp_path))
-    self.assertNotIn("人物", [item["name"] for item in after_delete["categories"]])
+    self.assertNotIn(
+      "Characters",
+      [item["name"] for item in after_delete["categories"]],
+    )
 
   def test_category_create_rename_reorder_and_last_category_guard(self):
     default_id = self._default_category_id()
@@ -281,7 +357,7 @@ class SkillTagTests(unittest.TestCase):
       )
     same_name_elsewhere = skill_tags.create_tag_subcategory(
       str(self.temp_path),
-      category_id=self._category_id("道具"),
+      category_id=self._category_id("Props"),
       name="职业",
     )
     self.assertEqual(same_name_elsewhere["subcategory"]["name"], "职业")
@@ -314,10 +390,10 @@ class SkillTagTests(unittest.TestCase):
 
   def test_tag_can_move_between_subcategories_and_validates_parent(self):
     character_id = self._default_category_id()
-    scene_id = self._category_id("场景")
-    hair_id = self._subcategory_id("人物", "发型")
-    gender_id = self._subcategory_id("人物", "性别")
-    weather_id = self._subcategory_id("场景", "天气")
+    scene_id = self._category_id("Scenes")
+    hair_id = self._subcategory_id("Characters", "Hairstyle")
+    gender_id = self._subcategory_id("Characters", "Gender")
+    weather_id = self._subcategory_id("Scenes", "Weather")
     created = skill_tags.create_skill_tag(
       str(self.temp_path),
       name="银灰短发",
@@ -371,7 +447,7 @@ class SkillTagTests(unittest.TestCase):
 
   def test_deleting_subcategory_preserves_tags_and_assignments(self):
     character_id = self._default_category_id()
-    subcategory_id = self._subcategory_id("人物", "发型")
+    subcategory_id = self._subcategory_id("Characters", "Hairstyle")
     created = skill_tags.create_skill_tag(
       str(self.temp_path),
       name="银色卷发",
@@ -402,7 +478,7 @@ class SkillTagTests(unittest.TestCase):
     )
 
   def test_version_one_state_migrates_clothing_name_and_subcategories(self):
-    legacy = skill_tags._default_state()
+    legacy = self._legacy_default_state()
     legacy["version"] = 1
     legacy["defaultsVersion"] = 1
     legacy.pop("subcategories")
@@ -421,9 +497,9 @@ class SkillTagTests(unittest.TestCase):
     migrated = skill_tags.get_skill_tag_state(str(self.temp_path))
 
     self.assertEqual(migrated["version"], 2)
-    self.assertEqual(migrated["defaultsVersion"], 3)
+    self.assertEqual(migrated["defaultsVersion"], 4)
     self.assertIn(
-      "服饰",
+      "Clothing",
       [item["name"] for item in migrated["categories"]],
     )
     self.assertNotIn(
@@ -436,7 +512,7 @@ class SkillTagTests(unittest.TestCase):
     )
 
   def test_version_two_defaults_remove_retired_items_and_add_new_groups(self):
-    legacy = skill_tags._default_state()
+    legacy = self._legacy_default_state()
     legacy["version"] = 2
     legacy["defaultsVersion"] = 2
     legacy["subcategories"] = [
@@ -479,12 +555,12 @@ class SkillTagTests(unittest.TestCase):
 
     migrated = skill_tags.get_skill_tag_state(str(self.temp_path))
 
-    self.assertEqual(migrated["defaultsVersion"], 3)
+    self.assertEqual(migrated["defaultsVersion"], 4)
     self.assertEqual(len(migrated["subcategories"]), 18)
     migrated_ids = {item["id"] for item in migrated["subcategories"]}
     self.assertFalse(retired_ids.intersection(migrated_ids))
     migrated_names = {item["name"] for item in migrated["subcategories"]}
-    self.assertTrue({"表情", "动作", "地点"}.issubset(migrated_names))
+    self.assertTrue({"Expression", "Pose", "Location"}.issubset(migrated_names))
     migrated_tag = next(
       item for item in migrated["tags"] if item["id"] == tag["id"]
     )
@@ -606,7 +682,7 @@ class SkillTagTests(unittest.TestCase):
 
   def test_batch_create_adds_tags_in_one_target_and_skips_duplicates(self):
     category_id = self._default_category_id()
-    subcategory_id = self._subcategory_id("人物", "发型")
+    subcategory_id = self._subcategory_id("Characters", "Hairstyle")
     existing_color = next(
       item["color"]
       for item in skill_tags.get_skill_tag_state(str(self.temp_path))["tags"]
@@ -615,7 +691,7 @@ class SkillTagTests(unittest.TestCase):
 
     created = skill_tags.create_skill_tags(
       str(self.temp_path),
-      names=[" 批量一 ", "批量二", "批量一", "女人", "批量三"],
+      names=[" 批量一 ", "批量二", "批量一", "Woman", "批量三"],
       category_id=category_id,
       subcategory_id=subcategory_id,
     )
@@ -639,7 +715,7 @@ class SkillTagTests(unittest.TestCase):
 
   def test_batch_create_reports_invalid_names_and_keeps_category_scope(self):
     character_id = self._default_category_id()
-    scene_id = self._category_id("场景")
+    scene_id = self._category_id("Scenes")
     long_name = "长" * (skill_tags.MAX_NAME_LENGTH + 1)
 
     created = skill_tags.create_skill_tags(
@@ -729,8 +805,8 @@ class SkillTagTests(unittest.TestCase):
 
   def test_batch_move_tags_to_category_and_subcategory(self):
     source_category_id = self._default_category_id()
-    target_category_id = self._category_id("场景")
-    target_subcategory_id = self._subcategory_id("场景", "天气")
+    target_category_id = self._category_id("Scenes")
+    target_subcategory_id = self._subcategory_id("Scenes", "Weather")
     tag_ids = [
       skill_tags.create_skill_tag(
         str(self.temp_path),
@@ -751,8 +827,8 @@ class SkillTagTests(unittest.TestCase):
     self.assertEqual(moved["movedCount"], 2)
     self.assertEqual(moved["skippedDuplicates"], 0)
     self.assertEqual(moved["missingCount"], 0)
-    self.assertEqual(moved["targetCategory"]["name"], "场景")
-    self.assertEqual(moved["targetSubcategory"]["name"], "天气")
+    self.assertEqual(moved["targetCategory"]["name"], "Scenes")
+    self.assertEqual(moved["targetSubcategory"]["name"], "Weather")
     for tag in moved["tags"]:
       if tag["id"] in tag_ids:
         self.assertEqual(tag["categoryId"], target_category_id)
@@ -760,7 +836,7 @@ class SkillTagTests(unittest.TestCase):
 
   def test_batch_move_skips_same_name_in_target_category(self):
     source_category_id = self._default_category_id()
-    target_category_id = self._category_id("场景")
+    target_category_id = self._category_id("Scenes")
     source_tag_id = skill_tags.create_skill_tag(
       str(self.temp_path),
       name="跨分类同名移动",
@@ -792,8 +868,8 @@ class SkillTagTests(unittest.TestCase):
 
   def test_batch_move_skips_duplicate_names_inside_the_same_batch(self):
     character_id = self._default_category_id()
-    scene_id = self._category_id("场景")
-    target_category_id = self._category_id("道具")
+    scene_id = self._category_id("Scenes")
+    target_category_id = self._category_id("Props")
     tag_ids = [
       skill_tags.create_skill_tag(
         str(self.temp_path),
@@ -837,8 +913,8 @@ class SkillTagTests(unittest.TestCase):
       skill_tags.move_skill_tags(
         str(self.temp_path),
         [tag_id],
-        category_id=self._category_id("场景"),
-        subcategory_id=self._subcategory_id("人物", "发型"),
+        category_id=self._category_id("Scenes"),
+        subcategory_id=self._subcategory_id("Characters", "Hairstyle"),
       )
 
 

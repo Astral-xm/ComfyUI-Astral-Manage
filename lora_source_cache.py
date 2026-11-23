@@ -131,7 +131,7 @@ def _strength_from_text(value: Any) -> dict[str, Any] | None:
       "value": value.get("value"),
       "min": value.get("min"),
       "max": value.get("max"),
-      "source": str(value.get("source") or "本地缓存"),
+      "source": str(value.get("source") or "Local cache"),
     }
   text = str(value or "").strip()
   if not text:
@@ -146,7 +146,7 @@ def _strength_from_text(value: Any) -> dict[str, Any] | None:
     "value": round((low + high) / 2, 2),
     "min": low,
     "max": high,
-    "source": "本地缓存",
+    "source": "Local cache",
   }
 
 
@@ -178,11 +178,11 @@ def _fallback_result_from_nb_data(
   if not matched:
     civitai["error"] = str(
       data.get("civitaiError")
-      or "本地缓存中没有可用的 C站匹配结果；可点击“刷新来源”重新拉取"
+      or "No usable Civitai match is available in the local cache. Click Refresh Sources to retrieve it again."
     )
   unavailable = {
     "ok": False,
-    "error": "本地缓存未包含此来源；可点击“刷新来源”重新拉取",
+    "error": "The local cache does not contain this source. Click Refresh Sources to retrieve it again.",
   }
   return {
     "file": file,
@@ -195,7 +195,7 @@ def _fallback_result_from_nb_data(
       recommendation.get("source") if recommendation else None
     ),
     "triggers": triggers,
-    "triggersSource": "NB 本地缓存" if triggers else None,
+    "triggersSource": "NB local cache" if triggers else None,
     "thumbnailUrl": None,
     "thumbnailSource": None,
     "sources": {
@@ -242,7 +242,7 @@ def _attach_cache_metadata(
     result["thumbnailLocalUrl"] = _preview_url(file, preview)
     result["thumbnailLocalFile"] = os.path.basename(preview)
     if not result.get("thumbnailSource"):
-      result["thumbnailSource"] = "本地缩略图"
+      result["thumbnailSource"] = "Local thumbnail"
   return result
 
 
@@ -322,7 +322,7 @@ def _download_preview(
   data, extension = download(value)
   extension = extension.casefold()
   if extension not in PREVIEW_EXTENSIONS:
-    raise ValueError("下载的缩略图格式不受支持")
+    raise ValueError("Downloaded thumbnail format is not supported")
   target = f"{_stem(path)}.preview{extension}"
   descriptor, temporary = tempfile.mkstemp(
     prefix=f".{os.path.basename(target)}.",

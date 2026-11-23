@@ -472,6 +472,7 @@ POST /assets-astral/prompt-templates/delete
 GET  /assets-astral/chat/config
 POST /assets-astral/chat/config
 GET  /assets-astral/chat/conversations
+POST /assets-astral/chat/models
 POST /assets-astral/chat/conversations
 GET  /assets-astral/chat/conversations/get
 POST /assets-astral/chat/conversations/update
@@ -500,6 +501,28 @@ POST /assets-astral/models/missing/resolve
 POST /assets-astral/models/recycle
 GET  /assets-astral/thumbnails/proxy
 ```
+
+### UI language
+
+The panel and the node definitions use English as their source language. The
+Chinese translation is applied only when ComfyUI's language setting
+(`Comfy.Locale`) starts with `zh`; node names and tooltips come from
+`locales/zh/nodeDefs.json`, and panel strings from `web/astral_i18n_dict.js`.
+The language button in the Asset Manager still stores a per-browser override.
+
+### API host policy
+
+`POST /assets-astral/chat/models` only reads the provider id from the request
+body: the base URL and the API key always come from the saved configuration, and
+a saved key is only sent back to the base URL it was entered for. Changing a
+base URL clears the stored key. Upstream failures are reported by HTTP status
+only, and redirects are not followed.
+
+Operators can pin the allowed API hosts with the
+`ASTRAL_MANAGE_API_ALLOWED_HOSTS` environment variable, a comma-separated list
+of `host`, `host:port` or `*.domain` entries. When it is unset, any public host
+is allowed except reserved and link-local addresses. URLs with an embedded
+username or password are always rejected.
 
 ## 已知限制
 

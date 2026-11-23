@@ -137,7 +137,10 @@ class ChatServiceTests(unittest.TestCase):
         tags=[],
       )
 
-    self.assertIn("画面想法", str(raised.exception))
+    self.assertIn(
+      "Please enter an image idea or select at least one inspiration tag",
+      str(raised.exception),
+    )
 
   def test_inspiration_validates_target_language_and_mode(self):
     self.assertEqual(
@@ -490,7 +493,7 @@ class ChatServiceTests(unittest.TestCase):
 
     self.assertEqual(len(reply.images), 3)
     self.assertIn("before cover", reply)
-    self.assertIn("between [图片] after", reply)
+    self.assertIn("between [Image] after", reply)
     self.assertNotIn(png_base64, reply)
     self.assertNotIn(jpeg_base64, reply)
     self.assertEqual(reply.images[0].data, png_data)
@@ -1017,7 +1020,7 @@ class ChatServiceTests(unittest.TestCase):
     self.assertEqual(request_chat_completion.call_count, 2)
     with self.assertRaisesRegex(
       chat_service.ChatServiceError,
-      "提示词扩写只能使用",
+      "Prompt expansion can only use",
     ):
       chat_service.run_prompt_task(
         str(self.data_directory),
@@ -1027,7 +1030,7 @@ class ChatServiceTests(unittest.TestCase):
       )
     with self.assertRaisesRegex(
       chat_service.ChatServiceError,
-      "图像反推只能使用",
+      "Image inversion can only use",
     ):
       chat_service.run_prompt_task(
         str(self.data_directory),
@@ -1038,7 +1041,7 @@ class ChatServiceTests(unittest.TestCase):
       )
     with self.assertRaisesRegex(
       chat_service.ChatServiceError,
-      "翻译任务不使用",
+      "Translation tasks do not use",
     ):
       chat_service.run_prompt_task(
         str(self.data_directory),
@@ -1168,7 +1171,7 @@ class ChatServiceTests(unittest.TestCase):
     ):
       with self.assertRaisesRegex(
         chat_service.ChatServiceError,
-        "只能选择一个",
+        "Only one of a system prompt or a Skill can be selected",
       ):
         chat_service.run_prompt_task(
           str(self.data_directory),
@@ -1415,8 +1418,8 @@ class ChatServiceTests(unittest.TestCase):
       b"RIFFmock",
     )
     text_parts = [part["text"] for part in parts if part["type"] == "text"]
-    self.assertIn("[图片素材 @image3：reference.png]", text_parts)
-    self.assertIn("[音频素材 @audio1：voice.wav]", text_parts)
+    self.assertIn("[Image asset @image3: reference.png]", text_parts)
+    self.assertIn("[Audio asset @audio1: voice.wav]", text_parts)
 
   def test_builds_inline_audio_attachment_parts(self):
     payload = b"RIFF-inline-audio"
@@ -1442,7 +1445,7 @@ class ChatServiceTests(unittest.TestCase):
       payload,
     )
     self.assertIn(
-      "[音频素材 @audio2：audio-2.wav]",
+      "[Audio asset @audio2: audio-2.wav]",
       [part["text"] for part in parts if part["type"] == "text"],
     )
 
@@ -1553,7 +1556,7 @@ class ChatServiceTests(unittest.TestCase):
 
     self.assertEqual(parts[0]["type"], "text")
     self.assertIn("@video2", parts[0]["text"])
-    self.assertIn("2 帧", parts[0]["text"])
+    self.assertIn("2 frames", parts[0]["text"])
     frame_parts = [part for part in parts if part["type"] == "image_url"]
     self.assertEqual(len(frame_parts), 2)
     for part in frame_parts:
@@ -1632,7 +1635,7 @@ class ChatServiceTests(unittest.TestCase):
     ) as generate:
       with self.assertRaisesRegex(
         chat_service.ChatServiceError,
-        "视觉投影模型",
+        "vision projection model",
       ):
         chat_service.run_local_chat_turn(
           str(self.data_directory),
@@ -1734,7 +1737,7 @@ class ChatServiceTests(unittest.TestCase):
     ) as generate:
       with self.assertRaisesRegex(
         chat_service.ChatServiceError,
-        "音频对话仅支持 Gemma4",
+        "Audio chat is supported only by Gemma4",
       ):
         chat_service.run_local_chat_turn(
           str(self.data_directory),

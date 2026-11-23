@@ -105,7 +105,7 @@ def extract_recommended_strength(data: dict[str, Any]) -> dict[str, Any] | None:
   for description in (data.get("description"), model.get("description")):
     recommendation = extract_recommended_strength_from_text(
       description,
-      "C站描述",
+      "Civitai description",
     )
     if recommendation:
       return recommendation
@@ -138,7 +138,7 @@ def extract_recommended_strength(data: dict[str, Any]) -> dict[str, Any] | None:
     return _make_strength(
       min(sample_weights),
       max(sample_weights),
-      "C站示例图权重",
+      "Civitai preview weight",
     )
   return None
 
@@ -203,14 +203,14 @@ def normalize_civitai_model_version(
 
 def error_message_for_status(status: int) -> str:
   if status == 404:
-    return "C站未找到此模型；本地 LoRA 的 SHA256 未匹配公开模型版本"
+    return "Civitai did not find this model; the local LoRA SHA256 does not match a public model version."
   if status in (401, 403):
-    return "C站要求登录或 API 密钥，无法读取此模型"
+    return "Civitai requires login or an API key, so this model cannot be read."
   if status == 429:
-    return "C站请求过于频繁，请稍后重试"
+    return "Civitai is receiving too many requests. Try again later."
   if status >= 500:
-    return f"C站服务暂时不可用（HTTP {status}）"
-  return f"C站返回 HTTP {status}"
+    return f"Civitai is temporarily unavailable (HTTP {status})."
+  return f"Civitai returned HTTP {status}."
 
 
 def _as_int(value: Any) -> int | None:

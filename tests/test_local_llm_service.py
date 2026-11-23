@@ -79,7 +79,7 @@ class LocalLLMServiceTests(unittest.TestCase):
     )
     with self.assertRaisesRegex(
       local_llm_service.LocalLLMError,
-      "不在 ComfyUI/models/LLM",
+      "outside the ComfyUI/models/LLM directory",
     ):
       local_llm_service.resolve_local_llm_model_path(
         "../outside.gguf",
@@ -96,7 +96,7 @@ class LocalLLMServiceTests(unittest.TestCase):
       )
     with self.assertRaisesRegex(
       local_llm_service.LocalLLMError,
-      "视觉投影模型",
+      "Vision projection model",
     ):
       local_llm_service.resolve_local_llm_vision_model_path(
         "chat.gguf",

@@ -16,7 +16,7 @@ except ImportError:
 
 
 STATE_VERSION = 2
-DEFAULTS_VERSION = 3
+DEFAULTS_VERSION = 4
 MAX_CATEGORIES = 100
 MAX_SUBCATEGORIES = 500
 MAX_TAGS = 2000
@@ -39,105 +39,105 @@ TAG_COLORS = (
 DEFAULT_SKILL_TAG_GROUPS = (
   (
     "character",
-    "人物",
+    "Characters",
     TAG_COLORS[0],
     (
-      "单人",
-      "女人",
-      "男人",
-      "公主",
-      "女仆",
-      "舞者",
-      "长发",
-      "双马尾",
-      "异色瞳",
-      "微笑",
-      "全身",
-      "半身像",
+      "Solo",
+      "Woman",
+      "Man",
+      "Princess",
+      "Maid",
+      "Dancer",
+      "Long Hair",
+      "Twin Tails",
+      "Heterochromia",
+      "Smile",
+      "Full Body",
+      "Bust Portrait",
     ),
   ),
   (
     "scene",
-    "场景",
+    "Scenes",
     TAG_COLORS[1],
     (
-      "大海",
-      "森林",
-      "星空",
-      "落日",
-      "公园",
-      "咖啡厅",
-      "城市风景",
-      "街道",
-      "建筑",
-      "在房间内",
-      "单色背景",
-      "埃菲尔铁塔",
+      "Ocean",
+      "Forest",
+      "Starry Sky",
+      "Sunset",
+      "Park",
+      "Cafe",
+      "Cityscape",
+      "Street",
+      "Architecture",
+      "Indoors",
+      "Solid Background",
+      "Eiffel Tower",
     ),
   ),
   (
     "clothing",
-    "服饰",
+    "Clothing",
     TAG_COLORS[2],
     (
-      "连衣裙",
-      "衬衫",
-      "牛仔裤",
-      "裙子",
-      "运动套装",
-      "校服",
-      "水手服",
-      "女仆装",
-      "旗袍",
-      "汉服",
-      "和服",
-      "洛丽塔风格",
+      "Dress",
+      "Shirt",
+      "Jeans",
+      "Skirt",
+      "Tracksuit",
+      "School Uniform",
+      "Sailor Uniform",
+      "Maid Outfit",
+      "Qipao",
+      "Hanfu",
+      "Kimono",
+      "Lolita Style",
     ),
   ),
   (
     "props",
-    "道具",
+    "Props",
     TAG_COLORS[3],
     (
-      "翅膀",
-      "天使翅膀",
-      "恶魔翅膀",
-      "蝴蝶翅膀",
-      "尾巴",
-      "猫尾",
-      "狐狸尾",
-      "猫耳",
-      "兔耳",
-      "恶魔之角",
-      "龙之角",
-      "机械角",
+      "Wings",
+      "Angel Wings",
+      "Demon Wings",
+      "Butterfly Wings",
+      "Tail",
+      "Cat Tail",
+      "Fox Tail",
+      "Cat Ears",
+      "Bunny Ears",
+      "Demon Horns",
+      "Dragon Horns",
+      "Mechanical Horns",
     ),
   ),
 )
 DEFAULT_SUBCATEGORY_GROUPS = {
   "character": (
-    "数量",
-    "性别",
-    "年龄",
-    "肤色",
-    "身材",
-    "发型",
-    "表情",
-    "动作",
+    "Count",
+    "Gender",
+    "Age",
+    "Skin Tone",
+    "Body Type",
+    "Hairstyle",
+    "Expression",
+    "Pose",
   ),
   "clothing": (
-    "上衣",
-    "裤子",
-    "套装",
-    "鞋",
-    "饰品",
+    "Tops",
+    "Pants",
+    "Sets",
+    "Shoes",
+    "Accessories",
   ),
   "scene": (
-    "天气",
-    "时间",
-    "光照",
-    "镜头视角",
-    "地点",
+    "Weather",
+    "Time",
+    "Lighting",
+    "Camera Angle",
+    "Location",
   ),
   "props": (),
 }
@@ -145,12 +145,122 @@ RETIRED_DEFAULT_SUBCATEGORIES = (
   ("clothing", "男装"),
   ("clothing", "女装"),
 )
+# Built-in names as they were stored before the UI source language became
+# English. Existing states are renamed in place so the new defaults do not
+# duplicate tags the user already has; ids keep their old values.
+BUILTIN_DISPLAY_RENAMES = {
+  "category": {
+    "人物": "Characters",
+    "场景": "Scenes",
+    "服饰": "Clothing",
+    "道具": "Props",
+  },
+  "subcategory": {
+    "character": {
+      "数量": "Count",
+      "性别": "Gender",
+      "年龄": "Age",
+      "肤色": "Skin Tone",
+      "身材": "Body Type",
+      "发型": "Hairstyle",
+      "表情": "Expression",
+      "动作": "Pose",
+    },
+    "clothing": {
+      "上衣": "Tops",
+      "裤子": "Pants",
+      "套装": "Sets",
+      "鞋": "Shoes",
+      "饰品": "Accessories",
+    },
+    "scene": {
+      "天气": "Weather",
+      "时间": "Time",
+      "光照": "Lighting",
+      "镜头视角": "Camera Angle",
+      "地点": "Location",
+    },
+    "props": {},
+  },
+  "tag": {
+    "character": {
+      "单人": "Solo",
+      "女人": "Woman",
+      "男人": "Man",
+      "公主": "Princess",
+      "女仆": "Maid",
+      "舞者": "Dancer",
+      "长发": "Long Hair",
+      "双马尾": "Twin Tails",
+      "异色瞳": "Heterochromia",
+      "微笑": "Smile",
+      "全身": "Full Body",
+      "半身像": "Bust Portrait",
+    },
+    "scene": {
+      "大海": "Ocean",
+      "森林": "Forest",
+      "星空": "Starry Sky",
+      "落日": "Sunset",
+      "公园": "Park",
+      "咖啡厅": "Cafe",
+      "城市风景": "Cityscape",
+      "街道": "Street",
+      "建筑": "Architecture",
+      "在房间内": "Indoors",
+      "单色背景": "Solid Background",
+      "埃菲尔铁塔": "Eiffel Tower",
+    },
+    "clothing": {
+      "连衣裙": "Dress",
+      "衬衫": "Shirt",
+      "牛仔裤": "Jeans",
+      "裙子": "Skirt",
+      "运动套装": "Tracksuit",
+      "校服": "School Uniform",
+      "水手服": "Sailor Uniform",
+      "女仆装": "Maid Outfit",
+      "旗袍": "Qipao",
+      "汉服": "Hanfu",
+      "和服": "Kimono",
+      "洛丽塔风格": "Lolita Style",
+    },
+    "props": {
+      "翅膀": "Wings",
+      "天使翅膀": "Angel Wings",
+      "恶魔翅膀": "Demon Wings",
+      "蝴蝶翅膀": "Butterfly Wings",
+      "尾巴": "Tail",
+      "猫尾": "Cat Tail",
+      "狐狸尾": "Fox Tail",
+      "猫耳": "Cat Ears",
+      "兔耳": "Bunny Ears",
+      "恶魔之角": "Demon Horns",
+      "龙之角": "Dragon Horns",
+      "机械角": "Mechanical Horns",
+    },
+  },
+}
 _COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 _LOCK = threading.RLock()
 
 
 class SkillTagDataError(ValueError):
   pass
+
+
+def _builtin_category_id(group_key: str) -> str:
+  return uuid.uuid5(
+    uuid.NAMESPACE_URL,
+    f"https://astral.local/comfyui-assets/skill-tags/category/{group_key}",
+  ).hex
+
+
+def _builtin_tag_id(group_key: str, name: str) -> str:
+  return uuid.uuid5(
+    uuid.NAMESPACE_URL,
+    f"https://astral.local/comfyui-assets/skill-tags/tag/{group_key}/{name}",
+  ).hex
 
 
 def _builtin_subcategory_id(group_key: str, name: str) -> str:
@@ -161,6 +271,33 @@ def _builtin_subcategory_id(group_key: str, name: str) -> str:
       f"{group_key}/{name}"
     ),
   ).hex
+
+
+def _rename_builtin_displays(state: dict[str, Any]) -> None:
+  category_renames = BUILTIN_DISPLAY_RENAMES["category"]
+  for key, _name, _color, _tags in DEFAULT_SKILL_TAG_GROUPS:
+    category_id = _builtin_category_id(key)
+    for category in state["categories"]:
+      if category["id"] != category_id:
+        continue
+      renamed = category_renames.get(category["name"])
+      if renamed:
+        category["name"] = renamed
+      break
+  for subcategory in state["subcategories"]:
+    for key, renames in BUILTIN_DISPLAY_RENAMES["subcategory"].items():
+      current = subcategory["name"]
+      if current in renames and subcategory["id"] == _builtin_subcategory_id(
+        key, current
+      ):
+        subcategory["name"] = renames[current]
+        break
+  for tag in state["tags"]:
+    for key, renames in BUILTIN_DISPLAY_RENAMES["tag"].items():
+      current = tag["name"]
+      if current in renames and tag["id"] == _builtin_tag_id(key, current):
+        tag["name"] = renames[current]
+        break
 
 
 def _state_path(data_directory: str) -> str:
@@ -176,10 +313,7 @@ def _default_state() -> dict[str, Any]:
   for category_index, (key, name, color, tag_names) in enumerate(
     DEFAULT_SKILL_TAG_GROUPS
   ):
-    category_id = uuid.uuid5(
-      uuid.NAMESPACE_URL,
-      f"https://astral.local/comfyui-assets/skill-tags/category/{key}",
-    ).hex
+    category_id = _builtin_category_id(key)
     categories.append(
       {
         "id": category_id,
@@ -201,13 +335,7 @@ def _default_state() -> dict[str, Any]:
     for tag_name in tag_names:
       tags.append(
         {
-          "id": uuid.uuid5(
-            uuid.NAMESPACE_URL,
-            (
-              "https://astral.local/comfyui-assets/skill-tags/tag/"
-              f"{key}/{tag_name}"
-            ),
-          ).hex,
+          "id": _builtin_tag_id(key, tag_name),
           "name": tag_name,
           "categoryId": category_id,
           "subcategoryId": "",
@@ -238,12 +366,12 @@ def _read_state_file(path: str) -> dict[str, Any]:
       with open(candidate, "r", encoding="utf-8-sig") as source:
         payload = json.load(source)
       if not isinstance(payload, dict):
-        raise SkillTagDataError("Skill 标签数据格式错误")
+        raise SkillTagDataError("Invalid skill tag data format")
       return payload
     except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
       last_error = error
   raise SkillTagDataError(
-    f"无法读取 Skill 标签数据：{os.path.basename(path)}"
+    f"Unable to read skill tag data: {os.path.basename(path)}"
   ) from last_error
 
 
@@ -273,30 +401,30 @@ def _atomic_write_state(path: str, payload: dict[str, Any]) -> None:
         pass
 
 
-def _clean_name(value: Any, field: str = "名称") -> str:
+def _clean_name(value: Any, field: str = "name") -> str:
   name = str(value or "").strip()
   if not name:
-    raise SkillTagDataError(f"{field}不能为空")
+    raise SkillTagDataError(f"{field} cannot be empty")
   if len(name) > MAX_NAME_LENGTH:
-    raise SkillTagDataError(f"{field}不能超过 {MAX_NAME_LENGTH} 个字符")
+    raise SkillTagDataError(f"{field} cannot exceed {MAX_NAME_LENGTH} characters")
   if "\x00" in name:
-    raise SkillTagDataError(f"{field}包含无效字符")
+    raise SkillTagDataError(f"{field} contains invalid characters")
   return name
 
 
 def _clean_color(value: Any, fallback: str = TAG_COLORS[0]) -> str:
   color = str(value or fallback).strip()
   if not _COLOR_RE.fullmatch(color):
-    raise SkillTagDataError("标签颜色必须是 #RRGGBB 格式")
+    raise SkillTagDataError("Tag color must be in #RRGGBB format")
   return color.casefold()
 
 
 def _clean_skill_id(value: Any) -> str:
   skill_id = str(value or "").replace("\\", "/").strip("/")
   if not skill_id:
-    raise SkillTagDataError("Skill ID 不能为空")
+    raise SkillTagDataError("Skill ID cannot be empty")
   if len(skill_id) > MAX_SKILL_ID_LENGTH or "\x00" in skill_id:
-    raise SkillTagDataError("Skill ID 格式错误")
+    raise SkillTagDataError("Invalid Skill ID format")
   return skill_id
 
 
@@ -312,7 +440,7 @@ def _unique_name(
     and str(item.get("name", "")).casefold() == key
     for item in records
   ):
-    raise SkillTagDataError(f"“{name}”已存在")
+    raise SkillTagDataError(f"\"{name}\" already exists")
 
 
 def _defaults_version(payload: dict[str, Any]) -> int:
@@ -410,7 +538,7 @@ def _normalize_state(payload: dict[str, Any]) -> dict[str, Any]:
       continue
     category_id = str(raw.get("id") or "").strip()
     try:
-      name = _clean_name(raw.get("name"), "分类名称")
+      name = _clean_name(raw.get("name"), "category name")
     except SkillTagDataError:
       continue
     name_key = name.casefold()
@@ -470,7 +598,7 @@ def _normalize_state(payload: dict[str, Any]) -> dict[str, Any]:
     ):
       continue
     try:
-      name = _clean_name(raw.get("name"), "二级分类名称")
+      name = _clean_name(raw.get("name"), "subcategory name")
     except SkillTagDataError:
       continue
     name_key = (category_id, name.casefold())
@@ -524,7 +652,7 @@ def _normalize_state(payload: dict[str, Any]) -> dict[str, Any]:
     if not tag_id or tag_id in tag_ids or category_id not in category_ids:
       continue
     try:
-      name = _clean_name(raw.get("name"), "标签名称")
+      name = _clean_name(raw.get("name"), "tag name")
       color = _clean_color(raw.get("color"))
     except SkillTagDataError:
       continue
@@ -574,6 +702,7 @@ def _normalize_state(payload: dict[str, Any]) -> dict[str, Any]:
     "assignments": assignments,
   }
   if payload_defaults_version < DEFAULTS_VERSION:
+    _rename_builtin_displays(state)
     if _is_legacy_empty_default(state):
       defaults = _default_state()
       state["categories"] = defaults["categories"]
@@ -607,12 +736,12 @@ def get_skill_tag_state(data_directory: str) -> dict[str, Any]:
 
 def create_tag_category(data_directory: str, name: Any) -> dict[str, Any]:
   path = _state_path(data_directory)
-  clean_name = _clean_name(name, "分类名称")
+  clean_name = _clean_name(name, "category name")
   with _LOCK:
     state = _load_state_unlocked(path)
     categories = state["categories"]
     if len(categories) >= MAX_CATEGORIES:
-      raise SkillTagDataError(f"最多创建 {MAX_CATEGORIES} 个标签分类")
+      raise SkillTagDataError(f"At most {MAX_CATEGORIES} tag categories can be created")
     _unique_name(categories, clean_name)
     category = {
       "id": uuid.uuid4().hex,
@@ -631,7 +760,7 @@ def rename_tag_category(
 ) -> dict[str, Any]:
   path = _state_path(data_directory)
   requested_id = str(category_id or "").strip()
-  clean_name = _clean_name(name, "分类名称")
+  clean_name = _clean_name(name, "category name")
   with _LOCK:
     state = _load_state_unlocked(path)
     categories = state["categories"]
@@ -640,7 +769,7 @@ def rename_tag_category(
       None,
     )
     if category is None:
-      raise FileNotFoundError("标签分类不存在")
+      raise FileNotFoundError("Tag category not found")
     _unique_name(categories, clean_name, exclude_id=requested_id)
     category["name"] = clean_name
     _save_state_unlocked(path, state)
@@ -657,9 +786,9 @@ def delete_tag_category(
     state = _load_state_unlocked(path)
     categories = state["categories"]
     if not any(item["id"] == requested_id for item in categories):
-      raise FileNotFoundError("标签分类不存在")
+      raise FileNotFoundError("Tag category not found")
     if len(categories) <= 1:
-      raise SkillTagDataError("至少需要保留一个标签分类")
+      raise SkillTagDataError("At least one tag category must be kept")
     removed_tag_ids = {
       item["id"]
       for item in state["tags"]
@@ -702,16 +831,16 @@ def create_tag_subcategory(
 ) -> dict[str, Any]:
   path = _state_path(data_directory)
   requested_category_id = str(category_id or "").strip()
-  clean_name = _clean_name(name, "二级分类名称")
+  clean_name = _clean_name(name, "subcategory name")
   with _LOCK:
     state = _load_state_unlocked(path)
     if not any(
       item["id"] == requested_category_id for item in state["categories"]
     ):
-      raise FileNotFoundError("标签分类不存在")
+      raise FileNotFoundError("Tag category not found")
     if len(state["subcategories"]) >= MAX_SUBCATEGORIES:
       raise SkillTagDataError(
-        f"最多创建 {MAX_SUBCATEGORIES} 个二级分类"
+        f"At most {MAX_SUBCATEGORIES} subcategories can be created"
       )
     siblings = [
       item
@@ -737,7 +866,7 @@ def rename_tag_subcategory(
 ) -> dict[str, Any]:
   path = _state_path(data_directory)
   requested_id = str(subcategory_id or "").strip()
-  clean_name = _clean_name(name, "二级分类名称")
+  clean_name = _clean_name(name, "subcategory name")
   with _LOCK:
     state = _load_state_unlocked(path)
     subcategory = next(
@@ -749,7 +878,7 @@ def rename_tag_subcategory(
       None,
     )
     if subcategory is None:
-      raise FileNotFoundError("二级分类不存在")
+      raise FileNotFoundError("Subcategory not found")
     siblings = [
       item
       for item in state["subcategories"]
@@ -773,7 +902,7 @@ def delete_tag_subcategory(
     if not any(
       item["id"] == requested_id for item in state["subcategories"]
     ):
-      raise FileNotFoundError("二级分类不存在")
+      raise FileNotFoundError("Subcategory not found")
     state["subcategories"] = [
       item
       for item in state["subcategories"]
@@ -798,7 +927,7 @@ def create_skill_tag(
   favorite: Any = False,
 ) -> dict[str, Any]:
   path = _state_path(data_directory)
-  clean_name = _clean_name(name, "标签名称")
+  clean_name = _clean_name(name, "tag name")
   requested_category_id = str(category_id or "").strip()
   clean_color = _clean_color(color or TAG_COLORS[0])
   with _LOCK:
@@ -806,16 +935,16 @@ def create_skill_tag(
     if not any(
       item["id"] == requested_category_id for item in state["categories"]
     ):
-      raise FileNotFoundError("标签分类不存在")
+      raise FileNotFoundError("Tag category not found")
     if len(state["tags"]) >= MAX_TAGS:
-      raise SkillTagDataError(f"最多创建 {MAX_TAGS} 个标签")
+      raise SkillTagDataError(f"At most {MAX_TAGS} tags can be created")
     requested_subcategory_id = str(subcategory_id or "").strip()
     if requested_subcategory_id and not any(
       item["id"] == requested_subcategory_id
       and item["categoryId"] == requested_category_id
       for item in state["subcategories"]
     ):
-      raise FileNotFoundError("标签二级分类不存在")
+      raise FileNotFoundError("Tag subcategory not found")
     siblings = [
       item for item in state["tags"] if item["categoryId"] == requested_category_id
     ]
@@ -843,7 +972,7 @@ def create_skill_tags(
   color: Any = "",
 ) -> dict[str, Any]:
   if not isinstance(names, list):
-    raise SkillTagDataError("批量标签名称必须是列表")
+    raise SkillTagDataError("Batch tag names must be a list")
   path = _state_path(data_directory)
   requested_category_id = str(category_id or "").strip()
   requested_subcategory_id = str(subcategory_id or "").strip()
@@ -864,13 +993,13 @@ def create_skill_tags(
       None,
     )
     if category_index is None:
-      raise FileNotFoundError("标签分类不存在")
+      raise FileNotFoundError("Tag category not found")
     if requested_subcategory_id and not any(
       item["id"] == requested_subcategory_id
       and item["categoryId"] == requested_category_id
       for item in state["subcategories"]
     ):
-      raise FileNotFoundError("标签二级分类不存在")
+      raise FileNotFoundError("Tag subcategory not found")
 
     category_tags = [
       item
@@ -895,9 +1024,9 @@ def create_skill_tags(
 
     for position, raw_name in enumerate(names, start=1):
       try:
-        clean_name = _clean_name(raw_name, "标签名称")
+        clean_name = _clean_name(raw_name, "tag name")
       except SkillTagDataError as error:
-        warnings.append(f"第 {position} 项：{error}，已跳过。")
+        warnings.append(f"Item {position}: {error}; skipped.")
         continue
       name_key = clean_name.casefold()
       if name_key in existing_names or name_key in requested_names:
@@ -905,7 +1034,7 @@ def create_skill_tags(
         continue
       if len(state["tags"]) + len(created_tags) >= MAX_TAGS:
         warnings.append(
-          f"最多只能有 {MAX_TAGS} 个标签，其余标签未创建。"
+          f"Only {MAX_TAGS} tags are allowed; the remaining tags were not created."
         )
         break
       tag = {
@@ -938,7 +1067,7 @@ def create_skill_tags(
 
 def _clean_tag_id_list(tag_ids: Any) -> list[str]:
   if not isinstance(tag_ids, list):
-    raise SkillTagDataError("标签 ID 必须是列表")
+    raise SkillTagDataError("Tag IDs must be a list")
   cleaned: list[str] = []
   seen: set[str] = set()
   for raw_tag_id in tag_ids:
@@ -947,7 +1076,7 @@ def _clean_tag_id_list(tag_ids: Any) -> list[str]:
       seen.add(tag_id)
       cleaned.append(tag_id)
   if not cleaned:
-    raise SkillTagDataError("请至少选择一个标签")
+    raise SkillTagDataError("Select at least one tag")
   return cleaned
 
 
@@ -1008,7 +1137,7 @@ def move_skill_tags(
       None,
     )
     if target_category is None:
-      raise FileNotFoundError("目标标签分类不存在")
+      raise FileNotFoundError("Target tag category not found")
     target_subcategory = None
     if requested_subcategory_id:
       target_subcategory = next(
@@ -1021,7 +1150,7 @@ def move_skill_tags(
         None,
       )
       if target_subcategory is None:
-        raise FileNotFoundError("目标标签二级分类不存在")
+        raise FileNotFoundError("Target tag subcategory not found")
 
     available_ids = {item["id"] for item in state["tags"]}
     missing_count = len(requested_set - available_ids)
@@ -1067,7 +1196,7 @@ def update_skill_tag(
   path = _state_path(data_directory)
   requested_id = str(tag_id or "").strip()
   if not isinstance(changes, dict):
-    raise SkillTagDataError("标签更新参数格式错误")
+    raise SkillTagDataError("Invalid tag update parameters")
   with _LOCK:
     state = _load_state_unlocked(path)
     tag = next(
@@ -1075,10 +1204,10 @@ def update_skill_tag(
       None,
     )
     if tag is None:
-      raise FileNotFoundError("标签不存在")
+      raise FileNotFoundError("Tag not found")
     category_id = str(changes.get("categoryId") or tag["categoryId"]).strip()
     if not any(item["id"] == category_id for item in state["categories"]):
-      raise FileNotFoundError("标签分类不存在")
+      raise FileNotFoundError("Tag category not found")
     if "subcategoryId" in changes:
       subcategory_id = str(changes.get("subcategoryId") or "").strip()
     else:
@@ -1092,9 +1221,9 @@ def update_skill_tag(
       item["id"] == subcategory_id and item["categoryId"] == category_id
       for item in state["subcategories"]
     ):
-      raise FileNotFoundError("标签二级分类不存在")
+      raise FileNotFoundError("Tag subcategory not found")
     name = (
-      _clean_name(changes.get("name"), "标签名称")
+      _clean_name(changes.get("name"), "tag name")
       if "name" in changes
       else tag["name"]
     )
@@ -1121,7 +1250,7 @@ def delete_skill_tag(data_directory: str, tag_id: Any) -> dict[str, Any]:
   with _LOCK:
     state = _load_state_unlocked(path)
     if not any(item["id"] == requested_id for item in state["tags"]):
-      raise FileNotFoundError("标签不存在")
+      raise FileNotFoundError("Tag not found")
     state["tags"] = [
       item for item in state["tags"] if item["id"] != requested_id
     ]
@@ -1145,7 +1274,7 @@ def assign_skill_tags(
   path = _state_path(data_directory)
   clean_skill_id = _clean_skill_id(skill_id)
   if not isinstance(tag_ids, list):
-    raise SkillTagDataError("Skill 标签必须是数组")
+    raise SkillTagDataError("Skill tags must be an array")
   with _LOCK:
     state = _load_state_unlocked(path)
     available_ids = {item["id"] for item in state["tags"]}
@@ -1153,7 +1282,7 @@ def assign_skill_tags(
     for raw_tag_id in tag_ids:
       tag_id = str(raw_tag_id or "").strip()
       if tag_id and tag_id not in available_ids:
-        raise FileNotFoundError("要分配的标签不存在")
+        raise FileNotFoundError("The tag to assign does not exist")
       if tag_id and tag_id not in selected:
         selected.append(tag_id)
     if selected:
@@ -1173,19 +1302,19 @@ def reorder_skill_tags(
   cleaned_kind = str(kind or "").strip().lower()
   if cleaned_kind not in {"categories", "subcategories", "tags"}:
     raise SkillTagDataError(
-      "排序类型必须是 categories、subcategories 或 tags"
+      "Sort type must be categories, subcategories, or tags"
     )
   if not isinstance(ordered_ids, list):
-    raise SkillTagDataError("排序 ID 必须是数组")
+    raise SkillTagDataError("Sort IDs must be an array")
   requested_ids = [str(item or "").strip() for item in ordered_ids]
   with _LOCK:
     state = _load_state_unlocked(path)
     records = state[cleaned_kind]
     current_ids = [item["id"] for item in records]
     if len(requested_ids) != len(set(requested_ids)):
-      raise SkillTagDataError("排序 ID 不能重复")
+      raise SkillTagDataError("Sort IDs must not contain duplicates")
     if set(requested_ids) != set(current_ids):
-      raise SkillTagDataError("排序必须包含当前全部条目")
+      raise SkillTagDataError("Sorting must include all current items")
     by_id = {item["id"]: item for item in records}
     state[cleaned_kind] = [by_id[item_id] for item_id in requested_ids]
     for index, item in enumerate(state[cleaned_kind]):

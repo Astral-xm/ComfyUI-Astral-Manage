@@ -43,7 +43,7 @@ class DuplicateScanCancelled(Exception):
 
 def _raise_if_cancelled(cancel_callback: Callable[[], bool] | None) -> None:
   if cancel_callback is not None and cancel_callback():
-    raise DuplicateScanCancelled("重复模型扫描已取消")
+    raise DuplicateScanCancelled("Duplicate model scan cancelled")
 
 
 def _report_progress(
@@ -68,14 +68,14 @@ def normalize_relative_path(value: str, *, allow_empty: bool = False) -> str:
   if not value:
     if allow_empty:
       return ""
-    raise ModelPathError("模型路径不能为空")
+    raise ModelPathError("Model path cannot be empty")
   if value.startswith("/") or "\x00" in value:
-    raise ModelPathError("模型路径必须是相对路径")
+    raise ModelPathError("Model path must be a relative path")
   if re.match(r"^[A-Za-z]:", value):
-    raise ModelPathError("模型路径不能使用绝对路径")
+    raise ModelPathError("Model path cannot use an absolute path")
   parts = [part for part in value.split("/") if part not in ("", ".")]
   if any(part == ".." for part in parts):
-    raise ModelPathError("模型路径不能越过配置的模型目录")
+    raise ModelPathError("Model path must not escape the configured model directory")
   return "/".join(parts)
 
 
@@ -186,9 +186,9 @@ def resolve_missing_model_files(
   """
 
   if not isinstance(requests, list) or not requests:
-    raise ModelPathError("请至少提供一个缺失模型")
+    raise ModelPathError("Provide at least one missing model")
   if len(requests) > 500:
-    raise ModelPathError("单次最多检查 500 个缺失模型")
+    raise ModelPathError("At most 500 missing models can be checked at a time")
 
   local_files = list(_iter_configured_files(categories))
   category_names = {
@@ -217,11 +217,11 @@ def resolve_missing_model_files(
   results: list[dict[str, Any]] = []
   for index, raw_request in enumerate(requests):
     if not isinstance(raw_request, dict):
-      raise ModelPathError("缺失模型检查项格式错误")
+      raise ModelPathError("Invalid missing model request item format")
     key = str(raw_request.get("key", index))
     value = str(raw_request.get("value", "")).strip()
     if not value:
-      raise ModelPathError("缺失模型名称不能为空")
+      raise ModelPathError("Missing model name cannot be empty")
     try:
       normalized_value = normalize_relative_path(value)
     except ModelPathError:
@@ -503,7 +503,7 @@ def _category(
   for category in categories:
     if category["name"] == category_name:
       return category
-  raise ModelPathError("未知的模型分类")
+  raise ModelPathError("Unknown model category")
 
 
 def _root(
@@ -513,10 +513,10 @@ def _root(
   try:
     root_index = int(root_index)
   except (TypeError, ValueError) as error:
-    raise ModelPathError("模型根目录索引无效") from error
+    raise ModelPathError("Invalid model root index") from error
   roots = category["roots"]
   if root_index < 0 or root_index >= len(roots):
-    raise ModelPathError("模型根目录索引超出范围")
+    raise ModelPathError("Model root index is out of range")
   return roots[root_index]
 
 
@@ -531,7 +531,7 @@ def resolve_model_path(
   category = _category(categories, category_name)
   root = _root(category, root_index)
   if not root.get("exists"):
-    raise FileNotFoundError("模型根目录不存在")
+    raise FileNotFoundError("Model root does not exist")
   relative_path = normalize_relative_path(
     relative_path,
     allow_empty=expect == "directory",
@@ -541,13 +541,13 @@ def resolve_model_path(
     os.path.join(base, *relative_path.split("/")) if relative_path else base
   )
   if not _path_inside(base, target):
-    raise ModelPathError("模型路径不在配置的根目录内")
+    raise ModelPathError("Model path is outside the configured root directory")
   if expect == "file":
     if not os.path.isfile(target):
-      raise FileNotFoundError("模型文件不存在")
+      raise FileNotFoundError("Model file does not exist")
   elif expect == "directory":
     if not os.path.isdir(target):
-      raise FileNotFoundError("模型目录不存在")
+      raise FileNotFoundError("Model directory does not exist")
   else:
     raise ValueError(f"Unknown path expectation: {expect}")
   return category, root, target
@@ -584,7 +584,7 @@ def _safe_directory_entries(path: str) -> tuple[list[dict[str, Any]], list[dict[
         except OSError:
           continue
   except OSError as error:
-    raise ModelPathError(f"无法读取模型目录：{error}") from error
+    raise ModelPathError(f"Unable to read model directory: {error}") from error
   directories.sort(key=lambda item: item["name"].casefold())
   files.sort(key=lambda item: item["name"].casefold())
   return directories, files
@@ -1030,7 +1030,7 @@ class _SHFILEOPSTRUCTW(ctypes.Structure):
 
 def recycle_bin_paths(paths: list[str]) -> None:
   if os.name != "nt":
-    raise RecycleBinError("当前系统不支持 Windows 回收站操作")
+    raise RecycleBinError("The current system does not support the Windows Recycle Bin")
   if not paths:
     return
   operation = _SHFILEOPSTRUCTW()
@@ -1050,9 +1050,9 @@ def recycle_bin_paths(paths: list[str]) -> None:
   shell32.SHFileOperationW.restype = ctypes.c_int
   result = shell32.SHFileOperationW(ctypes.byref(operation))
   if result != 0:
-    raise RecycleBinError(f"Windows 回收站操作失败，错误码 {result}")
+    raise RecycleBinError(f"Windows Recycle Bin operation failed, error code {result}")
   if operation.fAnyOperationsAborted:
-    raise RecycleBinError("用户或系统取消了回收站操作")
+    raise RecycleBinError("The user or system cancelled the Recycle Bin operation")
 
 
 def _selected_model_files(
@@ -1061,19 +1061,19 @@ def _selected_model_files(
   items: Any,
 ) -> list[dict[str, Any]]:
   if not isinstance(items, list) or not items:
-    raise ModelPathError("请至少选择一个模型")
+    raise ModelPathError("Select at least one model")
   selected: list[dict[str, Any]] = []
   seen: set[tuple[int, str]] = set()
   for raw_item in items:
     if not isinstance(raw_item, dict):
-      raise ModelPathError("模型选择项格式错误")
+      raise ModelPathError("Invalid model selection item format")
     relative_path = normalize_relative_path(
       str(raw_item.get("relativePath", "")),
     )
     try:
       root_index = int(raw_item.get("rootIndex"))
     except (TypeError, ValueError) as error:
-      raise ModelPathError("模型根目录索引无效") from error
+      raise ModelPathError("Invalid model root index") from error
     key = (root_index, relative_path.casefold())
     if key in seen:
       continue
@@ -1093,10 +1093,10 @@ def _selected_model_files(
     extension = os.path.splitext(target)[1].casefold()
     if allowed_extensions and extension not in allowed_extensions:
       raise ModelPathError(
-        f"所选文件不是“{category_name}”分类支持的模型文件"
+        f'Selected file is not a model file supported by the "{category_name}" category'
       )
     if os.path.islink(target):
-      raise ModelPathError("出于安全考虑，不操作符号链接模型")
+      raise ModelPathError("Symbolic-link models are not operated on for safety reasons")
     selected.append(
       {
         "rootIndex": root_index,
@@ -1107,7 +1107,7 @@ def _selected_model_files(
       }
     )
   if not selected:
-    raise ModelPathError("请至少选择一个模型")
+    raise ModelPathError("Select at least one model")
   return selected
 
 
@@ -1129,7 +1129,7 @@ def move_model_files(
     expect="directory",
   )
   if os.path.islink(target_directory):
-    raise ModelPathError("出于安全考虑，不移动到符号链接目录")
+    raise ModelPathError("Not moving into a symbolic-link directory for safety reasons")
 
   destinations: set[str] = set()
   operations: list[tuple[dict[str, Any], str]] = []
@@ -1137,15 +1137,15 @@ def move_model_files(
     if os.path.normcase(
       os.path.realpath(os.path.dirname(item["absolutePath"]))
     ) == os.path.normcase(os.path.realpath(target_directory)):
-      raise ModelPathError("模型已经位于目标目录中")
+      raise ModelPathError("The model is already in the target directory")
     destination = os.path.join(target_directory, item["name"])
     destination_key = os.path.normcase(os.path.abspath(destination))
     if destination_key in destinations:
-      raise FileExistsError("多个模型移动后会重名，请分批移动")
+      raise FileExistsError("Multiple models would share a name after moving; move them in batches")
     if os.path.lexists(destination):
-      raise FileExistsError(f"目标目录中已存在同名文件：{item['name']}")
+      raise FileExistsError(f"A file with the same name already exists in the target directory: {item['name']}")
     if not _path_inside(target_root["path"], destination):
-      raise ModelPathError("模型目标路径不在配置的根目录内")
+      raise ModelPathError("Model target path is outside the configured root directory")
     destinations.add(destination_key)
     operations.append((item, destination))
 
@@ -1191,7 +1191,7 @@ def recycle_model_files(
   recycle_function: Any = None,
 ) -> dict[str, Any]:
   if confirm is not True:
-    raise PermissionError("删除模型前必须明确确认")
+    raise PermissionError("Deleting models requires explicit confirmation")
   selected = _selected_model_files(categories, category_name, items)
   recycle = recycle_function or recycle_bin_paths
   recycle([item["absolutePath"] for item in selected])

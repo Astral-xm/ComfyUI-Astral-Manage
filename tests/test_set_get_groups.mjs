@@ -1127,11 +1127,11 @@ assert.deepEqual(aliasTraceContext.calls, traceContext.calls);
 const getMenuOptions = [];
 getNode.getExtraMenuOptions(null, getMenuOptions);
 assert.equal(
-  getMenuOptions.some((option) => option.content === "编辑 GetGroup 端口名"),
+  getMenuOptions.some((option) => option.content === "Edit GetGroup Port Name"),
   true,
 );
 assert.equal(
-  getMenuOptions.some((option) => option.content === "跳转到对应 SetGroup"),
+  getMenuOptions.some((option) => option.content === "Go to Matching SetGroup"),
   false,
   "Jumping must live on the port menu, not GetGroup's node menu",
 );
@@ -1168,7 +1168,7 @@ assert.deepEqual(
   portLabelMenu.filter(Boolean).map((option) => option.title ?? option.content),
   [
     "Disconnect Links",
-    "重命名接口",
+    "Rename Port",
     "Remove Slot",
   ],
 );
@@ -1592,7 +1592,7 @@ const placeholderJumpMenu = dynamicGet.getSlotMenuOptions({
 });
 assert.deepEqual(
   placeholderJumpMenu.slice(0, 1).map((entry) => entry.content),
-  ["跳转到对应 SetGroup"],
+  ["Go to Matching SetGroup"],
 );
 assert.equal(placeholderJumpMenu[0].disabled, true);
 assert.equal(
@@ -1609,7 +1609,7 @@ assert.equal(
 );
 assert.equal(
   placeholderJumpMenu.some(
-    (entry) => entry.content === "选择 SetGroup 端口",
+    (entry) => entry.content === "Select SetGroup Port",
   ),
   false,
 );
@@ -1953,8 +1953,8 @@ assert.equal(app.canvas.showConnectionMenu({
 }), undefined);
 const outputMenu = FakeContextMenu.last;
 assert.equal(LiteGraph.ContextMenu, FakeContextMenu);
-assert.equal(outputMenu.options.includes("添加 设置节点组"), true);
-outputMenu.menuOptions.callback("添加 设置节点组", {}, {});
+assert.equal(outputMenu.options.includes("Add SetGroup Node"), true);
+outputMenu.menuOptions.callback("Add SetGroup Node", {}, {});
 const menuSet = outputGraph._nodes.find((node) => node.type === SET_GROUP_NODE);
 assert.ok(menuSet);
 assert.equal(menuSource.outputs[0].links.length, 1);
@@ -1974,8 +1974,8 @@ app.canvas.showConnectionMenu({
   e: { canvasX: 240, canvasY: 160 },
 });
 const inputMenu = FakeContextMenu.last;
-assert.equal(inputMenu.options.includes("获取设置节点组"), true);
-inputMenu.menuOptions.callback("获取设置节点组", {}, {});
+assert.equal(inputMenu.options.includes("Add GetGroup Node"), true);
+inputMenu.menuOptions.callback("Add GetGroup Node", {}, {});
 const inputMenuGet = inputGraph._nodes.find((node) => node.type === GET_GROUP_NODE);
 assert.ok(inputMenuGet);
 assert.deepEqual(Array.from(inputMenuGet.pos), [240, 160]);
@@ -2407,7 +2407,7 @@ assert.equal(
   true,
 );
 const getChoiceMenu = FakeContextMenu.last;
-assert.equal(getChoiceMenu.menuOptions.title, "GetGroup 端口");
+assert.equal(getChoiceMenu.menuOptions.title, "GetGroup Ports");
 const getChoiceClipOption = getChoiceMenu.options.find(
   (option) => option?.content?.includes("choice_clip"),
 );
@@ -2438,7 +2438,7 @@ jumpGet.onPortNamesChanged("jump_a, jump_b");
 const jumpNodeMenu = [];
 jumpGet.getExtraMenuOptions(null, jumpNodeMenu);
 assert.equal(
-  jumpNodeMenu.some((option) => option.content === "跳转到对应 SetGroup"),
+  jumpNodeMenu.some((option) => option.content === "Go to Matching SetGroup"),
   false,
   "GetGroup's node context menu must not jump to SetGroup",
 );
@@ -2448,7 +2448,7 @@ const jumpPortMenu = jumpGet.getSlotMenuOptions({
 });
 assert.deepEqual(
   jumpPortMenu.slice(0, 1).map((option) => option.content),
-  ["跳转到对应 SetGroup"],
+  ["Go to Matching SetGroup"],
 );
 assert.equal(jumpPortMenu[0].disabled, false);
 assert.equal(
@@ -2460,7 +2460,7 @@ assert.equal(
   true,
 );
 assert.equal(
-  jumpPortMenu.some((option) => option.content === "选择 SetGroup 端口"),
+  jumpPortMenu.some((option) => option.content === "Select SetGroup Port"),
   false,
 );
 
@@ -2592,8 +2592,8 @@ assert.match(source, /resolveVirtualOutput\(slot\)/);
 assert.match(source, /getInputLink\(slot\)/);
 assert.match(source, /parsePortNameList/);
 assert.match(source, /MAX_GET_PORTS/);
-assert.match(source, /添加 设置节点组/);
-assert.match(source, /获取设置节点组/);
+assert.match(source, /Add SetGroup Node/);
+assert.match(source, /Add GetGroup Node/);
 assert.match(source, /custom_nodes\.ComfyUI-Astral-Manage/);
 assert.match(source, /beforeRegisterVueAppNodeDefs/);
 assert.match(source, /decorateConnectionMenuOptions/);

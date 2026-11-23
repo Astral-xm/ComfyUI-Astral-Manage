@@ -178,17 +178,17 @@ assert.equal(row.drawTrigger.toString().includes("layout.removeX"), true);
 
 assert.match(source, /import\("\.\.\/\.\.\/rgthree\/common\/dialog\.js"\)/);
 assert.doesNotMatch(source, /RgthreeLoraInfoDialog|dialog_info\.js/);
-assert.match(source, /this\.createRow\("推荐强度"/);
-assert.match(source, /this\.createRow\("触发词"/);
-assert.match(source, /this\.createRow\("C站",\s*this\.createSourceValue\("civitai",\s*true\)\)/);
+assert.match(source, /this\.createRow\("Recommended strength"/);
+assert.match(source, /this\.createRow\("Trigger words"/);
+assert.match(source, /this\.createRow\("Civitai",\s*this\.createSourceValue\("civitai",\s*true\)\)/);
 assert.match(source, /this\.createRow\("Hugging Face"/);
-assert.match(source, /this\.createRow\("魔搭"/);
-assert.doesNotMatch(source, /C站网址|Hugging Face网址|魔搭网址/);
-assert.match(source, /未找到可靠推荐强度/);
-assert.match(source, /未找到可靠触发词/);
+assert.match(source, /this\.createRow\("ModelScope"/);
+assert.doesNotMatch(source, /Civitai URL|Hugging Face URL|ModelScope URL/);
+assert.match(source, /No reliable recommended strength found/);
+assert.match(source, /No reliable trigger words found/);
 assert.match(source, /this\.info\.triggersSource/);
 assert.match(source, /Fetch model details/);
-assert.match(source, /SHA256 精确匹配/);
+assert.match(source, /Exact SHA256 match/);
 assert.match(source, /source\.warnings/);
 assert.match(source, /appendSourceWarnings\(sourceWrap,\s*source\)/);
 assert.match(source, /hashVerificationError/);
@@ -196,7 +196,7 @@ assert.match(
   source,
   /button\.addEventListener\("click",\s*\(event\)\s*=>\s*\{[\s\S]*?event\.stopPropagation\(\);[\s\S]*?void this\.fetchInfo\(\);/,
 );
-assert.match(source, /拉取失败：/);
+assert.match(source, /Fetch failed: /);
 assert.match(source, /refresh=\$\{Date\.now\(\)\}/);
 assert.match(source, /cache:\s*"no-store"/);
 assert.match(source, /showLoraInfoDialog\(this\.value\.lora,\s*this,\s*node\)/);

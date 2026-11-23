@@ -277,6 +277,6 @@ assert.match(source, /MODE_BYPASS = 4/);
 assert.match(source, /formatPortLabel\(lockedType, index\)/);
 assert.match(source, /output\.label = formatPortLabel\(lockedType\)/);
 assert.match(source, /inputToggleLabel\(entry\.input, entry\.slot\)/);
-assert.match(source, /stateText = effective \? "yes" : enabled \? "备选" : "no"/);
+assert.match(source, /stateText = effective \? "yes" : enabled \? "alt" : "no"/);
 
 console.log("Typed bypass switch frontend checks passed.");

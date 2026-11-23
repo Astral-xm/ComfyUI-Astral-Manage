@@ -40,17 +40,17 @@ def validate_thumbnail_url(url: str) -> str:
   value = str(url or "").strip()
   parsed = urlsplit(value)
   if parsed.scheme.lower() != "https":
-    raise ThumbnailError("缩略图地址必须使用 HTTPS")
+    raise ThumbnailError("Thumbnail URL must use HTTPS")
   if parsed.username or parsed.password:
-    raise ThumbnailError("缩略图地址不能包含登录信息")
+    raise ThumbnailError("Thumbnail URL must not contain login credentials")
   host = (parsed.hostname or "").lower().rstrip(".")
   if not host:
-    raise ThumbnailError("缩略图地址缺少域名")
+    raise ThumbnailError("Thumbnail URL is missing a host name")
   trusted = host in TRUSTED_HOSTS or any(
     host.endswith(suffix) for suffix in TRUSTED_HOST_SUFFIXES
   )
   if not trusted:
-    raise ThumbnailError("缩略图域名不在允许列表中")
+    raise ThumbnailError("Thumbnail host is not in the allowlist")
   return value
 
 
@@ -60,7 +60,7 @@ def _image_extension(content_type: str, data: bytes) -> str:
       image.verify()
       image_format = str(image.format or "").upper()
   except (OSError, UnidentifiedImageError) as error:
-    raise ThumbnailError("下载内容不是有效图片") from error
+    raise ThumbnailError("Downloaded content is not a valid image") from error
   mapping = {
     "JPEG": ".jpg",
     "PNG": ".png",
@@ -70,9 +70,9 @@ def _image_extension(content_type: str, data: bytes) -> str:
     "BMP": ".bmp",
   }
   if image_format not in mapping:
-    raise ThumbnailError("缩略图图片格式不受支持")
+    raise ThumbnailError("Thumbnail image format is not supported")
   if not str(content_type or "").lower().startswith("image/"):
-    raise ThumbnailError("缩略图响应不是图片类型")
+    raise ThumbnailError("Thumbnail response is not an image type")
   return mapping[image_format]
 
 
@@ -92,20 +92,20 @@ def _download_image(url: str) -> tuple[bytes, str, str]:
         stream=True,
       )
     except requests.exceptions.RequestException as error:
-      raise ThumbnailError(f"缩略图下载失败：{error}") from error
+      raise ThumbnailError(f"Thumbnail download failed: {error}") from error
 
     if response.status_code in {301, 302, 303, 307, 308}:
       location = response.headers.get("Location")
       response.close()
       if not location:
-        raise ThumbnailError("缩略图重定向缺少目标地址")
+        raise ThumbnailError("Thumbnail redirect is missing a target URL")
       current_url = validate_thumbnail_url(
         requests.compat.urljoin(current_url, location)
       )
       continue
     if response.status_code != 200:
       response.close()
-      raise ThumbnailError(f"缩略图服务器返回 HTTP {response.status_code}")
+      raise ThumbnailError(f"Thumbnail server returned HTTP {response.status_code}")
 
     content_type = str(response.headers.get("Content-Type") or "").split(";", 1)[0]
     chunks: list[bytes] = []
@@ -116,14 +116,14 @@ def _download_image(url: str) -> tuple[bytes, str, str]:
           continue
         total += len(chunk)
         if total > MAX_THUMBNAIL_BYTES:
-          raise ThumbnailError("缩略图文件超过 8 MB 限制")
+          raise ThumbnailError("Thumbnail file exceeds the 8 MB limit")
         chunks.append(chunk)
     finally:
       response.close()
     data = b"".join(chunks)
     extension = _image_extension(content_type, data)
     return data, extension, content_type
-  raise ThumbnailError("缩略图重定向次数过多")
+  raise ThumbnailError("Too many thumbnail redirects")
 
 
 def download_thumbnail_image(url: str) -> tuple[bytes, str]:

@@ -267,7 +267,7 @@ class AstralPrompt:
         "title": (
           "STRING",
           {
-            "default": "提示词",
+            "default": "Prompt",
             "multiline": False,
           },
         ),
@@ -312,20 +312,33 @@ def _prompt_processor_operation(value: Any) -> str:
     "提示词扩写": "expand",
     "反推": "invert",
     "图像反推": "invert",
+    "automatic": "auto",
+    "expansion": "expand",
+    "inversion": "invert",
   }
   normalized = aliases.get(normalized, normalized)
   if normalized not in PROMPT_PROCESSOR_OPERATIONS:
-    raise ValueError("提示词操作必须是自动、扩写或反推")
+    raise ValueError("Prompt processor operation must be auto, expand, or invert")
   return normalized
 
 
 def _prompt_processor_mode(value: Any) -> str:
   normalized = str(value or "api").strip().casefold()
-  if normalized in {"api", "api纯文本模式", "api图片模式", "api模式"}:
+  if normalized in {
+    "api",
+    "api纯文本模式",
+    "api图片模式",
+    "api模式",
+    "api text mode",
+    "api text-only mode",
+    "api image mode",
+  }:
     return "api"
-  if normalized in {"local", "本地", "本地模式"}:
+  if normalized in {"local", "本地", "本地模式", "local mode"}:
     return "local"
-  raise ValueError("提示词处理服务必须选择 API 纯文本模式或本地模式")
+  raise ValueError(
+    "Prompt processor service must be either API text-only mode or local mode"
+  )
 
 
 def _prompt_processor_enabled(value: Any) -> bool:
@@ -441,7 +454,7 @@ def _image_frame_attachment(frame: Any, name: str) -> dict[str, Any]:
   if array.ndim == 2:
     array = array[..., None]
   if array.ndim != 3 or array.shape[-1] not in {1, 3, 4}:
-    raise ValueError("图片必须是 [H,W,C] 或 [B,H,W,C] 格式")
+    raise ValueError("Image must be in [H,W,C] or [B,H,W,C] format")
 
   if array.dtype != np.uint8:
     array = np.nan_to_num(array.astype(np.float32, copy=False))
@@ -487,9 +500,9 @@ def _image_batch_attachments(
     elif array.shape[0] in {1, 3, 4}:
       array = np.moveaxis(array, 0, -1)[None, ...]
   if array.ndim != 4:
-    raise ValueError("图片必须是 [B,H,W,C] 格式")
+    raise ValueError("Image must be in [B,H,W,C] format")
   if array.shape[-1] not in {1, 3, 4}:
-    raise ValueError("图片通道数必须是 1、3 或 4")
+    raise ValueError("Image must have 1, 3, or 4 channels")
 
   return [
     _image_frame_attachment(
@@ -518,7 +531,7 @@ def _audio_sample_rate(value: Any) -> int:
   except (TypeError, ValueError):
     normalized = 0
   if normalized <= 0:
-    raise ValueError("音频缺少有效的 sample_rate")
+    raise ValueError("Audio is missing a valid sample_rate")
   return normalized
 
 
@@ -539,9 +552,9 @@ def _audio_batch_attachments(
   elif array.ndim == 2:
     array = array[None, ...]
   if array.ndim != 3:
-    raise ValueError("音频必须是 [B,C,T] 格式")
+    raise ValueError("Audio must be in [B,C,T] format")
   if array.shape[0] <= 0 or array.shape[1] <= 0 or array.shape[2] <= 0:
-    raise ValueError("音频波形不能为空")
+    raise ValueError("Audio waveform must not be empty")
 
   attachments: list[dict[str, Any]] = []
   for position, index in enumerate(
@@ -565,7 +578,7 @@ def _audio_batch_attachments(
     payload = output.getvalue()
     if len(payload) > PROMPT_PROCESSOR_MAX_AUDIO_BYTES:
       raise ValueError(
-        "音频过长，单个 WAV 附件不能超过 "
+        "Audio is too long; a single WAV attachment must not exceed "
         f"{PROMPT_PROCESSOR_MAX_AUDIO_BYTES // 1024 // 1024} MB"
       )
     audio_number = start_index + position + 1
@@ -692,21 +705,21 @@ class AstralPromptProcessor:
           {
             "default": "",
             "multiline": True,
-            "tooltip": "要扩写的提示词；反推时作为可选提示。",
+            "tooltip": "The prompt to expand; an optional hint when inverting.",
           },
         ),
         "operation": (
           list(PROMPT_PROCESSOR_OPERATIONS),
           {
             "default": "auto",
-            "tooltip": "auto 在未连接媒体时扩写，连接媒体时反推。",
+            "tooltip": "auto expands when no media is connected and inverts when media is connected.",
           },
         ),
         "mode": (
           list(PROMPT_PROCESSOR_MODES),
           {
             "default": "api",
-            "tooltip": "API 使用纯文本或图片模式，本地模式使用 GGUF 模型。",
+            "tooltip": "API uses text-only or image mode; local mode uses a GGUF model.",
           },
         ),
         "expand_rule": (
@@ -714,7 +727,7 @@ class AstralPromptProcessor:
           {
             "default": "",
             "multiline": False,
-            "tooltip": "“提示词扩写”分类的系统提示词 ID。",
+            "tooltip": "System prompt ID from the \"Expand Prompt\" category.",
           },
         ),
         "invert_rule": (
@@ -722,7 +735,7 @@ class AstralPromptProcessor:
           {
             "default": "",
             "multiline": False,
-            "tooltip": "“图像反推”分类的系统提示词 ID。",
+            "tooltip": "System prompt ID from the \"Image Inversion\" category.",
           },
         ),
         "skill": (
@@ -730,14 +743,14 @@ class AstralPromptProcessor:
           {
             "default": "",
             "multiline": False,
-            "tooltip": "与系统提示词规则互斥的 Skill ID。",
+            "tooltip": "Skill ID, exclusive with system prompt rules.",
           },
         ),
         "clear_vram": (
           "BOOLEAN",
           {
             "default": False,
-            "tooltip": "本地模式完成全部任务后释放本地 GGUF 并清理显存。",
+            "tooltip": "Release the local GGUF and clear VRAM after all tasks finish in local mode.",
           },
         ),
         "seed": (
@@ -748,7 +761,7 @@ class AstralPromptProcessor:
             "max": 0xFFFFFFFFFFFFFFFF,
             "step": 1,
             "control_after_generate": True,
-            "tooltip": "本地模式的随机种子，支持 ComfyUI 64 位随机值；传给 llama.cpp 时使用低 32 位，API 模式不使用。",
+            "tooltip": "Random seed for local mode; supports ComfyUI 64-bit values. llama.cpp receives the low 32 bits; API mode does not use it.",
           },
         ),
       },
@@ -811,7 +824,7 @@ class AstralPromptProcessor:
       "invert": str(invert_rule or "").strip(),
     }
     if skill_id and any(rules.values()):
-      raise ValueError("系统提示词与 Skill 只能选择一个")
+      raise ValueError("Choose either a system prompt or a Skill, not both")
 
     attachments = build_prompt_processor_attachments(
       image,
@@ -833,7 +846,7 @@ class AstralPromptProcessor:
     if operation_id == "auto":
       operation_id = "invert" if attachments else "expand"
     if operation_id == "invert" and not attachments:
-      raise ValueError("图像反推需要连接图片、视频或音频")
+      raise ValueError("Image inversion requires a connected image, video, or audio input")
 
     sampling_seed = int(seed) & 0xFFFFFFFF
     data_directory = _prompt_processor_data_directory()
@@ -854,7 +867,7 @@ class AstralPromptProcessor:
         )
         output_prompt = str(result.get("text") or "").strip()
         if not output_prompt:
-          raise ValueError("图像反推没有返回结果")
+          raise ValueError("Image inversion returned no result")
       else:
         result = _run_prompt_processor_task(
           data_directory,
@@ -868,7 +881,7 @@ class AstralPromptProcessor:
         )
         output_prompt = str(result.get("text") or "").strip()
         if not output_prompt:
-          raise ValueError("提示词扩写没有返回结果")
+          raise ValueError("Prompt expansion returned no result")
     finally:
       if mode_id == "local" and _prompt_processor_enabled(clear_vram):
         error = _clear_prompt_processor_vram()

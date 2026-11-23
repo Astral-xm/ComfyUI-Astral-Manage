@@ -1,0 +1,54 @@
+{
+  "Assets Astral Prompt Processor": {
+    "display_name": "提示词处理器",
+    "description": "运行一次无状态的提示词扩写或媒体反推任务。支持最多 9 张图片、3 个视频和 3 个音频输入。操作可显式选择，也可根据媒体输入自动推断。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "inputs": {
+      "user_prompt": {
+        "name": "用户提示词",
+        "tooltip": "要扩写的提示词；反推时作为可选提示。"
+      },
+      "operation": {
+        "name": "操作",
+        "tooltip": "auto 在未连接媒体时扩写，连接媒体时反推。",
+        "options": {
+          "auto": "自动",
+          "expand": "扩写",
+          "invert": "反推"
+        }
+      },
+      "mode": {
+        "name": "服务",
+        "tooltip": "API 使用纯文本或图片模式，本地模式使用 GGUF 模型。",
+        "options": {
+          "api": "API 模式",
+          "local": "本地模式"
+        }
+      },
+      "expand_rule": {
+        "name": "扩写规则",
+        "tooltip": "“提示词扩写”分类的系统提示词 ID。"
+      },
+      "invert_rule": {
+        "name": "反推规则",
+        "tooltip": "“图像反推”分类的系统提示词 ID。"
+      },
+      "skill": {
+        "name": "Skill（与规则互斥）",
+        "tooltip": "与系统提示词规则互斥的 Skill ID。"
+      },
+      "clear_vram": {
+        "name": "清理显存",
+        "tooltip": "本地模式完成全部任务后释放本地 GGUF 并清理显存。"
+      },
+      "seed": {
+        "name": "随机种子",
+        "tooltip": "本地模式的随机种子，支持 ComfyUI 64 位随机值；传给 llama.cpp 时使用低 32 位，API 模式不使用。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "提示词"
+      }
+    }
+  }
+}

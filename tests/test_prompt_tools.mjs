@@ -327,6 +327,9 @@ const sandbox = {
   console,
   document,
   getLanguage: () => language,
+  translateUiText(value) {
+    return value;
+  },
   navigator: {
     clipboard: {
       async writeText(value) {
@@ -374,6 +377,7 @@ function buildUi() {
     translateEnButton: fakeControl("英"),
     translateZhButton: fakeControl("中"),
     invertButton: fakeToolButton("invert", "caption-zh"),
+    invertEnButton: fakeControl("EN"),
     settings: fakeControl(),
     settingsHeading: fakeControl(),
     settingsSource: fakeControl(),
@@ -521,7 +525,7 @@ test("single-click expansion fills the prompt field immediately", async () => {
   const task = tools.handleToolClick("expand");
   assert.equal(tools.state.running, true);
   assert.equal(ui.expandButton.dataset.running, "true");
-  assert.match(ui.expandButton.title, /停止/);
+  assert.match(ui.expandButton.title, /Stop prompt expansion/);
   assert.equal(ui.invertButton.disabled, true);
   await task;
 
@@ -535,7 +539,7 @@ test("single-click expansion fills the prompt field immediately", async () => {
   assert.equal(request.ruleId, "expand-rule");
   assert.deepEqual(request.skillIds, []);
   assert.equal(request.clearVram, true);
-  assert.match(ui.status.textContent, /已填充到提示词框/);
+  assert.match(ui.status.textContent, /Expansion complete\. The prompt field was updated\./);
   assert.equal(ui.result.hidden, true);
   assert.equal(ui.applyButton.hidden, true);
   assert.equal(ui.expandButton.dataset.running, "false");
@@ -573,7 +577,7 @@ test("single-click inversion copies the result instead of editing the prompt", a
     "a weathered stone bridge over a quiet river",
   );
   assert.equal(widget.value, "portrait, soft light");
-  assert.match(ui.status.textContent, /已复制到剪贴板/);
+  assert.match(ui.status.textContent, /Inversion complete\. Copied to the clipboard\./);
   assert.equal(ui.result.hidden, true);
   assert.equal(
     ui.invertButton.firstElementChild.dataset.icon,
@@ -583,8 +587,8 @@ test("single-click inversion copies the result instead of editing the prompt", a
   language = "en";
   tools.refreshTexts();
   assert.equal(
-    ui.invertButton.firstElementChild.dataset.icon,
-    "caption-en",
+    ui.invertEnButton.title,
+    "English image inversion (left-click to run, right-click to configure)",
   );
   assert.equal(tools.state.settings.invert.skillId, "caption-skill");
 });
@@ -629,7 +633,7 @@ test("right-click settings expose independent rule, Skill, mode, and VRAM contro
   assert.equal(ui.settings.hidden, false);
   assert.equal(ui.toolbar.hidden, true);
   assert.equal(tools.state.menuAction, "expand");
-  assert.match(ui.settingsHeading.textContent, /提示词扩写/);
+  assert.match(ui.settingsHeading.textContent, /Expand Prompt/);
   assert.ok(requested.some((url) => url.includes("category=expand")));
   assert.ok(requested.includes("/assets-astral/skills"));
 
@@ -707,7 +711,7 @@ test("the active icon becomes a stop control and cancellation never writes the p
   assert.equal(ui.expandButton.dataset.running, "false");
   assert.equal(widget.value, "portrait, soft light");
   assert.deepEqual(widget.callbackCalls, []);
-  assert.match(ui.status.textContent, /停止/);
+  assert.match(ui.status.textContent, /Action stopped\./);
 });
 
 
@@ -719,8 +723,8 @@ test("translation shortcuts target English and Simplified Chinese", async () => 
   assert.equal(tools.state.action, "translate");
   assert.equal(tools.state.translationTarget, "en");
   assert.equal(ui.languageSelect.value, "en");
-  assert.equal(ui.translateEnButton.title, "翻译为英文");
-  assert.equal(ui.translateZhButton.title, "翻译为简体中文");
+  assert.equal(ui.translateEnButton.title, "Translate to English");
+  assert.equal(ui.translateZhButton.title, "Translate to Simplified Chinese");
   ui.serviceSelect.value = "local";
   ui.clearVram.checked = true;
 
@@ -742,8 +746,8 @@ test("translation shortcuts target English and Simplified Chinese", async () => 
   assert.equal(request.clearVram, true);
   assert.equal(ui.result.value, "穏やかな光の肖像画");
   assert.equal(ui.result.hidden, false);
-  assert.match(ui.sentTime.textContent, /发送/);
-  assert.match(ui.receivedTime.textContent, /接收/);
+  assert.match(ui.sentTime.textContent, /Send/);
+  assert.match(ui.receivedTime.textContent, /Received/);
 
   tools.openTranslation("zh");
   assert.equal(tools.state.translationTarget, "zh");
@@ -937,7 +941,7 @@ test("icon assets, compact CSS, direct actions, and legacy removal stay wired", 
     /ui\.(ruleSelect|skillSelect|manageButton|refreshButton|ruleField|skillField)/,
   );
   assert.doesNotMatch(source, /ui\.translateButton/);
-  assert.match(source, /target === "zh" \? "中" : "英"/);
+  assert.match(source, /target === "zh" \? "ZH" : "EN"/);
   assert.match(
     source,
     /ui\.translateEnButton\.addEventListener\("click",[\s\S]*?openTranslation\("en"\)/,

@@ -38,7 +38,10 @@ class CivitaiInfoTests(unittest.TestCase):
     )
     self.assertEqual(result["recommendedStrength"]["text"], "0.6 - 0.8")
     self.assertEqual(result["recommendedStrength"]["value"], 0.7)
-    self.assertEqual(result["recommendedStrength"]["source"], "C站描述")
+    self.assertEqual(
+      result["recommendedStrength"]["source"],
+      "Civitai description",
+    )
     self.assertEqual(result["triggers"], ["DCC3LDYN@S.", "extra", "trigger"])
 
   def test_reads_english_recommendation(self):
@@ -78,7 +81,7 @@ class CivitaiInfoTests(unittest.TestCase):
 
     self.assertEqual(recommendation["text"], "0.65 - 0.85")
     self.assertEqual(recommendation["value"], 0.75)
-    self.assertEqual(recommendation["source"], "C站示例图权重")
+    self.assertEqual(recommendation["source"], "Civitai preview weight")
 
   def test_does_not_invent_a_strength(self):
     data = {
@@ -89,8 +92,11 @@ class CivitaiInfoTests(unittest.TestCase):
     self.assertIsNone(civitai_info.extract_recommended_strength(data))
 
   def test_maps_common_http_failures_to_readable_reasons(self):
-    self.assertIn("未找到", civitai_info.error_message_for_status(404))
-    self.assertIn("请求过于频繁", civitai_info.error_message_for_status(429))
+    self.assertIn("did not find", civitai_info.error_message_for_status(404))
+    self.assertIn(
+      "too many requests",
+      civitai_info.error_message_for_status(429),
+    )
     self.assertIn("HTTP 503", civitai_info.error_message_for_status(503))
 
 

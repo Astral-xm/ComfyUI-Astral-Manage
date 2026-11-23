@@ -82,7 +82,7 @@ class DuplicateScanManager:
         if task is not None:
           task["status"] = "failed"
           task["phase"] = "failed"
-          task["error"] = f"无法启动后台扫描线程：{error}"
+          task["error"] = f"Unable to start background scan thread: {error}"
           task["finishedAt"] = time.time()
           task["updatedAt"] = task["finishedAt"]
           self._finish_locked(task_id)
@@ -163,7 +163,7 @@ class DuplicateScanManager:
         if cancel_event.is_set():
           task["status"] = "cancelled"
           task["phase"] = "cancelled"
-          task["error"] = "扫描已取消"
+          task["error"] = "Scan cancelled"
         else:
           task["status"] = "failed"
           task["phase"] = "failed"
@@ -183,7 +183,7 @@ class DuplicateScanManager:
       if cancel_event.is_set():
         task["status"] = "cancelled"
         task["phase"] = "cancelled"
-        task["error"] = "扫描已取消"
+        task["error"] = "Scan cancelled"
       else:
         task["status"] = "succeeded"
         task["phase"] = "completed"

@@ -110,33 +110,39 @@ def _model_relative_path(
   require_file: bool,
   vision_model: bool = False,
 ) -> str:
-  raw = str(value or "").strip().replace("\\", "/")
+  raw = str(value or "").strip()
   if not raw:
     return ""
+  # Reject absolute, drive and UNC values from the text alone, before any
+  # file-system call: resolving or stat-ing a network share would make the
+  # server connect to it with the current Windows account.
+  if raw.startswith(("\\", "/")) or re.match(r"^[A-Za-z]:", raw):
+    raise LocalLLMError("Local model path must be a relative path under ComfyUI/models/LLM")
+  parts = [
+    part for part in raw.replace("\\", "/").split("/") if part not in {"", "."}
+  ]
+  if any(part == ".." for part in parts):
+    raise LocalLLMError("Local model path is outside the ComfyUI/models/LLM directory")
   root = os.path.realpath(os.path.abspath(models_root))
-  if os.path.isabs(raw):
-    candidate = os.path.realpath(os.path.abspath(raw))
-  else:
-    parts = [part for part in raw.split("/") if part not in {"", "."}]
-    candidate = os.path.realpath(os.path.join(root, *parts))
+  candidate = os.path.realpath(os.path.join(root, *parts))
   try:
     inside_root = os.path.commonpath([root, candidate]) == root
   except ValueError as error:
-    raise LocalLLMError("本地模型路径不在 ComfyUI/models/LLM 目录内") from error
+    raise LocalLLMError("Local model path is outside the ComfyUI/models/LLM directory") from error
   if not inside_root:
-    raise LocalLLMError("本地模型路径不在 ComfyUI/models/LLM 目录内")
+    raise LocalLLMError("Local model path is outside the ComfyUI/models/LLM directory")
   if os.path.splitext(candidate)[1].casefold() != ".gguf":
-    raise LocalLLMError("本地模型必须是 .gguf 文件")
+    raise LocalLLMError("Local model must be a .gguf file")
   is_vision_projection = "mmproj" in os.path.basename(candidate).casefold()
   if vision_model and not is_vision_projection:
-    raise LocalLLMError("视觉投影模型必须是文件名包含 mmproj 的 .gguf 文件")
+    raise LocalLLMError("Vision projection model must be a .gguf file whose name contains mmproj")
   if not vision_model and is_vision_projection:
-    raise LocalLLMError("mmproj 是视觉投影文件，不能作为对话主模型")
+    raise LocalLLMError("mmproj is a vision projection file and cannot be used as the main chat model")
   if require_file and not os.path.isfile(candidate):
-    raise LocalLLMError("选择的本地 GGUF 模型不存在，请刷新模型列表")
+    raise LocalLLMError("The selected local GGUF model does not exist; refresh the model list")
   relative = os.path.relpath(candidate, root).replace("\\", "/")
   if relative == "." or relative.startswith("../"):
-    raise LocalLLMError("本地模型路径无效")
+    raise LocalLLMError("Invalid local model path")
   return relative
 
 
@@ -149,7 +155,7 @@ def resolve_local_llm_model_path(
   root = models_root or local_llm_models_root()
   relative = _model_relative_path(value, root, require_file=require_file)
   if not relative:
-    raise LocalLLMError("请先在“本地 LLM 配置”中选择模型")
+    raise LocalLLMError("Please select a model in \"Local LLM Config\" first")
   return os.path.join(os.path.realpath(os.path.abspath(root)), *relative.split("/"))
 
 
@@ -236,10 +242,10 @@ def _integer(
   try:
     number = int(raw)
   except (TypeError, ValueError) as error:
-    raise LocalLLMError(f"本地 LLM 参数 {key} 必须是整数") from error
+    raise LocalLLMError(f"Local LLM parameter {key} must be an integer") from error
   if number < minimum or number > maximum:
     raise LocalLLMError(
-      f"本地 LLM 参数 {key} 必须在 {minimum} 到 {maximum} 之间"
+      f"Local LLM parameter {key} must be between {minimum} and {maximum}"
     )
   return number
 
@@ -255,10 +261,10 @@ def _number(
   try:
     number = float(raw)
   except (TypeError, ValueError) as error:
-    raise LocalLLMError(f"本地 LLM 参数 {key} 必须是数字") from error
+    raise LocalLLMError(f"Local LLM parameter {key} must be a number") from error
   if not minimum <= number <= maximum:
     raise LocalLLMError(
-      f"本地 LLM 参数 {key} 必须在 {minimum} 到 {maximum} 之间"
+      f"Local LLM parameter {key} must be between {minimum} and {maximum}"
     )
   return number
 
@@ -278,7 +284,7 @@ def _boolean(
     return True
   if normalized in {"false", "0", "no", "off", "关闭", "否", ""}:
     return False
-  raise LocalLLMError(f"本地 LLM 参数 {key} 必须是布尔值")
+  raise LocalLLMError(f"Local LLM parameter {key} must be a boolean value")
 
 
 def _choice(
@@ -290,7 +296,7 @@ def _choice(
   value = str(payload.get(key, default) or default).strip().casefold()
   if value not in choices:
     raise LocalLLMError(
-      f"本地 LLM 参数 {key} 必须是以下值之一：{', '.join(sorted(choices))}"
+      f"Local LLM parameter {key} must be one of: {', '.join(sorted(choices))}"
     )
   return value
 
@@ -302,7 +308,7 @@ def _normalize_local_llm_config(
   require_model_file: bool,
 ) -> dict[str, Any]:
   if not isinstance(payload, dict):
-    raise LocalLLMError("本地 LLM 配置格式错误")
+    raise LocalLLMError("Invalid local LLM config format")
   root = models_root or local_llm_models_root()
   config = {
     "version": 2,
@@ -394,7 +400,7 @@ def _normalize_local_llm_config(
     ),
   }
   if config["nUbatch"] > config["nBatch"]:
-    raise LocalLLMError("n_ubatch 不能大于 n_batch")
+    raise LocalLLMError("n_ubatch cannot be greater than n_batch")
   return config
 
 
@@ -459,7 +465,7 @@ def _local_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
       if text:
         normalized.append({"role": role, "content": text})
   if not normalized:
-    raise LocalLLMError("发给本地模型的消息为空")
+    raise LocalLLMError("Messages sent to the local model are empty")
   return normalized
 
 
@@ -484,13 +490,13 @@ def _strip_think_blocks(value: str) -> str:
 
 def _response_text(result: Any) -> str:
   if not isinstance(result, dict):
-    raise LocalLLMError("本地模型返回了无法识别的响应格式")
+    raise LocalLLMError("The local model returned an unrecognized response format")
   choices = result.get("choices")
   if not isinstance(choices, list) or not choices:
     error = result.get("error")
     if isinstance(error, dict):
       error = error.get("message") or error
-    raise LocalLLMError(f"本地模型没有返回回复：{error or '未知原因'}")
+    raise LocalLLMError(f"The local model returned no reply: {error or 'unknown reason'}")
   first = choices[0] if isinstance(choices[0], dict) else {}
   message = first.get("message")
   content = message.get("content") if isinstance(message, dict) else None
@@ -504,7 +510,7 @@ def _response_text(result: Any) -> str:
     text = str(content or "")
   text = _strip_think_blocks(text)
   if not text:
-    raise LocalLLMError("本地模型返回了空消息")
+    raise LocalLLMError("The local model returned an empty message")
   return text
 
 
@@ -545,7 +551,7 @@ def _load_chat_handler_class(
     except (ImportError, AttributeError):
       continue
   raise LocalLLMError(
-    f"当前 llama-cpp-python 不支持 {class_name}，请更新 llama-cpp-python。"
+    f"The current llama-cpp-python does not support {class_name}; please update llama-cpp-python."
   )
 
 
@@ -619,7 +625,7 @@ def _create_qwen35_handler(
       last_error = error
   if last_error is not None:
     raise last_error
-  raise LocalLLMError("创建 Qwen3.5/3.6 视觉聊天处理器失败")
+  raise LocalLLMError("Failed to create the Qwen3.5/3.6 vision chat handler")
 
 
 def _adapt_qwen38_multimodal_template(chat_template: str) -> str:
@@ -641,7 +647,7 @@ def _adapt_qwen38_multimodal_template(chat_template: str) -> str:
   adapted, count = re.subn(output_pattern, replacement, chat_template)
   if count == 0:
     raise LocalLLMError(
-      "Qwen3.8 聊天模板包含 <|image_pad|>，但无法适配当前视觉处理器"
+      "Qwen3.8 chat template contains <|image_pad|> but cannot be adapted to the current vision handler"
     )
   return adapted
 
@@ -688,8 +694,8 @@ def _create_qwen38_vision_handler(
     )
   except Exception as fallback_error:
     raise LocalLLMError(
-      "无法创建 Qwen3.8 视觉聊天处理器："
-      f"GenericMTMD={generic_error or '不可用'}；"
+      "Unable to create the Qwen3.8 vision chat handler: "
+      f"GenericMTMD={generic_error or 'unavailable'}; "
       f"Qwen35 fallback={fallback_error}"
     ) from fallback_error
 
@@ -706,13 +712,13 @@ def _create_qwen38_text_handler(
     )
   except Exception as error:
     raise LocalLLMError(
-      "当前 llama-cpp-python 不支持 Qwen3.8 聊天模板"
+      "The current llama-cpp-python does not support the Qwen3.8 chat template"
     ) from error
   metadata = getattr(llama, "metadata", {}) or {}
   chat_template = metadata.get("tokenizer.chat_template")
   if not chat_template:
     raise LocalLLMError(
-      "Qwen3.8 GGUF 缺少 tokenizer.chat_template，无法应用推理设置"
+      "Qwen3.8 GGUF is missing tokenizer.chat_template; cannot apply reasoning settings"
     )
   model = getattr(llama, "_model", None)
 
@@ -911,8 +917,8 @@ class LocalLlamaManager:
       from llama_cpp import Llama
     except Exception as error:
       raise LocalLLMError(
-        "未加载 llama_cpp。请先在 ComfyUI Python 环境中安装 "
-        "llama-cpp-python。"
+        "llama_cpp is not loaded. Please install "
+        "llama-cpp-python in the ComfyUI Python environment first."
       ) from error
     return Llama
 
@@ -1008,14 +1014,14 @@ class LocalLlamaManager:
       kwargs["use_mmap"] = bool(config["useMmap"])
     elif config["useMmap"]:
       raise LocalLLMError(
-        "当前 llama-cpp-python 不支持 use_mmap，请更新该依赖"
+        "The current llama-cpp-python does not support use_mmap; please update the dependency"
       )
 
     flash_attention = str(config["flashAttention"])
     if flash_attention != "auto":
       if not _supports_parameter(factory, "flash_attn_type"):
         raise LocalLLMError(
-          "当前 llama-cpp-python 不支持 Flash Attention 设置"
+          "The current llama-cpp-python does not support the Flash Attention setting"
         )
       kwargs["flash_attn_type"] = (
         1 if flash_attention == "enabled" else 0
@@ -1026,7 +1032,7 @@ class LocalLlamaManager:
         parameter = "type_k" if key_name == "kvCacheTypeK" else "type_v"
         if not _supports_parameter(factory, parameter):
           raise LocalLLMError(
-            "当前 llama-cpp-python 不支持 KV cache q8_0 量化"
+            "The current llama-cpp-python does not support KV cache q8_0 quantization"
           )
         kwargs[parameter] = 8
 
@@ -1037,7 +1043,7 @@ class LocalLlamaManager:
       llama = factory(**kwargs)
     except Exception as error:
       raise LocalLLMError(
-        f"无法加载本地 GGUF 模型“{os.path.basename(model_path)}”：{error}"
+        f"Unable to load local GGUF model \"{os.path.basename(model_path)}\": {error}"
       ) from error
     if deferred_handler:
       try:
@@ -1131,7 +1137,7 @@ class LocalLlamaManager:
           },
         )
       except Exception as error:
-        raise LocalLLMError(f"本地模型推理失败：{error}") from error
+        raise LocalLLMError(f"Local model inference failed: {error}") from error
       finally:
         with self._state_lock:
           if self._active_llama is llama:

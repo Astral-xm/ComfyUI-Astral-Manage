@@ -6,6 +6,7 @@ import binascii
 import copy
 import hashlib
 import io
+import ipaddress
 import json
 import os
 import re
@@ -116,7 +117,7 @@ def normalize_chat_request_id(value: Any) -> str:
   if not request_id:
     return uuid.uuid4().hex
   if not CHAT_REQUEST_ID_RE.fullmatch(request_id):
-    raise ChatServiceError("请求 ID 格式无效")
+    raise ChatServiceError("Invalid request ID format")
   return request_id
 
 
@@ -124,7 +125,7 @@ def register_chat_request(value: Any) -> str:
   request_id = normalize_chat_request_id(value)
   with _CHAT_REQUESTS_LOCK:
     if request_id in _CHAT_REQUESTS:
-      raise ChatServiceError("该请求 ID 正在处理中")
+      raise ChatServiceError("This request ID is already being processed")
     cancelled_at = _CHAT_PRE_CANCELLED.pop(request_id, None)
     event = threading.Event()
     if cancelled_at is not None:
@@ -174,7 +175,7 @@ def _raise_if_cancelled(request_id: str | None) -> None:
     state = _CHAT_REQUESTS.get(request_id)
     cancelled = bool(state and state["event"].is_set())
   if cancelled:
-    raise ChatCancelled("操作已停止")
+    raise ChatCancelled("Operation stopped")
 
 
 def _register_request_closer(
@@ -205,12 +206,45 @@ def _unregister_request_closer(
     state["closers"] = [item for item in closers if item is not closer]
 
 
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+  """Refuse redirects so a request never carries credentials to another host."""
+
+  def redirect_request(self, req, fp, code, msg, headers, newurl):
+    return None
+
+
+_NO_REDIRECT_OPENER = urllib.request.build_opener(_NoRedirectHandler)
+
+
+def _open_no_redirect(request: urllib.request.Request, timeout: int):
+  return _NO_REDIRECT_OPENER.open(request, timeout=timeout)
+
+
+def _remote_http_url(value: str) -> str:
+  url = str(value or "").strip()
+  parsed = urllib.parse.urlsplit(url)
+  if parsed.scheme.casefold() not in {"http", "https"} or not parsed.hostname:
+    raise ChatServiceError("API returned an image URL that is not http or https")
+  try:
+    address = ipaddress.ip_address(parsed.hostname)
+  except ValueError:
+    address = None
+  if address is not None and (
+    address.is_link_local
+    or address.is_multicast
+    or address.is_unspecified
+    or address.is_reserved
+  ):
+    raise ChatServiceError("API returned an image URL on a reserved address")
+  return url
+
+
 def normalize_chat_url(base_url: str) -> str:
   url = str(base_url or "").strip()
   if not url:
-    raise ChatServiceError("请先填写 API 地址")
+    raise ChatServiceError("Please enter the API address first")
   if not re.match(r"^https?://", url, re.IGNORECASE):
-    raise ChatServiceError("API 地址必须使用 http:// 或 https://")
+    raise ChatServiceError("The API address must use http:// or https://")
   if url.endswith("#"):
     return url[:-1].rstrip("/")
   parsed = urllib.parse.urlsplit(url)
@@ -234,9 +268,9 @@ def normalize_chat_url(base_url: str) -> str:
 def normalize_models_url(base_url: str) -> str:
   url = str(base_url or "").strip()
   if not url:
-    raise ChatServiceError("请先填写 API 地址")
+    raise ChatServiceError("Please enter the API address first")
   if not re.match(r"^https?://", url, re.IGNORECASE):
-    raise ChatServiceError("API 地址必须使用 http:// 或 https://")
+    raise ChatServiceError("The API address must use http:// or https://")
   if url.endswith("#"):
     url = url[:-1].rstrip("/")
   parsed = urllib.parse.urlsplit(url)
@@ -360,7 +394,7 @@ def _read_limited(path: str, maximum: int, label: str) -> bytes:
   size = os.path.getsize(path)
   if size > maximum:
     raise ChatServiceError(
-      f"{label}文件过大（{size / 1024 / 1024:.1f} MB），上限为 "
+      f"{label} is too large ({size / 1024 / 1024:.1f} MB); the limit is "
       f"{maximum / 1024 / 1024:.0f} MB"
     )
   with open(path, "rb") as source:
@@ -399,7 +433,7 @@ def _compress_image_payload(
       )
   except (Image.DecompressionBombError, Image.UnidentifiedImageError, OSError) as error:
     raise ChatServiceError(
-      f"无法压缩{label}，请检查图片是否损坏"
+      f"Unable to compress {label}; check whether the image is corrupted"
     ) from error
   return output.getvalue()
 
@@ -411,10 +445,10 @@ def _compressed_image_data_url(
   jpeg_quality: int = IMAGE_JPEG_QUALITY,
   progressive: bool = False,
 ) -> str:
-  payload = _read_limited(path, MAX_IMAGE_BYTES, "图片")
+  payload = _read_limited(path, MAX_IMAGE_BYTES, "image")
   compressed = _compress_image_payload(
     payload,
-    f"图片 {os.path.basename(path)}",
+    f"image {os.path.basename(path)}",
     max_edge=max_edge,
     jpeg_quality=jpeg_quality,
     progressive=progressive,
@@ -433,14 +467,14 @@ def _inline_image_payload(
   else:
     text = str(value or "").strip()
     if not text:
-      raise ChatServiceError(f"{label}没有可读取的图片数据")
+      raise ChatServiceError(f"{label} has no readable image data")
     if text.startswith("data:"):
       header, separator, encoded = text.partition(",")
       if not separator or ";base64" not in header.casefold():
-        raise ChatServiceError(f"{label}不是有效的 base64 图片")
+        raise ChatServiceError(f"{label} is not a valid base64 image")
       mime_type = header[5:].split(";", 1)[0].strip().casefold()
       if not mime_type.startswith("image/"):
-        raise ChatServiceError(f"{label}的数据类型不是图片")
+        raise ChatServiceError(f"{label} is not an image type")
       text = encoded
     try:
       raw = base64.b64decode(
@@ -448,13 +482,13 @@ def _inline_image_payload(
         validate=True,
       )
     except (ValueError, binascii.Error) as error:
-      raise ChatServiceError(f"{label}不是有效的 base64 图片") from error
+      raise ChatServiceError(f"{label} is not a valid base64 image") from error
   if not raw:
-    raise ChatServiceError(f"{label}没有可读取的图片数据")
+    raise ChatServiceError(f"{label} has no readable image data")
   if len(raw) > MAX_IMAGE_BYTES:
     raise ChatServiceError(
-      f"{label}过大（{len(raw) / 1024 / 1024:.1f} MB），"
-      f"上限为 {MAX_IMAGE_BYTES / 1024 / 1024:.0f} MB"
+      f"{label} is too large ({len(raw) / 1024 / 1024:.1f} MB); "
+      f"the limit is {MAX_IMAGE_BYTES / 1024 / 1024:.0f} MB"
     )
   return raw
 
@@ -469,14 +503,14 @@ def _inline_audio_payload(
   else:
     text = str(value or "").strip()
     if not text:
-      raise ChatServiceError(f"{label}没有可读取的音频数据")
+      raise ChatServiceError(f"{label} has no readable audio data")
     if text.startswith("data:"):
       header, separator, encoded = text.partition(",")
       if not separator or ";base64" not in header.casefold():
-        raise ChatServiceError(f"{label}不是有效的 base64 音频")
+        raise ChatServiceError(f"{label} is not a valid base64 audio")
       mime_type = header[5:].split(";", 1)[0].strip().casefold()
       if not mime_type.startswith("audio/"):
-        raise ChatServiceError(f"{label}的数据类型不是音频")
+        raise ChatServiceError(f"{label} is not an audio type")
       text = encoded
     try:
       raw = base64.b64decode(
@@ -484,13 +518,13 @@ def _inline_audio_payload(
         validate=True,
       )
     except (ValueError, binascii.Error) as error:
-      raise ChatServiceError(f"{label}不是有效的 base64 音频") from error
+      raise ChatServiceError(f"{label} is not a valid base64 audio") from error
   if not raw:
-    raise ChatServiceError(f"{label}没有可读取的音频数据")
+    raise ChatServiceError(f"{label} has no readable audio data")
   if len(raw) > MAX_AUDIO_BYTES:
     raise ChatServiceError(
-      f"{label}过大（{len(raw) / 1024 / 1024:.1f} MB），"
-      f"上限为 {MAX_AUDIO_BYTES / 1024 / 1024:.0f} MB"
+      f"{label} is too large ({len(raw) / 1024 / 1024:.1f} MB); "
+      f"the limit is {MAX_AUDIO_BYTES / 1024 / 1024:.0f} MB"
     )
   return raw
 
@@ -503,7 +537,8 @@ def _find_media_tool(name: str) -> str:
   path = next((item for item in candidates if item and os.path.isfile(item)), None)
   if not path:
     raise ChatServiceError(
-      f"未找到 {name}，无法从视频中抽取画面。请安装 ffmpeg 后重试。"
+      f"{name} was not found, so frames cannot be extracted from the video. "
+      f"Install ffmpeg and try again."
     )
   return path
 
@@ -603,7 +638,7 @@ def _sample_video_frames(
         except (OSError, subprocess.SubprocessError):
           continue
         if process.returncode == 0 and os.path.isfile(frame_path):
-          frames.append(_read_limited(frame_path, 8 * 1024 * 1024, "视频帧"))
+          frames.append(_read_limited(frame_path, 8 * 1024 * 1024, "video frame"))
     else:
       output_pattern = os.path.join(temporary_directory, "thumb-%02d.jpg")
       try:
@@ -629,18 +664,18 @@ def _sample_video_frames(
           creationflags=WINDOWS_NO_WINDOW,
         )
       except (OSError, subprocess.SubprocessError) as error:
-        raise ChatServiceError("从视频抽取画面失败") from error
+        raise ChatServiceError("Failed to extract frames from the video") from error
       if process.returncode != 0:
-        raise ChatServiceError("ffmpeg 无法从视频抽取画面")
+        raise ChatServiceError("ffmpeg could not extract frames from the video")
       for index in range(1, maximum + 1):
         frame_path = os.path.join(
           temporary_directory,
           f"thumb-{index:02d}.jpg",
         )
         if os.path.isfile(frame_path):
-          frames.append(_read_limited(frame_path, 8 * 1024 * 1024, "视频帧"))
+          frames.append(_read_limited(frame_path, 8 * 1024 * 1024, "video frame"))
   if not frames:
-    raise ChatServiceError("未能从视频中抽取到可发送的画面")
+    raise ChatServiceError("No frames could be extracted from the video to send")
   return frames
 
 
@@ -665,16 +700,18 @@ def _media_cache_root(name: str) -> str:
 def _original_audio_payload(path: str, source_size: int, audio_format: str) -> tuple[bytes, str]:
   if source_size > MAX_AUDIO_BYTES:
     raise ChatServiceError(
-      f"音频压缩失败，且原始文件超过 {MAX_AUDIO_BYTES / 1024 / 1024:.0f} MB"
+      f"Audio compression failed and the original file exceeds "
+      f"{MAX_AUDIO_BYTES / 1024 / 1024:.0f} MB"
     )
-  return _read_limited(path, MAX_AUDIO_BYTES, "音频"), audio_format
+  return _read_limited(path, MAX_AUDIO_BYTES, "audio"), audio_format
 
 
 def _compressed_audio_payload(path: str) -> tuple[bytes, str]:
   source_size = os.path.getsize(path)
   if source_size > MAX_AUDIO_SOURCE_BYTES:
     raise ChatServiceError(
-      f"音频文件过大（{source_size / 1024 / 1024:.1f} MB），无法自动压缩"
+      f"Audio file is too large ({source_size / 1024 / 1024:.1f} MB) and "
+      f"cannot be compressed automatically"
     )
 
   audio_format = _audio_format(path)
@@ -682,7 +719,7 @@ def _compressed_audio_payload(path: str) -> tuple[bytes, str]:
     audio_format in {"mp3", "wav"}
     and source_size <= AUDIO_COMPRESSION_THRESHOLD_BYTES
   ):
-    return _read_limited(path, MAX_AUDIO_BYTES, "音频"), audio_format
+    return _read_limited(path, MAX_AUDIO_BYTES, "audio"), audio_format
 
   try:
     ffmpeg = _find_media_tool("ffmpeg")
@@ -725,7 +762,7 @@ def _compressed_audio_payload(path: str) -> tuple[bytes, str]:
         compressed = _read_limited(
           output_path,
           MAX_AUDIO_BYTES,
-          "压缩后的音频",
+          "compressed audio",
         )
         if compressed and (
           len(compressed) < source_size
@@ -770,17 +807,17 @@ def build_attachment_parts(
           else ""
         )
       )
-      name = str(attachment.get("name") or "内联图片")
+      name = str(attachment.get("name") or "Inline image")
       if kind == "image":
         payload = _inline_image_payload(
           inline_data,
-          label=f"附件 {name}",
+          label=f"attachment {name}",
         )
         payload_format = "image/jpeg"
       elif kind == "audio":
         payload = _inline_audio_payload(
           inline_data,
-          label=f"附件 {name}",
+          label=f"attachment {name}",
         )
         payload_format = (
           str(attachment.get("format") or "").strip().lower()
@@ -788,14 +825,16 @@ def build_attachment_parts(
           or "wav"
         )
       else:
-        raise ChatServiceError("内联附件目前只支持图片和音频")
+        raise ChatServiceError(
+          "Inline attachments currently support only images and audio"
+        )
     else:
       try:
         path = _attachment_path(attachment)
       except (AssetPathError, FileNotFoundError, PermissionError) as error:
         raise ChatServiceError(
-          f"无法读取附件 {attachment.get('root', '')}/"
-          f"{attachment.get('path', '')}：{error}"
+          f"Unable to read attachment {attachment.get('root', '')}/"
+          f"{attachment.get('path', '')}: {error}"
         ) from error
       kind = media_kind(path)
       name = str(attachment.get("name") or os.path.basename(path))
@@ -851,7 +890,7 @@ def build_attachment_parts(
       if item["payload"] is not None:
         compressed = _compress_image_payload(
           item["payload"],
-          f"图片 {name}",
+          f"image {name}",
           max_edge=max_image_edge,
           jpeg_quality=image_jpeg_quality,
           progressive=progressive_jpeg,
@@ -872,7 +911,7 @@ def build_attachment_parts(
         }
       )
       parts.append(
-        {"type": "text", "text": f"[图片素材 @{mention}：{name}]"}
+        {"type": "text", "text": f"[Image asset @{mention}: {name}]"}
       )
     elif kind == "audio":
       if item["payload"] is not None:
@@ -891,7 +930,7 @@ def build_attachment_parts(
         }
       )
       parts.append(
-        {"type": "text", "text": f"[音频素材 @{mention}：{name}]"}
+        {"type": "text", "text": f"[Audio asset @{mention}: {name}]"}
       )
     elif kind == "video":
       frames = _sample_video_frames(
@@ -902,15 +941,15 @@ def build_attachment_parts(
         {
           "type": "text",
           "text": (
-            f"[视频素材 @{mention}：{name}，"
-            f"按时间顺序抽取了 {len(frames)} 帧供分析]"
+            f"[Video asset @{mention}: {name}, "
+            f"{len(frames)} frames were sampled in chronological order for analysis]"
           ),
         }
       )
       for index, frame in enumerate(frames, start=1):
         compressed = _compress_image_payload(
           frame,
-          f"视频帧 {index}",
+          f"video frame {index}",
           max_edge=max_image_edge,
           jpeg_quality=image_jpeg_quality,
           progressive=progressive_jpeg,
@@ -923,7 +962,9 @@ def build_attachment_parts(
           }
         )
     else:
-      raise ChatServiceError(f"附件不是受支持的图片、音频或视频：{name}")
+      raise ChatServiceError(
+        f"Attachment is not a supported image, audio, or video: {name}"
+      )
   return parts
 
 
@@ -943,7 +984,7 @@ def build_user_content(
     progressive_jpeg=progressive_jpeg,
   )
   if not message and not parts:
-    raise ChatServiceError("消息内容不能为空")
+    raise ChatServiceError("Message content cannot be empty")
   if not parts:
     return message
   return [
@@ -1065,7 +1106,7 @@ def _request_payload(
     "stream": False,
   }
   if not payload["model"]:
-    raise ChatServiceError("请先填写模型名称")
+    raise ChatServiceError("Please enter the model name first")
   if level <= 0:
     payload["temperature"] = float(config.get("temperature", 0.7))
     payload["top_p"] = float(config.get("topP", 0.95))
@@ -1327,7 +1368,7 @@ def _extract_inline_images(
   cleaned = _BARE_DATA_IMAGE_RE.sub(
     lambda match: (
       _append_response_image(images, seen, match.group(0))
-      or "[图片]"
+      or "[Image]"
     ),
     cleaned,
   )
@@ -1338,7 +1379,7 @@ def _extract_inline_images(
     if not decoded or not _generated_image_format(decoded):
       return match.group(0)
     _append_response_image(images, seen, encoded)
-    return "[图片]"
+    return "[Image]"
 
   cleaned = _BARE_BASE64_IMAGE_RE.sub(replace_bare_base64, cleaned)
   return cleaned.strip()
@@ -1346,7 +1387,7 @@ def _extract_inline_images(
 
 def _response_text(payload: Any) -> ChatCompletionText:
   if not isinstance(payload, dict):
-    raise ChatAPIError("API 返回了无法识别的响应格式")
+    raise ChatAPIError("API returned an unrecognized response format")
   images: list[ResponseImage] = []
   seen_images: set[str] = set()
   choices = payload.get("choices")
@@ -1367,7 +1408,7 @@ def _response_text(payload: Any) -> ChatCompletionText:
       seen_images,
     )
     if not images:
-      raise ChatAPIError("API 响应中没有 choices")
+      raise ChatAPIError("API response has no choices")
     return ChatCompletionText("", tuple(images))
   first = choices[0] if isinstance(choices[0], dict) else {}
   message = first.get("message")
@@ -1393,7 +1434,7 @@ def _response_text(payload: Any) -> ChatCompletionText:
   if images:
     images = images[:MAX_GENERATED_IMAGES]
   if not text and not images:
-    raise ChatAPIError("API 返回了空消息")
+    raise ChatAPIError("API returned an empty message")
   if len(text) > MAX_RESPONSE_CHARS:
     text = text[:MAX_RESPONSE_CHARS]
   return ChatCompletionText(text, tuple(images))
@@ -1408,15 +1449,15 @@ def _generated_image_bytes(
   if reference.data:
     return reference.data, reference.mime_type
   if not reference.url:
-    raise ChatServiceError("API 返回的图片没有可读取的地址")
+    raise ChatServiceError("The image returned by the API has no readable URL")
   _raise_if_cancelled(request_id)
   request = urllib.request.Request(
-    reference.url,
+    _remote_http_url(reference.url),
     method="GET",
     headers={"Accept": "image/*"},
   )
   try:
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    with _open_no_redirect(request, timeout) as response:
       closer = response.close
       closer_registered = _register_request_closer(request_id, closer)
       try:
@@ -1430,11 +1471,15 @@ def _generated_image_bytes(
     raise
   except Exception as error:
     _raise_if_cancelled(request_id)
-    raise ChatServiceError(f"无法下载 API 返回的图片：{error}") from error
+    raise ChatServiceError(
+      f"Unable to download the image returned by the API: {error}"
+    ) from error
   if not data:
-    raise ChatServiceError("API 返回的图片为空")
+    raise ChatServiceError("The image returned by the API is empty")
   if len(data) > MAX_GENERATED_IMAGE_BYTES:
-    raise ChatServiceError("API 返回的图片超过 40 MB，已拒绝保存")
+    raise ChatServiceError(
+      "The image returned by the API exceeds 40 MB and was not saved"
+    )
   return data, mime_type
 
 
@@ -1474,7 +1519,8 @@ def _save_generated_response_images(
       extension = GENERATED_IMAGE_EXTENSIONS.get(image_format)
       if not extension:
         raise ChatServiceError(
-          f"API 返回了不支持的图片格式：{image_format or '未知'}"
+          f"API returned an unsupported image format: "
+          f"{image_format or 'unknown'}"
         )
       filename = f"generated-{uuid.uuid4().hex[:16]}{extension}"
       target = os.path.join(target_directory, filename)
@@ -1500,8 +1546,10 @@ def _save_generated_response_images(
     except Exception as error:
       failures.append(str(error))
   if not attachments and images:
-    detail = f"：{failures[0]}" if failures else ""
-    raise ChatServiceError(f"API 返回了图片，但图片保存失败{detail}")
+    detail = f": {failures[0]}" if failures else ""
+    raise ChatServiceError(
+      f"API returned images but they could not be saved{detail}"
+    )
   return attachments
 
 
@@ -1555,7 +1603,7 @@ def _http_post_json(
     },
   )
   try:
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    with _open_no_redirect(request, timeout) as response:
       closer = response.close
       closer_registered = _register_request_closer(request_id, closer)
       try:
@@ -1568,7 +1616,7 @@ def _http_post_json(
         return response.status, json.loads(raw), raw
       except json.JSONDecodeError as error:
         raise ChatAPIError(
-          f"API 返回了无法解析的 JSON（HTTP {response.status}）",
+          f"API returned unparseable JSON (HTTP {response.status})",
           response.status,
         ) from error
   except urllib.error.HTTPError as error:
@@ -1584,14 +1632,18 @@ def _http_post_json(
     _raise_if_cancelled(request_id)
     reason = getattr(error, "reason", error)
     if isinstance(reason, (socket.timeout, TimeoutError)):
-      raise ChatAPIError("API 请求超时，请检查服务状态或增大超时时间") from error
-    raise ChatAPIError(f"无法连接 API：{reason}") from error
+      raise ChatAPIError(
+        "API request timed out; check the service status or increase the timeout"
+      ) from error
+    raise ChatAPIError(f"Unable to connect to the API: {reason}") from error
   except (socket.timeout, TimeoutError) as error:
     _raise_if_cancelled(request_id)
-    raise ChatAPIError("API 请求超时，请检查服务状态或增大超时时间") from error
+    raise ChatAPIError(
+      "API request timed out; check the service status or increase the timeout"
+    ) from error
   except (ConnectionError, OSError) as error:
     _raise_if_cancelled(request_id)
-    raise ChatAPIError(f"无法连接 API：{error}") from error
+    raise ChatAPIError(f"Unable to connect to the API: {error}") from error
   except ChatCancelled:
     raise
   except Exception:
@@ -1613,17 +1665,17 @@ def _http_get_json(
     },
   )
   try:
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    with _open_no_redirect(request, timeout) as response:
       raw = response.read().decode("utf-8", errors="replace")
       try:
         payload = json.loads(raw)
       except json.JSONDecodeError as error:
         raise ChatAPIError(
-          f"API 返回了无法解析的 JSON（HTTP {response.status}）",
+          f"API returned unparseable JSON (HTTP {response.status})",
           response.status,
         ) from error
       if not isinstance(payload, dict):
-        raise ChatAPIError("模型列表接口返回了无法识别的数据")
+        raise ChatAPIError("The model list endpoint returned unrecognized data")
       return response.status, payload, raw
   except urllib.error.HTTPError as error:
     raw = error.read().decode("utf-8", errors="replace")
@@ -1635,32 +1687,30 @@ def _http_get_json(
   except urllib.error.URLError as error:
     reason = getattr(error, "reason", error)
     if isinstance(reason, (socket.timeout, TimeoutError)):
-      raise ChatAPIError("拉取模型列表超时，请检查服务状态") from error
-    raise ChatAPIError(f"无法连接模型列表接口：{reason}") from error
+      raise ChatAPIError(
+        "Fetching the model list timed out; check the service status"
+      ) from error
+    raise ChatAPIError(
+      f"Unable to connect to the model list endpoint: {reason}"
+    ) from error
   except (socket.timeout, TimeoutError) as error:
-    raise ChatAPIError("拉取模型列表超时，请检查服务状态") from error
+    raise ChatAPIError(
+      "Fetching the model list timed out; check the service status"
+    ) from error
 
 
 def _api_error_message(
   status: int,
-  payload: dict[str, Any] | None,
-  raw: str,
+  _payload: dict[str, Any] | None = None,
+  _raw: str = "",
 ) -> str:
-  detail = ""
-  if isinstance(payload, dict):
-    error = payload.get("error")
-    if isinstance(error, dict):
-      detail = str(error.get("message") or error.get("detail") or "")
-    elif error:
-      detail = str(error)
-    detail = detail or str(payload.get("message") or "")
-  detail = detail or raw.strip()
-  detail = re.sub(r"\s+", " ", detail)[:1000]
+  # The upstream response body is never echoed back: it can disclose internal
+  # service details when the base URL points inside the local network.
   if status == 401:
-    return "API Key 无效或缺失"
+    return "API Key is invalid or missing"
   if status == 404:
-    return f"API 地址或模型不存在（HTTP 404）{f'：{detail}' if detail else ''}"
-  return f"API 请求失败（HTTP {status}）{f'：{detail}' if detail else ''}"
+    return "API address or model does not exist (HTTP 404)"
+  return f"API request failed (HTTP {status})"
 
 
 def list_api_models(
@@ -1681,8 +1731,9 @@ def list_api_models(
     message = _api_error_message(status, payload, raw)
     if status == 404:
       message = (
-        "模型列表接口不可用（HTTP 404）。请确认 API 地址兼容 "
-        "OpenAI /models，或直接手动填写模型名称。"
+        "The model list endpoint is unavailable (HTTP 404). Confirm that the "
+        "API address is compatible with OpenAI /models, or enter the model name "
+        "manually."
       )
     raise ChatAPIError(message, status)
   candidates: Any = None
@@ -1692,7 +1743,7 @@ def list_api_models(
         candidates = payload[key]
         break
   if not isinstance(candidates, list):
-    raise ChatAPIError("模型列表响应中没有 data、models 或 items 数组")
+    raise ChatAPIError("The model list response has no data, models, or items array")
   models: list[str] = []
   seen: set[str] = set()
   for item in candidates:
@@ -1712,7 +1763,7 @@ def list_api_models(
     seen.add(model_id)
     models.append(model_id)
   if not models:
-    raise ChatAPIError("模型列表为空")
+    raise ChatAPIError("The model list is empty")
   models.sort(key=str.casefold)
   return models[:5000]
 
@@ -1770,7 +1821,7 @@ def request_chat_completion(
       raise last_error
   if last_error:
     raise last_error
-  raise ChatAPIError("API 请求失败")
+  raise ChatAPIError("API request failed")
 
 
 def run_chat_turn(
@@ -1908,10 +1959,10 @@ def build_translation_messages(
 ) -> list[dict[str, Any]]:
   cleaned = str(text or "").strip()
   if not cleaned:
-    raise ChatServiceError("请先输入要翻译的文本")
+    raise ChatServiceError("Please enter the text to translate first")
   target = str(target_language or "").strip()
   if not target:
-    raise ChatServiceError("请选择目标语言")
+    raise ChatServiceError("Please choose a target language")
   messages = [
     {
       "role": "system",
@@ -2028,38 +2079,41 @@ def _validate_local_attachments(
       mime_type = str(attachment.get("mimeType") or "").strip().lower()
       if not kind and mime_type.startswith("image/"):
         kind = "image"
-      path = str(attachment.get("name") or "内联附件")
+      path = str(attachment.get("name") or "inline attachment")
     else:
       try:
         path = _attachment_path(attachment)
       except (AssetPathError, FileNotFoundError, PermissionError) as error:
         raise ChatServiceError(
-          f"无法读取附件 {attachment.get('root', '')}/"
-          f"{attachment.get('path', '')}：{error}"
+          f"Unable to read attachment {attachment.get('root', '')}/"
+          f"{attachment.get('path', '')}: {error}"
         ) from error
       kind = media_kind(path)
     if kind not in {"image", "video", "audio"}:
       raise ChatServiceError(
-        f"本地模型不支持这个素材：{attachment.get('name') or path}"
+        f"The local model does not support this asset: "
+        f"{attachment.get('name') or path}"
       )
     kinds.add(kind)
 
   vision_model = str(config.get("visionModelPath") or "").strip()
   if kinds & {"image", "video"} and not vision_model:
     raise ChatServiceError(
-      "本地模型收到图片或视频素材，但尚未选择视觉投影模型（mmproj）。"
-      "请到“本地 LLM 配置”选择与主模型匹配的 mmproj。"
+      "The local model received image or video assets, but no vision "
+      "projection model (mmproj) is selected. Go to \"Local LLM Configuration\" "
+      "and choose the mmproj that matches the main model."
     )
   if "audio" in kinds:
     family = local_model_family(str(config.get("modelPath") or ""))
     if family != "gemma4":
       raise ChatServiceError(
-        "当前本地主模型不支持音频输入。音频对话仅支持 Gemma4。"
+        "The current local main model does not support audio input. "
+        "Audio chat is supported only by Gemma4."
       )
     if not vision_model:
       raise ChatServiceError(
-        "Gemma4 音频输入需要视觉投影模型（mmproj），"
-        "请先选择与主模型匹配的 BF16 mmproj。"
+        "Gemma4 audio input requires a vision projection model (mmproj). "
+        "Select the BF16 mmproj that matches the main model first."
       )
 
 
@@ -2089,7 +2143,7 @@ def run_local_chat_turn(
   if not isinstance(selected_attachments, list):
     selected_attachments = []
   if not cleaned and not selected_attachments:
-    raise ChatServiceError("请先输入消息或选择素材")
+    raise ChatServiceError("Please enter a message or select assets first")
   selected_skills = normalize_conversation_skill_ids(
     skill_ids
     if skill_ids is not None
@@ -2175,7 +2229,7 @@ def optimize_prompt(
 ) -> str:
   cleaned = str(text or "").strip()
   if not cleaned:
-    raise ChatServiceError("请先输入要优化的提示词")
+    raise ChatServiceError("Please enter the prompt to optimize first")
   config = resolve_api_config(data_directory, "text")
   _, skill_context = build_skill_context(
     normalize_conversation_skill_ids(skill_ids)
@@ -2208,7 +2262,7 @@ def normalize_inspiration_tags(tags: Any) -> list[dict[str, str]]:
   if tags is None:
     return []
   if not isinstance(tags, list):
-    raise ChatServiceError("灵感标签必须是数组")
+    raise ChatServiceError("Inspiration tags must be an array")
   normalized: list[dict[str, str]] = []
   seen: set[tuple[str, str]] = set()
   for raw_tag in tags:
@@ -2240,7 +2294,7 @@ def _inspiration_target(value: Any) -> tuple[str, str]:
     return "image", "文生图（静态画面）"
   if normalized in {"video", "t2v", "文生视频", "视频"}:
     return "video", "文生视频（连续镜头）"
-  raise ChatServiceError("生成目标必须是文生图或文生视频")
+  raise ChatServiceError("The generation target must be text-to-image or text-to-video")
 
 
 def _inspiration_language(value: Any) -> tuple[str, str]:
@@ -2249,7 +2303,7 @@ def _inspiration_language(value: Any) -> tuple[str, str]:
     return "en", "English"
   if normalized in {"zh", "zh-cn", "chinese", "中文"}:
     return "zh", "简体中文"
-  raise ChatServiceError("输出语言必须是英文或中文")
+  raise ChatServiceError("The output language must be English or Chinese")
 
 
 def _inspiration_mode(value: Any) -> str:
@@ -2264,7 +2318,9 @@ def _inspiration_mode(value: Any) -> str:
     return "api"
   if normalized in {"local", "本地", "本地模式"}:
     return "local"
-  raise ChatServiceError("生成方式必须是 API纯文本模式或本地模式")
+  raise ChatServiceError(
+    "Generation mode must be API text-only mode or local mode"
+  )
 
 
 INSPIRATION_VISUAL_RULES = (
@@ -2286,7 +2342,9 @@ def generate_inspiration_prompt(
   cleaned_prompt = str(base_prompt or "").strip()
   selected_tags = normalize_inspiration_tags(tags)
   if not cleaned_prompt and not selected_tags:
-    raise ChatServiceError("请先输入画面想法或选择至少一个灵感标签")
+    raise ChatServiceError(
+      "Please enter an image idea or select at least one inspiration tag"
+    )
   target_id, target_label = _inspiration_target(target)
   _, language_label = _inspiration_language(language)
   mode_id = _inspiration_mode(mode)
@@ -2351,7 +2409,9 @@ def invert_prompt(
   skill_ids: list[str] | None = None,
 ) -> str:
   if not attachments:
-    raise ChatServiceError("提示词反推需要先选择图片或视频素材")
+    raise ChatServiceError(
+      "Prompt inversion requires selecting image or video assets first"
+    )
   config = resolve_api_config(data_directory, "image")
   _, skill_context = build_skill_context(
     normalize_conversation_skill_ids(skill_ids)
@@ -2384,7 +2444,7 @@ def invert_prompt(
 def _prompt_task_kind(value: Any) -> str:
   normalized = str(value or "expand").strip().casefold()
   if normalized not in {"expand", "invert", "translate"}:
-    raise ChatServiceError("提示词任务必须是扩写、反推或翻译")
+    raise ChatServiceError("The prompt task must be expand, invert, or translate")
   return normalized
 
 
@@ -2399,7 +2459,7 @@ def _prompt_task_mode(value: Any) -> str:
     return "api"
   if normalized in {"local", "本地", "本地模式"}:
     return "local"
-  raise ChatServiceError("服务必须选择 API 模式或本地模式")
+  raise ChatServiceError("The service must use API mode or local mode")
 
 
 def _prompt_task_enabled(value: Any) -> bool:
@@ -2429,7 +2489,7 @@ def _clear_local_model_memory() -> str:
       empty_cache()
   except Exception as error:
     errors.append(str(error))
-  return "；".join(item for item in errors if item)
+  return "; ".join(item for item in errors if item)
 
 
 def _prompt_task_rule(
@@ -2446,16 +2506,20 @@ def _prompt_task_rule(
     "invert": "invert",
   }.get(task)
   if expected_category is None:
-    raise ChatServiceError("翻译任务不使用提示词扩写或图像反推规则")
+    raise ChatServiceError(
+      "Translation tasks do not use prompt expansion or image inversion rules"
+    )
   if str(template.get("category") or "") != expected_category:
     raise ChatServiceError(
-      "提示词扩写只能使用“提示词扩写”分类的系统提示词"
+      "Prompt expansion can only use a system prompt from the "
+      "\"Prompt Expansion\" category"
       if task == "expand"
-      else "图像反推只能使用“图像反推”分类的系统提示词"
+      else "Image inversion can only use a system prompt from the "
+      "\"Image Inversion\" category"
     )
   content = str(template.get("prompt") or "").strip()
   if not content:
-    raise ChatServiceError("所选系统提示词正文为空")
+    raise ChatServiceError("The selected system prompt is empty")
   return {
     "id": str(template.get("id") or ""),
     "title": str(template.get("title") or ""),
@@ -2577,12 +2641,14 @@ def run_prompt_task(
   ]
   if task_id in {"expand", "translate"} and not cleaned:
     raise ChatServiceError(
-      "请先输入要扩写的提示词"
+      "Please enter the prompt to expand first"
       if task_id == "expand"
-      else "请先输入要翻译的文本"
+      else "Please enter the text to translate first"
     )
   if task_id == "invert" and not selected_attachments:
-    raise ChatServiceError("图像反推需要先选择图片、视频或音频素材")
+    raise ChatServiceError(
+      "Image inversion requires selecting image, video, or audio assets first"
+    )
 
   selected_skills = normalize_conversation_skill_ids(skill_ids)
   selected_rule = _prompt_task_rule(
@@ -2591,7 +2657,9 @@ def run_prompt_task(
     rule_id,
   )
   if selected_rule and selected_skills:
-    raise ChatServiceError("系统提示词与 Skill 只能选择一个")
+    raise ChatServiceError(
+      "Only one of a system prompt or a Skill can be selected"
+    )
   _, skill_context = build_skill_context(selected_skills)
 
   reply = ""

@@ -433,7 +433,7 @@ class PromptProcessorTests(unittest.TestCase):
 
   def test_invert_requires_media(self):
     processor = asset_nodes.AstralPromptProcessor()
-    with self.assertRaisesRegex(ValueError, "图片、视频或音频"):
+    with self.assertRaisesRegex(ValueError, "image, video, or audio"):
       processor.process(operation="invert", mode="api")
     self.task.assert_not_called()
 
@@ -489,7 +489,7 @@ class PromptProcessorTests(unittest.TestCase):
 
   def test_rule_and_skill_are_mutually_exclusive(self):
     processor = asset_nodes.AstralPromptProcessor()
-    with self.assertRaisesRegex(ValueError, "只能选择一个"):
+    with self.assertRaisesRegex(ValueError, "Choose either a system prompt or a Skill, not both"):
       processor.process(
         "portrait",
         operation="expand",

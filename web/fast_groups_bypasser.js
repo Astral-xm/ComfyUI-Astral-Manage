@@ -1,7 +1,7 @@
 import { app } from "../../scripts/app.js";
 
 export const ASTRAL_FAST_GROUPS_BYPASSER = "AstralFastGroupsBypasser";
-export const FAST_GROUPS_BYPASSER_TITLE = "忽略多框";
+export const FAST_GROUPS_BYPASSER_TITLE = "Fast Groups Bypasser";
 export const FAST_GROUPS_BYPASSER_CATEGORY = "Assets Astral/Group Control";
 export const NODE_PACKAGE_MODULE = "custom_nodes.ComfyUI-Astral-Manage";
 
@@ -973,19 +973,19 @@ class AstralFastGroupsBypasser extends LiteGraph.LGraphNode {
     const menu = Array.isArray(options) ? options : [];
     menu.unshift(
       {
-        content: "全部旁路",
+        content: "Bypass All",
         callback: () => this.handleAction("Bypass all"),
       },
       {
-        content: "全部启用",
+        content: "Enable All",
         callback: () => this.handleAction("Enable all"),
       },
       {
-        content: "反转全部",
+        content: "Toggle All",
         callback: () => this.handleAction("Toggle all"),
       },
       {
-        content: "刷新组列表",
+        content: "Refresh Group List",
         callback: () => {
           this.refreshWidgets();
           this.scheduleRefresh();

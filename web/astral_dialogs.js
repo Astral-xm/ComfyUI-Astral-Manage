@@ -118,10 +118,10 @@ function createButton(label, className = "") {
 }
 
 export function showAstralConfirm({
-  title = "确认操作",
+  title = "Confirm Action",
   message = "",
-  confirmLabel = "确认",
-  cancelLabel = "取消",
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
   tone = "danger",
 } = {}) {
   if (activeDialog) {
@@ -151,13 +151,13 @@ export function showAstralConfirm({
 }
 
 export function showAstralPrompt({
-  title = "输入内容",
+  title = "Enter Content",
   message = "",
   label = "",
   initialValue = "",
   placeholder = "",
-  confirmLabel = "确定",
-  cancelLabel = "取消",
+  confirmLabel = "OK",
+  cancelLabel = "Cancel",
   multiline = false,
 } = {}) {
   if (activeDialog) {
@@ -214,13 +214,13 @@ export function showAstralPrompt({
 }
 
 export function showAstralSelect({
-  title = "选择内容",
+  title = "Select Content",
   message = "",
   label = "",
   options = [],
   initialValue = "",
-  confirmLabel = "确定",
-  cancelLabel = "取消",
+  confirmLabel = "OK",
+  cancelLabel = "Cancel",
 } = {}) {
   if (activeDialog) {
     activeDialog.focus();
@@ -290,16 +290,16 @@ export function showAstralSelect({
 }
 
 export function showAstralShortcutRecorder({
-  title = "自定义面板快捷键",
-  message = "设置打开资产管理器的快捷键。保存后立即生效，关闭面板后也可以使用。",
+  title = "Customize Panel Shortcut",
+  message = "Set the shortcut that opens the Asset Manager. It takes effect immediately and works while the panel is closed.",
   initialShortcut = null,
   defaultShortcut = null,
   shortcutFromEvent = () => null,
   validateShortcut = () => "",
   formatShortcut = (shortcut) => shortcut?.code || "",
-  resetLabel = "恢复默认",
-  confirmLabel = "保存",
-  cancelLabel = "取消",
+  resetLabel = "Restore Default",
+  confirmLabel = "Save",
+  cancelLabel = "Cancel",
 } = {}) {
   if (activeDialog) {
     activeDialog.focus();
@@ -318,7 +318,7 @@ export function showAstralShortcutRecorder({
     );
     recorder.tabIndex = 0;
     recorder.setAttribute("role", "button");
-    recorder.setAttribute("aria-label", "快捷键录入区域");
+    recorder.setAttribute("aria-label", "Shortcut capture area");
     const preview = createElement(
       "strong",
       "astral-am-shortcut-preview",
@@ -326,7 +326,7 @@ export function showAstralShortcutRecorder({
     const hint = createElement(
       "span",
       "astral-am-shortcut-hint",
-      "按下新的快捷键组合",
+      "Press the new shortcut combination.",
     );
     const status = createElement("p", "astral-am-shortcut-status");
     status.setAttribute("aria-live", "polite");
@@ -353,7 +353,7 @@ export function showAstralShortcutRecorder({
     const renderCandidate = (instruction = "") => {
       const formatted = formatCandidate();
       const validationError = candidate ? validateShortcut(candidate) : "";
-      preview.textContent = formatted || "等待按键…";
+      preview.textContent = formatted || "Waiting for keys...";
       recorder.dataset.empty = formatted ? "false" : "true";
       status.className = `astral-am-shortcut-status${
         validationError ? " is-error" : formatted ? " is-valid" : ""
@@ -361,7 +361,7 @@ export function showAstralShortcutRecorder({
       status.textContent =
         validationError ||
         instruction ||
-        "按“保存”应用新的快捷键。";
+        "Press \"Save\" to apply the new shortcut.";
       confirmButton.disabled = !candidate || Boolean(validationError);
       resetButton.disabled =
         !defaultShortcut ||
@@ -373,7 +373,7 @@ export function showAstralShortcutRecorder({
     const finish = mountDialog(dialog, null, resolve, recorder);
     resetButton.addEventListener("click", () => {
       candidate = defaultShortcut;
-      renderCandidate("已恢复推荐快捷键，点击“保存”应用。");
+      renderCandidate("The recommended shortcut was restored. Press Save to apply it.");
       recorder.focus();
     });
     cancelButton.addEventListener("click", () => finish(null));
@@ -397,7 +397,7 @@ export function showAstralShortcutRecorder({
       const captured = shortcutFromEvent(event);
       if (!captured) {
         candidate = null;
-        renderCandidate("请继续按下一个字母、数字或功能键。");
+        renderCandidate("Now press a letter, number, or function key.");
         return;
       }
       candidate = captured;
@@ -408,9 +408,9 @@ export function showAstralShortcutRecorder({
 }
 
 export function showAstralAlert({
-  title = "提示",
+  title = "Notice",
   message = "",
-  confirmLabel = "知道了",
+  confirmLabel = "Got it",
   tone = "info",
 } = {}) {
   if (activeDialog) {

@@ -101,7 +101,7 @@ assert.match(
 );
 assert.match(
   source,
-  /const clearText = createElement\([\s\S]*?"astral-pp-check-label",[\s\S]*?"清理显存",/,
+  /const clearText = createElement\([\s\S]*?"astral-pp-check-label",[\s\S]*?"Clear VRAM",/,
 );
 assert.match(
   css,
@@ -331,7 +331,7 @@ assert.match(
   css,
   /\.astral-pp\s*\{[\s\S]*?align-self:\s*flex-start;[\s\S]*?flex:\s*0\s+0\s+auto;/,
 );
-assert.match(source, /从图片、视频或音频反推提示词/);
+assert.match(source, /Reverse-engineer a prompt from image, video, or audio/);
 assert.doesNotMatch(source, /图片\s+\$\{number\}\//);
 assert.doesNotMatch(source, /MEDIA_INPUT_LABELS/);
 assert.match(source, /function syncMediaInputs\(node\)/);

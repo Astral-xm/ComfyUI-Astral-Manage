@@ -171,7 +171,7 @@ assert.equal(typeof app.extension?.beforeRegisterNodeDef, "function");
 app.extension.beforeRegisterNodeDef(MockNode, { name: api.NODE_TYPE });
 
 const node = new MockNode();
-assert.equal(node.onGetPropertyInfo("promptCount").label, "模式数量");
+assert.equal(node.onGetPropertyInfo("promptCount").label, "Mode Count");
 node.inputs.push({
   name: api.CONTROL_WIDGET,
   type: "STRING",
@@ -260,7 +260,7 @@ let modeToggles = node.widgets.filter(
 assert.equal(modeToggles.length, 1);
 assert.deepEqual(
   modeToggles.map((widget) => widget.label),
-  ["Enable 未命名模式 1"],
+  ["Enable Untitled Mode 1"],
 );
 assert.deepEqual(modeToggles.map((widget) => widget.value), [true]);
 assert.ok(modeToggles.every((widget) => widget.type === "toggle"));

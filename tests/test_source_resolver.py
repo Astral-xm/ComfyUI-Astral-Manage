@@ -190,7 +190,7 @@ class SourceResolverTests(unittest.TestCase):
 
     candidate = result["candidates"][0]
     self.assertEqual(result["match"], "sha256")
-    self.assertEqual(candidate["matchLabel"], "SHA256 精确匹配")
+    self.assertEqual(candidate["matchLabel"], "Exact SHA256 match")
     self.assertEqual(
       candidate["matchedFile"],
       "renamed/repository-file.safetensors",
@@ -338,10 +338,10 @@ class SourceResolverTests(unittest.TestCase):
     )
     self.assertEqual(
       source["recommendedStrength"]["source"],
-      "Hugging Face 模型卡",
+      "Hugging Face model card",
     )
     self.assertEqual(source["triggers"], ["photo style", "soft focus", "cinematic"])
-    self.assertEqual(source["triggersSource"], "Hugging Face 模型卡")
+    self.assertEqual(source["triggersSource"], "Hugging Face model card")
 
   def test_modelscope_model_card_supplies_strength_and_triggers(self):
     source = {
@@ -371,9 +371,9 @@ class SourceResolverTests(unittest.TestCase):
       source_resolver._enrich_modelscope_source(source)
 
     self.assertEqual(source["recommendedStrength"]["text"], "0.8 - 1.2")
-    self.assertEqual(source["recommendedStrength"]["source"], "魔搭模型卡")
+    self.assertEqual(source["recommendedStrength"]["source"], "ModelScope model card")
     self.assertEqual(source["triggers"], ["soft light", "portrait"])
-    self.assertEqual(source["triggersSource"], "魔搭模型卡")
+    self.assertEqual(source["triggersSource"], "ModelScope model card")
 
   def test_aggregate_prefers_civitai_then_huggingface_then_modelscope(self):
     sources = {
@@ -387,20 +387,20 @@ class SourceResolverTests(unittest.TestCase):
         "recommendedStrength": {
           "text": "0.7 - 0.9",
           "value": 0.8,
-          "source": "Hugging Face 模型卡",
+          "source": "Hugging Face model card",
         },
         "triggers": ["hf trigger"],
-        "triggersSource": "Hugging Face 模型卡",
+        "triggersSource": "Hugging Face model card",
       },
       "modelscope": {
         "ok": True,
         "recommendedStrength": {
           "text": "0.6 - 0.8",
           "value": 0.7,
-          "source": "魔搭模型卡",
+          "source": "ModelScope model card",
         },
         "triggers": ["ms trigger"],
-        "triggersSource": "魔搭模型卡",
+        "triggersSource": "ModelScope model card",
       },
     }
 
@@ -409,19 +409,19 @@ class SourceResolverTests(unittest.TestCase):
     self.assertEqual(result["recommendedStrength"]["text"], "0.7 - 0.9")
     self.assertEqual(result["recommendedStrengthSource"], "Hugging Face")
     self.assertEqual(result["triggers"], ["hf trigger"])
-    self.assertEqual(result["triggersSource"], "Hugging Face 模型卡")
+    self.assertEqual(result["triggersSource"], "Hugging Face model card")
 
     sources["civitai"]["recommendedStrength"] = {
       "text": "0.5",
       "value": 0.5,
-      "source": "C站描述",
+      "source": "Civitai description",
     }
     sources["civitai"]["triggers"] = ["civitai trigger"]
     result = source_resolver._aggregate_model_info(sources)
 
     self.assertEqual(result["recommendedStrength"]["text"], "0.5")
     self.assertEqual(result["triggers"], ["civitai trigger"])
-    self.assertEqual(result["triggersSource"], "C站模型")
+    self.assertEqual(result["triggersSource"], "Civitai model")
 
   @patch.object(source_resolver.requests, "request")
   def test_reports_readable_source_http_failure(self, request):
@@ -430,7 +430,7 @@ class SourceResolverTests(unittest.TestCase):
     with self.assertRaises(source_resolver.SourceRequestError) as context:
       source_resolver.find_huggingface_sources("style.safetensors")
 
-    self.assertIn("请求过于频繁", str(context.exception))
+    self.assertIn("too many requests", str(context.exception))
 
 
 if __name__ == "__main__":
