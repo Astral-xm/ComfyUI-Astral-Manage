@@ -1,4 +1,79 @@
 {
+  "Anything Everywhere": {
+    "display_name": "万物互联（Astral）",
+    "description": "把每个已连接的值广播到当前画布中匹配的未连接输入。虚拟连线由前端绘制并生效。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "inputs": {
+      "anything": {
+        "name": "任意输入"
+      }
+    }
+  },
+  "LoRA Stack Loader": {
+    "display_name": "LoRA 堆栈加载器",
+    "description": "加载多个 LoRA，并以逗号分隔输出所选触发词，末尾保留逗号。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "inputs": {
+      "model": {
+        "name": "模型"
+      },
+      "clip": {
+        "name": "CLIP"
+      }
+    }
+  },
+  "Typed Bypass Switch": {
+    "display_name": "类型旁路开关",
+    "description": "选择一个已启用的输入，旁路其他已连接来源，并在单个输出上暴露锁定的输入类型。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "inputs": {
+      "enabled_slots": {
+        "name": "已启用输入",
+        "tooltip": "由前端管理。以逗号分隔的输入槽位（从 1 开始）；只有启用的槽位会输出，最靠前的启用槽位优先。"
+      }
+    }
+  },
+  "String Mode Selector": {
+    "display_name": "字符串模式选择器",
+    "description": "在节点界面中选择一个带标题的提示词模式，并以 STRING 返回其提示词，不暴露输入端口。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "inputs": {
+      "selected_string": {
+        "name": "选中的字符串",
+        "tooltip": "由前端根据当前模式的提示词自动维护。该节点没有输入端口，因此编辑器控件默认隐藏。"
+      }
+    }
+  },
+  "Assets Prompt": {
+    "display_name": "素材提示词",
+    "description": "放在画布上的已保存提示词模板。标题与提示词控件由素材管理器填充，提示词以 STRING 返回。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "inputs": {
+      "title": {
+        "name": "标题"
+      },
+      "prompt": {
+        "name": "提示词"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "STRING"
+      }
+    }
+  },
+  "Assets Astral Prompt": {
+    "display_name": "素材提示词",
+    "description": "放在画布上的已保存提示词模板。标题与提示词控件由素材管理器填充，提示词以 STRING 返回。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "inputs": {
+      "title": {
+        "name": "标题"
+      },
+      "prompt": {
+        "name": "提示词"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "STRING"
+      }
+    }
+  },
   "Assets Astral Prompt Processor": {
     "display_name": "提示词处理器",
     "description": "运行一次无状态的提示词扩写或媒体反推任务。支持最多 9 张图片、3 个视频和 3 个音频输入。操作可显式选择，也可根据媒体输入自动推断。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",

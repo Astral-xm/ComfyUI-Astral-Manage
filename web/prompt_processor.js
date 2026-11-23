@@ -28,6 +28,49 @@ const STYLE_URL =
 const CONTROL_WIDGET = "astral_prompt_processor_controls";
 const CONTROL_INITIAL_HEIGHT = 184;
 const CONTROL_HEIGHT_MARGIN = 2;
+// ComfyUI's frontend does not read inputs.<slot>.options from locales, so the
+// Chinese option labels are applied to the combo widgets here.
+const COMBO_LABELS = Object.freeze({
+  operation: {
+    auto: "自动",
+    expand: "扩写",
+    invert: "反推",
+  },
+  mode: {
+    api: "API 模式",
+    local: "本地模式",
+  },
+});
+
+function localeIsZh() {
+  try {
+    const value = app?.ui?.settings?.getSettingValue?.("Comfy.Locale");
+    if (typeof value === "string" && value) {
+      return value.toLowerCase().startsWith("zh");
+    }
+  } catch {
+    // Settings are not ready yet; fall back to the document language.
+  }
+  return String(document?.documentElement?.lang || "")
+    .toLowerCase()
+    .startsWith("zh");
+}
+
+function patchComboLabels(node) {
+  for (const widget of node.widgets || []) {
+    const labels = COMBO_LABELS[widget.name];
+    if (!labels || widget.__astralComboLabels) continue;
+    widget.__astralComboLabels = true;
+    const options = widget.options || (widget.options = {});
+    const previous = options.getOptionLabel;
+    options.getOptionLabel = function (value) {
+      if (localeIsZh() && Object.prototype.hasOwnProperty.call(labels, value)) {
+        return labels[value];
+      }
+      return previous ? previous(value) : String(value ?? "");
+    };
+  }
+}
 const CONTROL_MIN_WIDTH = 150;
 const USER_PROMPT_MAX_HEIGHT = 100000;
 const SETUP_RETRY_LIMIT = 40;
@@ -400,6 +443,7 @@ function syncMediaInputs(node) {
 function setupPromptProcessor(node) {
   if (!node || installs.has(node)) return true;
   if (!isPromptProcessorNode(node)) return false;
+  patchComboLabels(node);
   if (typeof node.addDOMWidget !== "function") return false;
   const widgets = {
     operation: widgetByName(node, "operation"),

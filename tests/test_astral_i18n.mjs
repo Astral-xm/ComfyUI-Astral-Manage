@@ -167,6 +167,28 @@ assert.deepEqual(
   "astral_i18n_dict.js must not contain duplicate English keys.",
 );
 
+const { DYNAMIC_EN_TO_ZH, EN_TO_ZH } = await import(
+  `${pathToFileURL(dictionaryPath).href}?test=${Date.now()}`
+);
+for (const key of Object.keys(EN_TO_ZH)) {
+  assert.ok(
+    !key.includes("${"),
+    `static translation keys must not hold template source: ${key}`,
+  );
+}
+for (const [pattern, replacement] of DYNAMIC_EN_TO_ZH) {
+  assert.ok(pattern instanceof RegExp, "dynamic entries must be RegExp");
+  assert.equal(
+    pattern.test(""),
+    false,
+    `dynamic pattern must not match empty text: ${pattern}`,
+  );
+  assert.ok(
+    typeof replacement === "string" && replacement.length > 0,
+    `dynamic pattern has no replacement: ${pattern}`,
+  );
+}
+
 function setComfyLocale(locale) {
   if (locale === undefined) {
     delete globalThis.app;
