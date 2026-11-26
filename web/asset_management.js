@@ -566,7 +566,7 @@ class AstralLoraInfoDialog {
       this.createRow("Hugging Face", this.createSourceValue("huggingface")),
       this.createRow("ModelScope", this.createSourceValue("modelscope")),
       this.createRow("Thumbnail", this.createThumbnailValue()),
-      this.createRow("Recommended strength", this.createStrengthValue()),
+      this.createRow("Strength", this.createStrengthValue()),
       this.createRow("Trigger words", this.createTriggersValue()),
     );
     content.append(table);

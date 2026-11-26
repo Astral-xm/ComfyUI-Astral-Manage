@@ -9300,7 +9300,7 @@ class LoraSourceBrowser {
     const recommendation = result?.recommendedStrength || source?.recommendedStrength;
     const strength = createElement("div", "astral-am-source-detail");
     strength.append(
-      createElement("span", "astral-am-source-label", "Recommended strength"),
+      createElement("span", "astral-am-source-label", "Strength"),
       createElement(
         "span",
         "",

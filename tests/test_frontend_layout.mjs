@@ -178,7 +178,7 @@ assert.equal(row.drawTrigger.toString().includes("layout.removeX"), true);
 
 assert.match(source, /import\("\.\.\/\.\.\/rgthree\/common\/dialog\.js"\)/);
 assert.doesNotMatch(source, /RgthreeLoraInfoDialog|dialog_info\.js/);
-assert.match(source, /this\.createRow\("Recommended strength"/);
+assert.match(source, /this\.createRow\("Strength"/);
 assert.match(source, /this\.createRow\("Trigger words"/);
 assert.match(source, /this\.createRow\("Civitai",\s*this\.createSourceValue\("civitai",\s*true\)\)/);
 assert.match(source, /this\.createRow\("Hugging Face"/);
