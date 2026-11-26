@@ -65,10 +65,12 @@ function segmentHitsRect(x1, y1, x2, y2, rect) {
   return false;
 }
 
-function countNodeHits(pts, rects) {
+function countNodeHits(pts, rects, excluded) {
   let hits = 0;
   for (const rect of rects) {
     for (let i = 1; i < pts.length; i++) {
+      const portStub = i === 1 || i === pts.length - 1;
+      if (portStub && excluded?.has(rect.id)) continue;
       if (
         segmentHitsRect(
           pts[i - 1][0],
@@ -191,6 +193,13 @@ function buildRoute(linkData) {
       rect.y2 >= minY &&
       rect.y1 <= maxY,
   );
+  const uRelevant = frameRects.filter(
+    (rect) =>
+      rect.x2 >= minX &&
+      rect.x1 <= maxX &&
+      rect.y2 >= minY &&
+      rect.y1 <= maxY,
+  );
 
   const makePoints = (midX) =>
     dedupe([
@@ -230,9 +239,15 @@ function buildRoute(linkData) {
     // from the left, with a horizontal final segment into the port.
     const rightX = s.x + PORT_STUB;
     const leftX = e.x - PORT_STUB;
+    const top = Math.min(s.y, e.y);
+    const bottom = Math.max(s.y, e.y);
+    const middle = (top + bottom) / 2;
     const detourYs = [];
-    for (const ratio of [0.5, 0.35, 0.65, 0.2, 0.8, 0.1, 0.9]) {
-      detourYs.push(s.y + (e.y - s.y) * ratio);
+    for (let y = middle; y >= top - 0.01; y -= CHANNEL_STEP) {
+      detourYs.push(y);
+    }
+    for (let y = middle + CHANNEL_STEP; y <= bottom + 0.01; y += CHANNEL_STEP) {
+      detourYs.push(y);
     }
     for (const detourY of detourYs) {
       const pts = dedupe([
@@ -243,15 +258,19 @@ function buildRoute(linkData) {
         [leftX, e.y],
         [e.x, e.y],
       ]);
-      const candidate = scorePoints(pts);
+      const nodeHits = countNodeHits(pts, uRelevant, excluded);
+      const channelHits = countChannelHits(pts, frameChannels);
       const crossesSource =
         leftX > Math.min(s.x, rightX) &&
         leftX < Math.max(s.x, rightX) &&
         s.y > Math.min(detourY, e.y) &&
         s.y < Math.max(detourY, e.y);
-      const score = candidate.score + (crossesSource ? 500 : 0);
+      const score =
+        nodeHits * 1000 +
+        channelHits * 10000 +
+        (crossesSource ? 500 : 0);
       if (!best || score < best.score) {
-        best = { pts: candidate.pts, score };
+        best = { pts, score };
       }
       if (score === 0) break;
     }
