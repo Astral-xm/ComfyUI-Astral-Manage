@@ -964,6 +964,96 @@ class ChatServiceTests(unittest.TestCase):
     )
     self.assertTrue(all(call["messages"] for call in calls))
 
+  def test_prompt_task_accepts_explicit_api_config_and_history(self):
+    with (
+      mock.patch.object(chat_service, "resolve_api_config") as resolve,
+      mock.patch.object(chat_service, "load_local_llm_config") as load_local,
+      mock.patch.object(
+        chat_service,
+        "build_skill_context",
+        return_value=("", ""),
+      ),
+      mock.patch.object(
+        chat_service,
+        "build_user_content",
+        side_effect=lambda text, attachments, **_kwargs: text,
+      ),
+      mock.patch.object(
+        chat_service,
+        "request_chat_completion",
+        return_value="chat reply",
+      ) as request_chat_completion,
+    ):
+      result = chat_service.run_prompt_task(
+        str(self.data_directory),
+        "hello",
+        task="chat",
+        api_config={
+          "baseUrl": "https://node.test/v1",
+          "apiKey": "node-key",
+          "model": "node-model",
+        },
+        history=[
+          {"role": "user", "content": "hi"},
+          {"role": "assistant", "content": "hello back"},
+        ],
+        system_prompt="SYS-PROMPT",
+        skill_context="SKILL-TEXT",
+      )
+
+    resolve.assert_not_called()
+    load_local.assert_not_called()
+    config, messages = request_chat_completion.call_args.args[:2]
+    self.assertEqual(config["baseUrl"], "https://node.test/v1")
+    self.assertEqual(config["model"], "node-model")
+    self.assertEqual(
+      [message["role"] for message in messages],
+      ["system", "user", "assistant", "user"],
+    )
+    self.assertEqual(messages[-1]["content"], "hello")
+    self.assertIn("SYS-PROMPT", messages[0]["content"])
+    self.assertIn("SKILL-TEXT", messages[0]["content"])
+    self.assertEqual(result["task"], "chat")
+    self.assertEqual(result["text"], "chat reply")
+
+  def test_prompt_task_uses_explicit_local_config(self):
+    config = {
+      "modelPath": "qwen.gguf",
+      "maxImageEdge": 1024,
+      "imageJpegQuality": 90,
+    }
+    with (
+      mock.patch.object(chat_service, "load_local_llm_config") as load_local,
+      mock.patch.object(chat_service, "_validate_local_attachments"),
+      mock.patch.object(
+        chat_service,
+        "build_skill_context",
+        return_value=("", ""),
+      ),
+      mock.patch.object(
+        chat_service,
+        "_prompt_task_messages",
+        return_value=[{"role": "user", "content": "hello"}],
+      ) as build_messages,
+      mock.patch.object(
+        chat_service,
+        "generate_local_chat",
+        return_value="local reply",
+      ) as generate_local_chat,
+    ):
+      result = chat_service.run_prompt_task(
+        str(self.data_directory),
+        "hello",
+        task="chat",
+        mode="local",
+        local_config=config,
+      )
+
+    load_local.assert_not_called()
+    self.assertEqual(build_messages.call_args.args[0]["modelPath"], "qwen.gguf")
+    self.assertEqual(generate_local_chat.call_count, 1)
+    self.assertEqual(result["text"], "local reply")
+
   def test_prompt_task_rules_are_limited_to_matching_categories(self):
     expand_rule = self.create_prompt_rule(
       "expand",

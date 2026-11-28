@@ -67,17 +67,79 @@ class PromptLibraryTests(unittest.TestCase):
       0,
     )
 
-  def test_template_validates_category_and_required_fields(self):
-    with self.assertRaises(prompt_library.PromptDataError):
-      prompt_library.save_template(
-        str(self.temp_path),
-        {"title": "bad", "category": "workflow", "prompt": "text"},
-      )
+  def test_template_accepts_custom_categories_and_required_fields(self):
+    custom = prompt_library.save_template(
+      str(self.temp_path),
+      {"title": "custom", "category": "workflow", "prompt": "text"},
+    )
+    self.assertEqual(custom["category"], "workflow")
+    builtin = prompt_library.save_template(
+      str(self.temp_path),
+      {"title": "builtin", "category": "Image", "prompt": "text"},
+    )
+    self.assertEqual(builtin["category"], "image")
     with self.assertRaises(prompt_library.PromptDataError):
       prompt_library.save_template(
         str(self.temp_path),
         {"title": "", "category": "text", "prompt": "text"},
       )
+
+  def test_prompt_categories_can_be_added_and_removed(self):
+    created = prompt_library.create_prompt_category(
+      str(self.temp_path),
+      "人物设定",
+    )
+    self.assertTrue(created["created"])
+    self.assertIn("人物设定", created["categories"])
+    again = prompt_library.create_prompt_category(
+      str(self.temp_path),
+      "人物设定",
+    )
+    self.assertFalse(again["created"])
+    builtin = prompt_library.create_prompt_category(
+      str(self.temp_path),
+      "Image",
+    )
+    self.assertEqual(builtin["category"], "image")
+    self.assertFalse(builtin["created"])
+    removed = prompt_library.delete_prompt_category(
+      str(self.temp_path),
+      "人物设定",
+    )
+    self.assertNotIn("人物设定", removed["categories"])
+
+  def test_prompt_category_with_templates_cannot_be_removed(self):
+    prompt_library.create_prompt_category(str(self.temp_path), "人物设定")
+    prompt_library.save_template(
+      str(self.temp_path),
+      {"title": "人物", "category": "人物设定", "prompt": "text"},
+    )
+    with self.assertRaisesRegex(
+      prompt_library.PromptDataError,
+      "still contains 1 prompt templates",
+    ):
+      prompt_library.delete_prompt_category(str(self.temp_path), "人物设定")
+    with self.assertRaises(prompt_library.PromptDataError):
+      prompt_library.delete_prompt_category(str(self.temp_path), "expand")
+
+  def test_custom_categories_are_listed_and_filterable(self):
+    prompt_library.save_template(
+      str(self.temp_path),
+      {"title": "人物", "category": "人物设定", "prompt": "text"},
+    )
+    prompt_library.save_template(
+      str(self.temp_path),
+      {"title": "文本", "category": "text", "prompt": "text"},
+    )
+    result = prompt_library.list_templates(str(self.temp_path))
+    self.assertIn("人物设定", result["categories"])
+    self.assertIn("text", result["categories"])
+    filtered = prompt_library.list_templates(
+      str(self.temp_path),
+      category="人物设定",
+    )
+    self.assertEqual(filtered["total"], 1)
+    self.assertEqual(filtered["items"][0]["category"], "人物设定")
 
   def test_prompt_task_categories_save_and_filter_independently(self):
     expand = prompt_library.save_template(

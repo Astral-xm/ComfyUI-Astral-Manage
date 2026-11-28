@@ -12,6 +12,7 @@ import {
   onLanguageChange,
   registerLocalizationRoot,
   toggleLanguage,
+  translateUiText,
 } from "./astral_i18n.js";
 import {
   DEFAULT_ASSET_MANAGER_SHORTCUT,
@@ -37,36 +38,12 @@ const DUPLICATE_SCAN_POLL_MS = 1000;
 const THUMBNAIL_PREFERENCE = "assets-astral.show-lora-thumbnails";
 const WINDOW_VIEWPORT_MARGIN = 18;
 const AUTO_LOAD_BOTTOM_THRESHOLD = 96;
-const ASTRAL_PROMPT_NODE_ID = "Assets Prompt";
-const LEGACY_NODE_TYPES = Object.freeze({
-  "Assets Astral Prompt": ASTRAL_PROMPT_NODE_ID,
-});
+const ASTRAL_PROMPT_NODE_ID = "System Prompt";
+const ASTRAL_SKILL_LOADER_NODE_ID = "Prompt Skill Loader";
 
 let manager = null;
 let activeAssetManagerShortcut = null;
 let assetManagerShortcutListenerInstalled = false;
-
-function migrateLegacyNodeTypes(graphData) {
-  if (!graphData || typeof graphData !== "object") return;
-
-  for (const node of graphData.nodes || []) {
-    if (node?.type && LEGACY_NODE_TYPES[node.type]) {
-      node.type = LEGACY_NODE_TYPES[node.type];
-    }
-  }
-
-  for (const subgraph of graphData.definitions?.subgraphs || []) {
-    migrateLegacyNodeTypes(subgraph);
-  }
-}
-
-function hideLegacyNodeDefs(nodeDefs) {
-  for (let index = nodeDefs.length - 1; index >= 0; index -= 1) {
-    if (LEGACY_NODE_TYPES[nodeDefs[index]?.name]) {
-      nodeDefs.splice(index, 1);
-    }
-  }
-}
 
 function showLoraThumbnails() {
   try {
@@ -89,6 +66,58 @@ function createElement(tag, className, text) {
   if (className) element.className = className;
   if (text !== undefined && text !== null) element.textContent = String(text);
   return element;
+}
+
+function canvasViewportCenter() {
+  const canvas = globalThis.app?.canvas;
+  const rect = canvas?.canvas?.getBoundingClientRect?.();
+  if (!canvas || !rect || !(rect.width > 0) || !(rect.height > 0)) return [0, 0];
+  const clientX = rect.left + rect.width / 2;
+  const clientY = rect.top + rect.height / 2;
+  if (typeof canvas.convertEventToCanvasOffset === "function") {
+    const point = canvas.convertEventToCanvasOffset({ clientX, clientY });
+    if (point && Number.isFinite(point[0]) && Number.isFinite(point[1])) {
+      return [Number(point[0]), Number(point[1])];
+    }
+  }
+  if (typeof canvas.clientPosToCanvasPos === "function") {
+    const point = canvas.clientPosToCanvasPos([clientX, clientY]);
+    if (point && Number.isFinite(point[0]) && Number.isFinite(point[1])) {
+      return [Number(point[0]), Number(point[1])];
+    }
+  }
+  const scale = Number(canvas.ds?.scale) || 1;
+  const offset = canvas.ds?.offset || [0, 0];
+  return [
+    rect.width / 2 / scale - Number(offset[0]),
+    rect.height / 2 / scale - Number(offset[1]),
+  ];
+}
+
+function placeNodesAtViewCenter(nodes) {
+  const list = (Array.isArray(nodes) ? nodes : [nodes]).filter(Boolean);
+  if (!list.length) return;
+  const center = canvasViewportCenter();
+  const step = 28;
+  list.forEach((node, index) => {
+    const size = Array.isArray(node.size) ? node.size : [220, 120];
+    const width = Number(size[0]) || 220;
+    const height = Number(size[1]) || 120;
+    const spread = (index - (list.length - 1) / 2) * step;
+    node.pos = [
+      center[0] - width / 2 + spread,
+      center[1] - height / 2 + spread,
+    ];
+    node.setDirtyCanvas?.(true, true);
+  });
+  const canvas = globalThis.app?.canvas;
+  canvas?.deselectAllNodes?.();
+  if (typeof canvas?.selectNodes === "function") {
+    canvas.selectNodes(list);
+  } else if (typeof canvas?.selectNode === "function") {
+    canvas.selectNode(list[list.length - 1], false);
+  }
+  canvas?.setDirty?.(true, true);
 }
 
 function skillPreviewExcerpt(content, limit = 1400) {
@@ -1064,7 +1093,7 @@ class AssetBrowser {
     if (retainedItems.length) {
       promptBrowser.setChatStatus(result.message, "warning");
     }
-    this.root.showTab("prompts");
+    this.root.showTab("chat");
     promptBrowser.setMode("chat");
     promptBrowser.chatInput.focus();
   }
@@ -1980,18 +2009,9 @@ const CHAT_MODE_DEFINITIONS = [
   ...API_TASK_DEFINITIONS,
   LOCAL_CHAT_MODE_DEFINITION,
 ];
-const TRANSLATION_LANGUAGES = [
-  { value: "en", label: "English" },
+const TRANSLATION_TARGETS = [
   { value: "zh", label: "Simplified Chinese" },
-  { value: "ja", label: "Japanese (日本語)" },
-  { value: "ko", label: "Korean (한국어)" },
-  { value: "fr", label: "French (Français)" },
-  { value: "de", label: "German (Deutsch)" },
-  { value: "es", label: "Spanish (Español)" },
-  { value: "ru", label: "Russian (Русский)" },
-  { value: "pt", label: "Portuguese (Português)" },
-  { value: "it", label: "Italian (Italiano)" },
-  { value: "ar", label: "Arabic (العربية)" },
+  { value: "en", label: "English" },
 ];
 const DEFAULT_LOCAL_LLM_CONFIG = Object.freeze({
   modelPath: "",
@@ -2043,7 +2063,7 @@ const LOCAL_LLM_PARAMETER_HINTS = Object.freeze({
   nBatch: "Prompt batch size. Increasing it usually improves throughput but uses more memory.",
   nUbatch: "Micro-batch size, affecting inference speed and VRAM usage. Usually best left at the default.",
   maxTokens: "Maximum tokens generated per reply, excluding input tokens.",
-  maxRounds: "Number of history rounds included when sending multi-turn chats; Prompt Processor sends no history.",
+  maxRounds: "Number of history rounds included when sending multi-turn chats.",
   temperature: "Controls randomness. Lower values are more stable; higher values are more creative and varied.",
   topP: "Nucleus sampling threshold. Usually adjust only one of Temperature or Top P; 0.9–0.95 is common.",
   topK: "Sample each step only from the K most probable candidate tokens.",
@@ -2065,12 +2085,63 @@ const LOCAL_LLM_PARAMETER_HINTS = Object.freeze({
   preserveThinking: "Keep think content in the history context; turn off to save context.",
   useMmap: "Load the model with memory mapping. On by default; turning it off consumes physical memory faster.",
 });
-function promptCategoryLabel(category) {
+function promptCategoryBuiltin(category) {
+  const value = String(category || "").trim();
+  if (!value) return null;
+  const lowered = value.toLowerCase();
   return (
-    PROMPT_CATEGORY_OPTIONS.find((option) => option.value === category)?.label ||
-    category ||
-    "Text"
+    PROMPT_CATEGORY_OPTIONS.find(
+      (option) =>
+        option.value === lowered || option.label.toLowerCase() === lowered,
+    ) || null
   );
+}
+
+function promptCategoryLabel(category) {
+  return promptCategoryBuiltin(category)?.label || String(category || "").trim() || "Text";
+}
+
+function promptCategoryValueFromInput(value) {
+  const text = String(value || "").trim();
+  if (!text) return "text";
+  const lowered = text.toLowerCase();
+  const builtin = PROMPT_CATEGORY_OPTIONS.find(
+    (option) =>
+      option.value === lowered ||
+      option.label.toLowerCase() === lowered ||
+      translateUiText(option.label, "en").toLowerCase() === lowered ||
+      translateUiText(option.label, "zh").toLowerCase() === lowered,
+  );
+  return builtin ? builtin.value : text;
+}
+
+function promptCategoryOptionList(categories, includeAll = true) {
+  const options = includeAll
+    ? [{ value: "all", label: "All Categories" }]
+    : [];
+  const seen = new Set(options.map((option) => option.value));
+  const values = Array.isArray(categories)
+    ? categories
+    : PROMPT_CATEGORY_OPTIONS.map((option) => option.value);
+  for (const raw of values) {
+    const value = String(raw || "").trim();
+    if (!value) continue;
+    const builtin = promptCategoryBuiltin(value);
+    const key = (builtin?.value || value).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    options.push(
+      builtin
+        ? { value: builtin.value, label: builtin.label }
+        : { value, label: value },
+    );
+  }
+  return options;
+}
+
+function editorCategoryOptions(values) {
+  const list = Array.isArray(values) && values.length ? values : ["text"];
+  return promptCategoryOptionList(list, false);
 }
 
 class PromptBrowser {
@@ -2107,10 +2178,11 @@ class PromptBrowser {
     this.pendingAttachments = [];
     this.pendingSkillIds = [];
     this.pendingSystemPromptTemplate = null;
+    this.chatPickerReturn = "";
     this.activeTaskId = "text";
     this.chatModeButtons = new Map();
     this.translationEnabled = false;
-    this.translationTargetLanguage = "en";
+    this.translationTargetLanguage = "zh";
     this.chatCurrentModelName = null;
     this.localLlmConfig = { ...DEFAULT_LOCAL_LLM_CONFIG };
     this.localLlmModels = [];
@@ -2166,18 +2238,10 @@ class PromptBrowser {
       "System Prompt Management",
     );
     this.skillModeButton = createElement("button", "astral-am-subtab", "Skill Management");
-    this.chatModeButton = createElement("button", "astral-am-subtab", "API Chat");
-    this.apiConfigModeButton = createElement(
-      "button",
-      "astral-am-subtab",
-      "API Configuration",
-    );
     for (const button of [
       this.skillTagModeButton,
       this.templateModeButton,
       this.skillModeButton,
-      this.chatModeButton,
-      this.apiConfigModeButton,
     ]) {
       button.type = "button";
     }
@@ -2185,11 +2249,10 @@ class PromptBrowser {
       this.skillTagModeButton,
       this.templateModeButton,
       this.skillModeButton,
-      this.chatModeButton,
-      this.apiConfigModeButton,
     );
 
     this.templatePane = this.buildTemplatePane();
+    // The chat and API configuration panes live in their own top-level tab.
     this.chatPane = this.buildChatPane();
     this.chatPane.hidden = true;
     this.skillPane = this.buildSkillPane();
@@ -2202,19 +2265,13 @@ class PromptBrowser {
       modeTabs,
       this.skillTagPane,
       this.templatePane,
-      this.chatPane,
       this.skillPane,
-      this.apiConfigPane,
     );
     this.element = section;
     this.templateModeButton.addEventListener("click", () => this.setMode("templates"));
-    this.chatModeButton.addEventListener("click", () => this.setMode("chat"));
     this.skillModeButton.addEventListener("click", () => this.setMode("skills"));
     this.skillTagModeButton.addEventListener("click", () =>
       this.setMode("skillTags"),
-    );
-    this.apiConfigModeButton.addEventListener("click", () =>
-      this.setMode("apiConfig"),
     );
   }
 
@@ -2228,10 +2285,19 @@ class PromptBrowser {
     this.templateSearch.setAttribute("aria-label", "Search prompt templates");
     this.templateCategory = createCustomDropdown("astral-am-category-dropdown");
     this.templateCategory.element.setAttribute("aria-label", "Prompt template category");
-    this.templateCategory.setOptions([
-      { value: "all", label: "All Categories" },
-      ...PROMPT_CATEGORY_OPTIONS,
-    ]);
+    this.promptCategoryValues = PROMPT_CATEGORY_OPTIONS.map(
+      (option) => option.value,
+    );
+    this.templateCategory.setOptions(promptCategoryOptionList());
+    this.manageCategoriesButton = createElement(
+      "button",
+      "astral-am-button",
+      "Manage Categories",
+    );
+    this.manageCategoriesButton.type = "button";
+    this.manageCategoriesButton.addEventListener("click", () =>
+      this.openCategoryManager(),
+    );
     this.templateCreateButton = createElement(
       "button",
       "astral-am-button is-primary",
@@ -2243,6 +2309,7 @@ class PromptBrowser {
     toolbar.append(
       this.templateSearch,
       this.templateCategory.element,
+      this.manageCategoriesButton,
       this.templateCreateButton,
       this.templateRefreshButton,
     );
@@ -2485,7 +2552,7 @@ class PromptBrowser {
       1,
       50,
       "1",
-      "Maximum number of history message rounds carried in API chats; Prompt Processor has no history and is unaffected.",
+      "Maximum number of history message rounds carried in API chats.",
     );
     runtimeNumberField(
       "frequencyPenalty",
@@ -2713,19 +2780,31 @@ class PromptBrowser {
       createElement("span", "astral-am-chat-translation-switch"),
       createElement("span", "", "Translation Mode"),
     );
-    this.translationLanguageSelect = createElement(
-      "select",
-      "astral-am-select astral-am-chat-translation-language",
+    this.translationTarget = createElement(
+      "div",
+      "astral-am-chat-translation-target",
     );
-    this.translationLanguageSelect.setAttribute("aria-label", "Translation target language");
-    this.translationLanguageSelect.replaceChildren(
-      ...TRANSLATION_LANGUAGES.map((language) => {
-        const option = createElement("option", "", language.label);
-        option.value = language.value;
-        return option;
-      }),
+    this.translationTarget.setAttribute("role", "group");
+    this.translationTarget.setAttribute(
+      "aria-label",
+      "Translation target language",
     );
-    this.translationLanguageSelect.value = this.translationTargetLanguage;
+    this.translationTargetButtons = new Map();
+    for (const target of TRANSLATION_TARGETS) {
+      const button = createElement(
+        "button",
+        "astral-am-chat-translation-target-option",
+        target.label,
+      );
+      button.type = "button";
+      button.dataset.translationTarget = target.value;
+      button.addEventListener("click", () =>
+        this.setTranslationTarget(target.value),
+      );
+      this.translationTargetButtons.set(target.value, button);
+      this.translationTarget.append(button);
+    }
+    this.setTranslationTarget(this.translationTargetLanguage);
     this.translationToggle.classList.toggle(
       "is-active",
       this.translationEnabled,
@@ -2733,7 +2812,7 @@ class PromptBrowser {
     this.translationCheckbox.checked = this.translationEnabled;
     this.translationControls.append(
       this.translationToggle,
-      this.translationLanguageSelect,
+      this.translationTarget,
     );
     this.sendButton = createElement(
       "button",
@@ -2871,9 +2950,6 @@ class PromptBrowser {
         this.translationEnabled ? "warning" : "",
       );
     });
-    this.translationLanguageSelect.addEventListener("change", () => {
-      this.translationTargetLanguage = this.translationLanguageSelect.value;
-    });
     this.sendButton.addEventListener(
       "click",
       () => void this.handleChatSendButton(),
@@ -2888,6 +2964,13 @@ class PromptBrowser {
       "astral-am-prompt-tool astral-am-api-config-pane",
     );
     const heading = createElement("div", "astral-am-api-config-heading");
+    const backToChat = createElement(
+      "button",
+      "astral-am-button is-small astral-am-config-back",
+      "Back to API Chat",
+    );
+    backToChat.type = "button";
+    backToChat.addEventListener("click", () => this.setMode("chat"));
     heading.append(
       createElement("strong", "", "Multiple APIs and Mode Assignment"),
       createElement(
@@ -2895,6 +2978,7 @@ class PromptBrowser {
         "astral-am-muted",
         "Configuration stays on this machine. Manage external APIs above and local GGUF models below.",
       ),
+      backToChat,
     );
     this.localLlmConfigPane = this.buildLocalLlmConfigPane();
     this.apiConfigScroll = createElement(
@@ -3675,15 +3759,10 @@ class PromptBrowser {
     this.skillTagPane.classList.toggle("is-active", mode === "skillTags");
     this.apiConfigPane.classList.toggle("is-active", mode === "apiConfig");
     this.templateModeButton.classList.toggle("is-active", mode === "templates");
-    this.chatModeButton.classList.toggle("is-active", mode === "chat");
     this.skillModeButton.classList.toggle("is-active", mode === "skills");
     this.skillTagModeButton.classList.toggle(
       "is-active",
       mode === "skillTags",
-    );
-    this.apiConfigModeButton.classList.toggle(
-      "is-active",
-      mode === "apiConfig",
     );
     if (mode === "templates" && !this.templatesLoaded) {
       void this.loadTemplates();
@@ -3705,6 +3784,7 @@ class PromptBrowser {
   }
 
   openApiConfigSection(section = "api") {
+    this.root?.showTab?.("chat");
     this.setMode("apiConfig");
     window.requestAnimationFrame(() => {
       if (!this.apiConfigScroll) return;
@@ -3778,6 +3858,7 @@ class PromptBrowser {
       );
       if (requestId !== this.templatesRequestId) return;
       this.templates = Array.isArray(payload?.items) ? payload.items : [];
+      this.applyPromptCategories(payload?.categories);
       this.renderTemplates(preserveScroll);
       this.templateSummary.textContent = `${this.templates.length} prompt templates`;
       this.setTemplateStatus(
@@ -3795,6 +3876,21 @@ class PromptBrowser {
         this.templateList.classList.remove("is-loading");
       }
     }
+  }
+
+  applyPromptCategories(categories) {
+    const options = promptCategoryOptionList(categories);
+    this.promptCategoryValues = options
+      .filter((option) => option.value !== "all")
+      .map((option) => option.value);
+    this.templateCategory.setOptions(options, this.templateCategory.value);
+    if (this.templateEditorCategory) {
+      this.templateEditorCategory.setOptions(
+        editorCategoryOptions(this.promptCategoryValues),
+        this.templateEditorCategory.value,
+      );
+    }
+    if (this.categoryManager) this.renderCategoryManager();
   }
 
   renderTemplates(preserveScroll = true) {
@@ -3826,11 +3922,15 @@ class PromptBrowser {
     card.dataset.templateId = template.id;
     const header = createElement("div", "astral-am-template-header");
     const heading = createElement("div", "astral-am-template-heading");
+    const category = String(template.category || "text");
+    const builtinCategory = promptCategoryBuiltin(category);
     heading.append(
       createElement(
         "span",
-        `astral-am-category-badge is-${template.category || "text"}`,
-        promptCategoryLabel(template.category),
+        `astral-am-category-badge${
+          builtinCategory ? ` is-${builtinCategory.value}` : " is-custom"
+        }`,
+        promptCategoryLabel(category),
       ),
       createElement("strong", "", template.title || "Untitled Template"),
     );
@@ -3847,7 +3947,7 @@ class PromptBrowser {
     const loadToChat = createElement(
       "button",
       "astral-am-button is-small",
-      loaded ? "Current Session Prompt" : "Load to Conversation",
+      loaded ? "Current Session Prompt" : "Add to Conversation",
     );
     const insert = createElement(
       "button",
@@ -3859,7 +3959,7 @@ class PromptBrowser {
       "astral-am-button is-small is-danger",
       "Delete",
     );
-    for (const button of [edit, copy, loadToChat, insert, remove]) {
+    for (const button of [edit, copy, insert, loadToChat, remove]) {
       button.type = "button";
     }
     loadToChat.disabled = loaded;
@@ -3884,7 +3984,7 @@ class PromptBrowser {
     );
     insert.addEventListener("click", () => this.insertTemplateOnCanvas(template));
     remove.addEventListener("click", () => void this.deleteTemplate(template));
-    actions.append(edit, copy, loadToChat, insert, remove);
+    actions.append(edit, copy, insert, loadToChat, remove);
     card.append(header, prompt, actions);
     return card;
   }
@@ -3904,8 +4004,12 @@ class PromptBrowser {
     const body = createElement("div", "astral-am-editor-body");
     this.templateTitleInput = createElement("input", "astral-am-input");
     this.templateTitleInput.placeholder = "For example: cinematic portrait";
-    this.templateEditorCategory = createCustomDropdown("astral-am-category-dropdown");
-    this.templateEditorCategory.setOptions(PROMPT_CATEGORY_OPTIONS);
+    this.templateEditorCategory = createCustomDropdown(
+      "astral-am-category-dropdown",
+    );
+    this.templateEditorCategory.setOptions(
+      editorCategoryOptions(this.promptCategoryValues),
+    );
     this.templatePromptInput = createElement("textarea", "astral-am-textarea");
     this.templatePromptInput.rows = 14;
     this.templatePromptInput.placeholder = "Enter prompt text";
@@ -3930,6 +4034,7 @@ class PromptBrowser {
     shell.append(header, body, footer);
     dialog.append(shell);
     document.body.append(dialog);
+    registerLocalizationRoot(dialog);
     this.templateEditor = dialog;
     return dialog;
   }
@@ -3941,12 +4046,174 @@ class PromptBrowser {
       ? "Edit Prompt Template"
       : "New Prompt Template";
     this.templateTitleInput.value = template?.title || "";
-    this.templateEditorCategory.value = template?.category || "text";
+    this.templateEditorCategory.setOptions(
+      editorCategoryOptions(this.promptCategoryValues),
+      template?.category || "text",
+    );
     this.templatePromptInput.value = template?.prompt || "";
     this.templateEditorStatus.textContent = "";
     this.templateEditorStatus.className = "astral-am-action-status";
     if (!dialog.open) dialog.showModal();
     window.setTimeout(() => this.templateTitleInput.focus(), 0);
+  }
+
+  ensureCategoryManager() {
+    if (this.categoryManager) return this.categoryManager;
+    const dialog = createElement("dialog", "astral-am-editor-dialog");
+    const shell = createElement("div", "astral-am-editor-shell");
+    const header = createElement("div", "astral-am-editor-header");
+    const title = createElement("strong", "", "Manage Prompt Categories");
+    const close = createElement("button", "astral-am-icon-button", "×");
+    close.type = "button";
+    close.title = "Close";
+    close.addEventListener("click", () => dialog.close());
+    header.append(title, close);
+    const body = createElement("div", "astral-am-editor-body");
+    this.categoryManagerList = createElement(
+      "div",
+      "astral-am-category-manager-list",
+    );
+    const addRow = createElement("div", "astral-am-category-manager-add");
+    this.categoryManagerInput = createElement("input", "astral-am-input");
+    this.categoryManagerInput.type = "text";
+    this.categoryManagerInput.maxLength = 40;
+    this.categoryManagerInput.placeholder = "New category name";
+    const addButton = createElement(
+      "button",
+      "astral-am-button is-primary",
+      "Add Category",
+    );
+    addButton.type = "button";
+    addButton.addEventListener("click", () => void this.createPromptCategory());
+    this.categoryManagerInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      void this.createPromptCategory();
+    });
+    addRow.append(this.categoryManagerInput, addButton);
+    this.categoryManagerStatus = createElement(
+      "div",
+      "astral-am-action-status",
+    );
+    body.append(
+      this.categoryManagerList,
+      addRow,
+      this.categoryManagerStatus,
+    );
+    shell.append(header, body);
+    dialog.append(shell);
+    document.body.append(dialog);
+    registerLocalizationRoot(dialog);
+    this.categoryManager = dialog;
+    return dialog;
+  }
+
+  renderCategoryManager() {
+    if (!this.categoryManagerList) return;
+    const values = this.promptCategoryValues || [];
+    if (!values.length) {
+      this.categoryManagerList.replaceChildren(
+        createElement("p", "astral-am-muted", "No categories yet."),
+      );
+      return;
+    }
+    const fragment = document.createDocumentFragment();
+    for (const value of values) {
+      const row = createElement("div", "astral-am-category-manager-row");
+      row.append(
+        createElement(
+          "span",
+          "astral-am-category-manager-name",
+          promptCategoryLabel(value),
+        ),
+      );
+      const ruleCategory = ["expand", "invert"].includes(
+        String(value).toLowerCase(),
+      );
+      const remove = createElement(
+        "button",
+        "astral-am-button is-small is-danger",
+        "Delete",
+      );
+      remove.type = "button";
+      remove.disabled = ruleCategory;
+      remove.title = ruleCategory
+        ? "Built-in rule categories cannot be removed"
+        : "Remove this category; it must be empty";
+      remove.addEventListener("click", () =>
+        void this.deletePromptCategory(value),
+      );
+      row.append(remove);
+      fragment.append(row);
+    }
+    this.categoryManagerList.replaceChildren(fragment);
+  }
+
+  openCategoryManager() {
+    const dialog = this.ensureCategoryManager();
+    this.setCategoryManagerStatus("");
+    this.renderCategoryManager();
+    if (!dialog.open) dialog.showModal();
+  }
+
+  setCategoryManagerStatus(message, kind = "") {
+    if (!this.categoryManagerStatus) return;
+    this.categoryManagerStatus.textContent = message || "";
+    this.categoryManagerStatus.className =
+      `astral-am-action-status${kind ? ` is-${kind}` : ""}`;
+  }
+
+  async createPromptCategory() {
+    const raw = this.categoryManagerInput.value.trim();
+    if (!raw) {
+      this.setCategoryManagerStatus("Enter a category name.", "error");
+      return;
+    }
+    const name = promptCategoryValueFromInput(raw);
+    try {
+      const payload = await fetchJson(
+        "/assets-astral/prompt-templates/categories/create",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        },
+      );
+      this.categoryManagerInput.value = "";
+      this.applyPromptCategories(payload?.categories);
+      this.setCategoryManagerStatus(
+        payload?.created === false
+          ? "Category already exists."
+          : "Category added.",
+        payload?.created === false ? "warning" : "success",
+      );
+    } catch (error) {
+      this.setCategoryManagerStatus(
+        `Add failed: ${error.message || error}`,
+        "error",
+      );
+    }
+  }
+
+  async deletePromptCategory(name) {
+    try {
+      const payload = await fetchJson(
+        "/assets-astral/prompt-templates/categories/delete",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        },
+      );
+      this.applyPromptCategories(payload?.categories);
+      this.setCategoryManagerStatus("Category removed.", "success");
+      void this.loadTemplates();
+    } catch (error) {
+      this.setCategoryManagerStatus(
+        `Delete failed: ${error.message || error}`,
+        "error",
+      );
+    }
   }
 
   async saveTemplate() {
@@ -4008,27 +4275,19 @@ class PromptBrowser {
     try {
       const node = LiteGraph.createNode(ASTRAL_PROMPT_NODE_ID);
       if (!node) {
-        throw new Error("ComfyUI has not registered the Assets Prompt node.");
+        throw new Error("ComfyUI has not registered the System Prompt node.");
       }
       const titleWidget = node.widgets?.find((widget) => widget.name === "title");
       const promptWidget = node.widgets?.find((widget) => widget.name === "prompt");
       if (!titleWidget || !promptWidget) {
-        throw new Error("The Assets Prompt node is missing the title or prompt widget.");
+        throw new Error("The System Prompt node is missing the title or prompt widget.");
       }
       titleWidget.value = template.title || "Prompt";
       promptWidget.value = template.prompt || "";
       node.setSize?.([420, 240]);
-      const canvas = app.canvas;
-      node.pos = canvas?.graph_offset
-        ? [
-            -canvas.graph_offset[0] / (canvas.ds?.scale || 1) + 80,
-            -canvas.graph_offset[1] / (canvas.ds?.scale || 1) + 80,
-          ]
-        : [80, 80];
       app.graph.add(node);
+      placeNodesAtViewCenter([node]);
       app.graph.setDirtyCanvas?.(true, true);
-      node.setDirtyCanvas?.(true, true);
-      app.canvas?.selectNode?.(node);
       this.root.close();
     } catch (error) {
       this.setTemplateStatus(`Failed to place on canvas: ${error.message || error}`, "error");
@@ -4663,6 +4922,18 @@ class PromptBrowser {
     }
   }
 
+  setTranslationTarget(value) {
+    const target =
+      TRANSLATION_TARGETS.find((item) => item.value === value) ||
+      TRANSLATION_TARGETS[0];
+    this.translationTargetLanguage = target.value;
+    for (const [key, button] of this.translationTargetButtons || []) {
+      const active = key === target.value;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    }
+  }
+
   setChatStatus(message, kind = "") {
     this.chatStatus.textContent = message || "";
     this.chatStatus.className =
@@ -4694,11 +4965,11 @@ class PromptBrowser {
     ]) {
       if (button) button.disabled = this.chatGenerating;
     }
-    for (const control of [
-      this.translationCheckbox,
-      this.translationLanguageSelect,
-    ]) {
-      if (control) control.disabled = this.chatGenerating;
+    if (this.translationCheckbox) {
+      this.translationCheckbox.disabled = this.chatGenerating;
+    }
+    for (const button of this.translationTargetButtons?.values() || []) {
+      button.disabled = this.chatGenerating;
     }
     this.renderConversationList();
   }
@@ -5783,6 +6054,14 @@ class PromptBrowser {
       saved ? action : `${action} Failed to save the conversation.`,
       saved ? "success" : "error",
     );
+    this.returnToChatAfterPicker();
+  }
+
+  returnToChatAfterPicker() {
+    if (!this.chatPickerReturn) return;
+    this.chatPickerReturn = "";
+    this.root?.showTab?.("chat");
+    this.setMode("chat");
   }
 
   async persistConversationSettings() {
@@ -5874,6 +6153,7 @@ class PromptBrowser {
       saved ? "success" : "error",
     );
     this.setChatStatus(message, saved ? "success" : "error");
+    this.returnToChatAfterPicker();
   }
 
   handleChatSendButton() {
@@ -6001,8 +6281,8 @@ class PromptBrowser {
       );
       return;
     }
-    const targetLanguage = TRANSLATION_LANGUAGES.find(
-      (language) => language.value === this.translationLanguageSelect.value,
+    const targetLanguage = TRANSLATION_TARGETS.find(
+      (language) => language.value === this.translationTargetLanguage,
     );
     if (translationEnabled && !targetLanguage) {
       this.setChatStatus("Select a translation target language.", "warning");
@@ -6065,7 +6345,7 @@ class PromptBrowser {
           };
     this.setChatStatus(
       translationEnabled
-        ? `Translating this passage to "${targetLanguage.label}"; history, system prompt, Skills and assets will not be sent.`
+        ? `Translating this passage to "${translateUiText(targetLanguage.label, getLanguage())}"; history, system prompt, Skills and assets will not be sent.`
         : useLocal
           ? `Running inference with local model "${activeModel.split("/").pop()}". First load may be slow.`
           : `Requesting the API with "${activeTask.label}" and model "${activeModel}". ${
@@ -6483,6 +6763,7 @@ class PromptBrowser {
     const current = this.chatInput.value.trim();
     this.chatInput.value = current ? `${current}\n\n${result}` : result;
     this.selectChatTask("text");
+    this.root?.showTab?.("chat");
     this.setMode("chat");
     this.chatInput.dispatchEvent(new Event("input", { bubbles: true }));
     this.chatInput.focus();
@@ -7849,7 +8130,7 @@ class PromptBrowser {
       const button = createElement(
         "button",
         `astral-am-skill-tag-context-item${item.danger ? " is-danger" : ""}`,
-        item.label,
+        translateUiText(item.label, getLanguage()),
       );
       button.type = "button";
       button.setAttribute("role", "menuitem");
@@ -8121,9 +8402,17 @@ class PromptBrowser {
             ? "Switch to this Skill"
             : "Add to Conversation",
       );
+      const addToCanvas = createElement(
+        "button",
+        "astral-am-button is-small",
+        "Add to Canvas",
+      );
       preview.type = "button";
       openDirectory.type = "button";
+      addToCanvas.type = "button";
       addToChat.type = "button";
+      addToCanvas.title =
+        "Place a Prompt Skill Loader node with this Skill on the current canvas.";
     openDirectory.title = "Open this Skill's folder in the system file manager and select it.";
       addToChat.dataset.chatSkillId = skill.id;
       addToChat.disabled = isCurrentSkill;
@@ -8143,7 +8432,8 @@ class PromptBrowser {
         "click",
         () => void this.addSkillToChat(skill.id),
       );
-      actions.append(preview, openDirectory, addToChat);
+      addToCanvas.addEventListener("click", () => this.insertSkillLoader(skill));
+      actions.append(preview, openDirectory, addToCanvas, addToChat);
       card.append(header, description, meta, actions);
       fragment.append(card);
     }
@@ -8383,6 +8673,46 @@ class PromptBrowser {
     );
     this.skillContentCache.set(skillId, detail);
     return detail;
+  }
+
+  insertSkillLoader(skill) {
+    try {
+      if (
+        typeof LiteGraph === "undefined" ||
+        typeof LiteGraph.createNode !== "function" ||
+        !app?.graph
+      ) {
+        throw new Error("The current ComfyUI canvas is not ready.");
+      }
+      const node = LiteGraph.createNode(ASTRAL_SKILL_LOADER_NODE_ID);
+      if (!node) {
+        throw new Error(
+          "ComfyUI has not registered the Prompt Skill Loader node.",
+        );
+      }
+      const pathWidget = node.widgets?.find(
+        (widget) => widget.name === "skill_path",
+      );
+      if (!pathWidget) {
+        throw new Error(
+          "The Prompt Skill Loader is missing its skill_path input.",
+        );
+      }
+      pathWidget.value = String(skill.absolutePath || "");
+      node.title = `Skill · ${skill.name || skill.fileName || skill.id}`;
+      app.graph.add(node);
+      placeNodesAtViewCenter([node]);
+      app.graph.setDirtyCanvas?.(true, true);
+      this.setSkillStatus(
+        `Placed a Skill loader for "${skill.name}" on the canvas.`,
+        "success",
+      );
+    } catch (error) {
+      this.setSkillStatus(
+        `Failed to place the Skill loader: ${error.message || error}`,
+        "error",
+      );
+    }
   }
 
   async showSkillContent(skill) {
@@ -9472,32 +9802,6 @@ class LoraSourceBrowser {
       ) {
         throw new Error("The current ComfyUI canvas is not ready.");
       }
-      const canvas = app.canvas;
-      const canvasElement = canvas?.canvas;
-      const viewport = canvasElement?.getBoundingClientRect?.();
-      let center = null;
-      if (viewport && typeof canvas?.convertEventToCanvasOffset === "function") {
-        center = canvas.convertEventToCanvasOffset({
-          clientX: viewport.left + viewport.width / 2,
-          clientY: viewport.top + viewport.height / 2,
-        });
-      } else if (
-        viewport &&
-        typeof canvas?.clientPosToCanvasPos === "function"
-      ) {
-        center = canvas.clientPosToCanvasPos([
-          viewport.left + viewport.width / 2,
-          viewport.top + viewport.height / 2,
-        ]);
-      }
-      if (!Array.isArray(center) || center.length < 2) {
-        center = canvas?.graph_offset
-          ? [
-              -canvas.graph_offset[0] / (canvas.ds?.scale || 1) + 80,
-              -canvas.graph_offset[1] / (canvas.ds?.scale || 1) + 80,
-            ]
-          : [80, 80];
-      }
       const nodes = [];
       for (const item of wanted) {
         const loader = LiteGraph.createNode("LoraLoader");
@@ -9516,22 +9820,9 @@ class LoraSourceBrowser {
         loader.title = `LoRA Loader · ${item.name || value}`;
         nodes.push(loader);
       }
-      nodes.forEach((node, index) => {
-        app.graph.add(node);
-        const [nodeWidth, nodeHeight] = Array.isArray(node.size)
-          ? node.size
-          : [220, 120];
-        node.pos = [
-          Number(center[0]) - nodeWidth / 2 + index * 28,
-          Number(center[1]) - nodeHeight / 2 + index * 28,
-        ];
-        node.setDirtyCanvas?.(true, true);
-      });
+      nodes.forEach((node) => app.graph.add(node));
+      placeNodesAtViewCenter(nodes);
       app.graph.setDirtyCanvas?.(true, true);
-      const last = nodes[nodes.length - 1];
-      if (typeof app.canvas?.selectNode === "function") {
-        app.canvas.selectNode(last);
-      }
       this.setStatus(
         skippedCount
           ? `Placed the first ${nodes.length} LoRA Loaders on the current canvas; up to ${MAX_LORA_CANVAS_BATCH} at a time, so the other ${skippedCount} were not placed.`
@@ -9875,21 +10166,13 @@ class ModelManagerBrowser {
     modeTabs.setAttribute("aria-label", "Model management tools");
     this.loraModeButton = createElement("button", "astral-am-subtab is-active", "LoRA Management");
     this.duplicateModeButton = createElement("button", "astral-am-subtab", "Duplicate Model Cleanup");
-    this.missingModeButton = createElement(
-      "button",
-      "astral-am-subtab",
-      "Fill Missing Models",
-    );
     this.duplicateModeButton.type = "button";
     this.loraModeButton.type = "button";
-    this.missingModeButton.type = "button";
-    modeTabs.append(
-      this.missingModeButton,
-      this.loraModeButton,
-      this.duplicateModeButton,
-    );
+    modeTabs.append(this.loraModeButton, this.duplicateModeButton);
 
     this.duplicatePane = this.buildDuplicatePane();
+    // The missing-model pane has no tab: the sidebar hover shortcut drives it
+    // and reads its status text. It stays hidden inside the manager.
     this.missingModelPane = this.buildMissingModelPane();
     this.loraPane = createElement("div", "astral-am-model-tool is-active");
     this.loraPane.append(this.loraBrowser.element);
@@ -9902,7 +10185,6 @@ class ModelManagerBrowser {
     this.element = section;
 
     this.duplicateModeButton.addEventListener("click", () => this.setMode("duplicates"));
-    this.missingModeButton.addEventListener("click", () => this.setMode("missing"));
     this.loraModeButton.addEventListener("click", () => this.setMode("loras"));
   }
 
@@ -10591,11 +10873,8 @@ class ModelManagerBrowser {
     this.duplicatePane.classList.toggle("is-active", mode === "duplicates");
     this.loraPane.hidden = mode !== "loras";
     this.loraPane.classList.toggle("is-active", mode === "loras");
-    this.missingModelPane.hidden = mode !== "missing";
-    this.missingModelPane.classList.toggle("is-active", mode === "missing");
     this.duplicateModeButton.classList.toggle("is-active", mode === "duplicates");
     this.loraModeButton.classList.toggle("is-active", mode === "loras");
-    this.missingModeButton.classList.toggle("is-active", mode === "missing");
     if (mode === "loras" && !this.lorasLoaded) {
       this.lorasLoaded = true;
       void Promise.all([
@@ -10606,18 +10885,12 @@ class ModelManagerBrowser {
     if (mode === "duplicates") {
       void this.loadCategories().then(() => this.resumeDuplicateScan());
     }
-    if (mode === "missing" && !this.missingModelScanned) {
-      void this.scanMissingModels();
-    }
   }
 
   async load(reset = false, preserveScroll = false) {
     if (this.mode === "duplicates") {
       await this.loadCategories();
       await this.resumeDuplicateScan();
-    }
-    if (this.mode === "missing" && (reset || !this.missingModelScanned)) {
-      await this.scanMissingModels();
     }
     if (!this.lorasLoaded || reset) {
       this.lorasLoaded = true;
@@ -11413,45 +11686,9 @@ class MediaViewer {
         widget.options.values.push(value);
       }
       loader.title = `${nodeType} · ${asset.name}`;
-      const canvas = app.canvas;
-      const canvasElement = canvas?.canvas;
-      const viewport = canvasElement?.getBoundingClientRect?.();
-      let graphPosition = null;
-      if (viewport && typeof canvas?.convertEventToCanvasOffset === "function") {
-        graphPosition = canvas.convertEventToCanvasOffset({
-          clientX: viewport.left + viewport.width / 2,
-          clientY: viewport.top + viewport.height / 2,
-        });
-      } else if (
-        viewport &&
-        typeof canvas?.clientPosToCanvasPos === "function"
-      ) {
-        graphPosition = canvas.clientPosToCanvasPos([
-          viewport.left + viewport.width / 2,
-          viewport.top + viewport.height / 2,
-        ]);
-      }
-      if (!Array.isArray(graphPosition) || graphPosition.length < 2) {
-        graphPosition = canvas?.graph_offset
-          ? [
-              -canvas.graph_offset[0] / (canvas.ds?.scale || 1) + 80,
-              -canvas.graph_offset[1] / (canvas.ds?.scale || 1) + 80,
-            ]
-          : [80, 80];
-      }
       app.graph.add(loader);
-      const [nodeWidth, nodeHeight] = Array.isArray(loader.size)
-        ? loader.size
-        : [220, 120];
-      loader.pos = [
-        Number(graphPosition[0]) - nodeWidth / 2,
-        Number(graphPosition[1]) - nodeHeight / 2,
-      ];
+      placeNodesAtViewCenter([loader]);
       app.graph.setDirtyCanvas?.(true, true);
-      loader.setDirtyCanvas?.(true, true);
-      if (typeof app.canvas?.selectNode === "function") {
-        app.canvas.selectNode(loader);
-      }
       this.dialog.close();
       this.managerRoot.close();
     } catch (error) {
@@ -11647,6 +11884,10 @@ class AssetManager {
       this.syncShortcutButton();
     });
     this.promptPane.append(this.promptBrowser.element);
+    this.chatPaneHost.append(
+      this.promptBrowser.chatPane,
+      this.promptBrowser.apiConfigPane,
+    );
     this.assetPane.append(this.assetBrowser.element);
     this.modelPane.append(this.modelBrowser.element);
     this.workspacePane.append(this.workspaceBrowser.element);
@@ -11727,34 +11968,6 @@ class AssetManager {
     projectLink.title = "Open the GitHub release page for ComfyUI-Astral-Manage";
     heading.append(projectLink, headingLinks);
     const headerActions = createElement("div", "astral-am-header-actions");
-    headerActions.append(
-      createElement(
-        "span",
-        "astral-am-directory-prompt",
-        "Quick Open User Folders",
-      ),
-    );
-    this.directoryButtons = new Map();
-    for (const root of [
-      "models",
-      "custom_nodes",
-      "input",
-      "output",
-      "workflows",
-    ]) {
-      const button = createElement(
-        "button",
-        "astral-am-header-button astral-am-directory-label",
-      );
-      button.type = "button";
-      button.dataset.pathLabel = root;
-      button.setAttribute("aria-label", `Open the ${root} folder`);
-    button.title = `Show the ${root} folder in system file manager now`;
-      markUntranslated(button);
-      button.addEventListener("click", () => void this.openDirectory(root));
-      this.directoryButtons.set(root, button);
-      headerActions.append(button);
-    }
     this.shortcutButtonLabel = createElement(
       "span",
       "astral-am-shortcut-button-label",
@@ -11770,19 +11983,7 @@ class AssetManager {
       "click",
       () => void this.openShortcutEditor(),
     );
-    this.refreshButton = createElement(
-      "button",
-      "astral-am-header-button is-primary",
-      "Refresh",
-    );
-    this.refreshButton.type = "button";
-    this.refreshButton.title = "Refresh ComfyUI node definitions, models, and workflows (same as R).";
-    this.refreshButton.addEventListener(
-      "click",
-      () => void this.refreshComfyRegistries(),
-    );
-    headerActions.prepend(this.shortcutButton);
-    headerActions.append(this.refreshButton);
+    headerActions.append(this.shortcutButton);
     const close = createElement("button", "astral-am-icon-button", "×");
     close.type = "button";
     close.title = "Close";
@@ -11794,10 +11995,12 @@ class AssetManager {
     this.promptTab = createElement("button", "astral-am-tab is-active", "Prompt Management");
     this.assetTab = createElement("button", "astral-am-tab", "Media Management");
     this.modelTab = createElement("button", "astral-am-tab", "Model Management");
+    this.chatTab = createElement("button", "astral-am-tab", "API Chat");
     this.promptTab.type = "button";
     this.assetTab.type = "button";
     this.modelTab.type = "button";
-    tabs.append(this.promptTab, this.assetTab, this.modelTab);
+    this.chatTab.type = "button";
+    tabs.append(this.promptTab, this.assetTab, this.modelTab, this.chatTab);
 
     const main = createElement("main", "astral-am-main");
     this.promptPane = createElement("div", "astral-am-pane-host");
@@ -11805,15 +12008,20 @@ class AssetManager {
     this.assetPane.hidden = true;
     this.modelPane = createElement("div", "astral-am-pane-host");
     this.modelPane.hidden = true;
+    this.chatPaneHost = createElement("div", "astral-am-pane-host");
+    this.chatPaneHost.hidden = true;
     this.workspacePane = createElement("div", "astral-am-pane-host");
     this.workspacePane.hidden = true;
     main.append(
       this.promptPane,
       this.assetPane,
       this.modelPane,
+      this.chatPaneHost,
       this.workspacePane,
     );
-    windowElement.append(header, tabs, main);
+    const topbar = createElement("div", "astral-am-topbar");
+    topbar.append(tabs, header);
+    windowElement.append(topbar, main);
     backdrop.append(windowElement);
     document.body.append(backdrop);
 
@@ -11824,7 +12032,11 @@ class AssetManager {
     this.promptTab.addEventListener("click", () => this.showTab("prompts"));
     this.assetTab.addEventListener("click", () => this.showTab("assets"));
     this.modelTab.addEventListener("click", () => this.showTab("models"));
-    header.addEventListener(
+    this.chatTab.addEventListener("click", () => {
+      this.showTab("chat");
+      this.promptBrowser.setMode("chat");
+    });
+    topbar.addEventListener(
       "pointerdown",
       (event) => this.startWindowDrag(event),
     );
@@ -11915,6 +12127,7 @@ class AssetManager {
       prompts: this.promptTab,
       assets: this.assetTab,
       models: this.modelTab,
+      chat: this.chatTab,
     }[this.activeTab];
     activeTab?.focus();
   }
@@ -11938,6 +12151,7 @@ class AssetManager {
 
   openChatSkillSelection(promptBrowser = this.promptBrowser) {
     this.open("prompts");
+    promptBrowser.chatPickerReturn = "skill";
     promptBrowser.setMode("skills");
     void promptBrowser.loadSkills();
   }
@@ -11947,6 +12161,7 @@ class AssetManager {
     category = "all",
   ) {
     this.open("prompts");
+    promptBrowser.chatPickerReturn = "prompt";
     promptBrowser.setMode("templates");
     promptBrowser.templateSearch.value = "";
     const requestedCategory = String(category || "all");
@@ -12061,18 +12276,29 @@ class AssetManager {
 
   showTab(tab) {
     if (tab === "loras") tab = "models";
-    if (!["prompts", "assets", "models", "workspace"].includes(tab)) {
+    if (!["prompts", "assets", "models", "chat", "workspace"].includes(tab)) {
       tab = "prompts";
     }
     if (tab !== "prompts") this.promptBrowser?.hideSkillPreview();
+    if (tab !== "prompts" && this.promptBrowser) {
+      this.promptBrowser.chatPickerReturn = "";
+    }
     this.activeTab = tab;
     this.promptPane.hidden = tab !== "prompts";
     this.assetPane.hidden = tab !== "assets";
     this.modelPane.hidden = tab !== "models";
+    this.chatPaneHost.hidden = tab !== "chat";
     this.workspacePane.hidden = tab !== "workspace";
     this.promptTab.classList.toggle("is-active", tab === "prompts");
     this.assetTab.classList.toggle("is-active", tab === "assets");
     this.modelTab.classList.toggle("is-active", tab === "models");
+    this.chatTab.classList.toggle("is-active", tab === "chat");
+    if (
+      tab === "prompts" &&
+      ["chat", "apiConfig"].includes(this.promptBrowser.mode)
+    ) {
+      this.promptBrowser.setMode("templates");
+    }
     if (tab === "prompts" && !this.promptsLoaded) {
       this.promptsLoaded = true;
       void this.promptBrowser.load(true);
@@ -12086,72 +12312,15 @@ class AssetManager {
       this.modelsLoaded = true;
       void this.modelBrowser.load(true);
     }
-  }
-
-  async openDirectory(root) {
-    const button = this.directoryButtons.get(root);
-    if (button) button.disabled = true;
-    try {
-      await fetchJson("/assets-astral/workspace/open", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ root, path: "" }),
-      });
-    } catch (error) {
-      await showAstralAlert({
-        title: `Unable to open ${root}`,
-        message: String(error.message || error),
-        tone: "warning",
-      });
-    } finally {
-      if (button) button.disabled = false;
+    if (tab === "chat") {
+      if (!this.promptsLoaded) {
+        this.promptsLoaded = true;
+        void this.promptBrowser.load(true);
+      }
+      this.promptBrowser.setMode("chat");
     }
   }
 
-  async refreshComfyRegistries() {
-    if (this.refreshButton.disabled) return;
-    this.refreshButton.disabled = true;
-    this.refreshButton.textContent = "Refreshing";
-    try {
-      const command = app.extensionManager?.command;
-      if (typeof command?.execute === "function") {
-        await command.execute("Comfy.RefreshNodeDefinitions");
-      } else if (typeof app.refreshComboInNodes === "function") {
-        await app.refreshComboInNodes();
-      } else {
-        throw new Error("The current ComfyUI frontend does not expose a refresh API.");
-      }
-
-      this.modelBrowser.categoriesPromise = null;
-      this.modelBrowser.lorasLoaded = false;
-      this.loraBrowser.selected.clear();
-      this.loraBrowser.selectionPool.clear();
-      this.loraBrowser.selectionScopeComplete = false;
-      this.loraBrowser.loadingSources.clear();
-      this.assetsLoaded = false;
-      this.modelsLoaded = false;
-
-      if (this.activeTab === "models") {
-        await this.modelBrowser.load(true, true);
-      } else if (this.activeTab === "assets") {
-        await this.assetBrowser.reloadPreservingLoadedCount(
-          this.assetBrowser.items.length,
-          true,
-        );
-      } else if (this.activeTab === "workspace" && this.workspaceBrowser.root) {
-        await this.workspaceBrowser.load(true);
-      }
-    } catch (error) {
-      await showAstralAlert({
-        title: "Failed to Refresh ComfyUI Data",
-        message: String(error.message || error),
-        tone: "warning",
-      });
-    } finally {
-      this.refreshButton.disabled = false;
-      this.refreshButton.textContent = "Refresh";
-    }
-  }
 }
 
 function openAssetManager(tab = "prompts") {
@@ -12163,7 +12332,7 @@ function openAssetManager(tab = "prompts") {
 function openAstralApiConfig(section = "api") {
   ensureStyles();
   manager ||= new AssetManager();
-  manager.open("prompts");
+  manager.open("chat");
   manager.promptBrowser.openApiConfigSection(
     section === "local" ? "local" : "api",
   );
@@ -12183,6 +12352,248 @@ function openAstralPromptCategory(category = "all") {
     manager.promptBrowser,
     String(category || "all"),
   );
+}
+
+const ASSET_MANAGER_SIDEBAR_ID = "astral-asset-manager";
+const ASSET_MANAGER_SIDEBAR_TEST_ID = `${ASSET_MANAGER_SIDEBAR_ID}-tab-button`;
+const ASSET_MANAGER_SIDEBAR_FOLDERS = Object.freeze([
+  "models",
+  "custom_nodes",
+  "input",
+  "output",
+  "workflows",
+]);
+
+async function openWorkspaceRoot(root) {
+  await fetchJson("/assets-astral/workspace/open", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ root, path: "" }),
+  });
+}
+
+async function openSidebarFolder(root) {
+  try {
+    await openWorkspaceRoot(root);
+  } catch (error) {
+    await showAstralAlert({
+      title: `Unable to open ${root}`,
+      message: String(error.message || error),
+      tone: "warning",
+    });
+  }
+}
+
+async function fillMissingModelsFromSidebar({ fill, status }) {
+  if (fill.disabled) return;
+  fill.disabled = true;
+  status.hidden = false;
+  status.textContent = translateUiText("Scanning...");
+  try {
+    manager ||= new AssetManager();
+    const browser = manager.modelBrowser;
+    browser.autoFillMissingModels = true;
+    browser.missingAutoFillCheckbox.checked = true;
+    await browser.scanMissingModels();
+    await new Promise((resolve) => {
+      if (typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(() => resolve());
+      } else {
+        window.setTimeout(resolve, 0);
+      }
+    });
+    const summary = String(
+      browser.missingModelStatus?.textContent || "",
+    ).trim();
+    status.textContent = summary || translateUiText("Scan complete.");
+  } catch (error) {
+    status.textContent =
+      `${translateUiText("Scan failed")}: ${error.message || error}`;
+  } finally {
+    fill.disabled = false;
+  }
+}
+
+function buildAssetManagerSidebarMenu() {
+  const menu = createElement("div", "astral-am-sidebar-menu");
+  menu.hidden = true;
+  menu.setAttribute("role", "menu");
+  menu.append(
+    createElement(
+      "div",
+      "astral-am-sidebar-menu-title",
+      "Quick Open User Folders",
+    ),
+  );
+  const folders = createElement("div", "astral-am-sidebar-menu-folders");
+  for (const root of ASSET_MANAGER_SIDEBAR_FOLDERS) {
+    const button = markUntranslated(
+      createElement("button", "astral-am-sidebar-menu-item", root),
+    );
+    button.type = "button";
+    button.setAttribute("aria-label", `Open the ${root} folder`);
+    button.addEventListener("click", () => {
+      menu.hidden = true;
+      void openSidebarFolder(root);
+    });
+    folders.append(button);
+  }
+  const status = createElement("div", "astral-am-sidebar-menu-status");
+  status.hidden = true;
+  const fill = createElement(
+    "button",
+    "astral-am-sidebar-menu-fill",
+    "Fill Missing Models",
+  );
+  fill.type = "button";
+  fill.addEventListener("click", () => {
+    void fillMissingModelsFromSidebar({ fill, status });
+  });
+  menu.append(folders, status, fill);
+  registerLocalizationRoot(menu);
+  return menu;
+}
+
+function positionAssetManagerSidebarMenu(menu, anchor) {
+  const rect = anchor.getBoundingClientRect();
+  menu.hidden = false;
+  const size = menu.getBoundingClientRect();
+  const gap = 8;
+  const margin = 10;
+  let left = rect.right + gap;
+  if (left + size.width > window.innerWidth - margin) {
+    left = rect.left - gap - size.width;
+  }
+  const top = Math.min(
+    Math.max(margin, rect.top),
+    Math.max(margin, window.innerHeight - margin - size.height),
+  );
+  menu.style.left = `${Math.max(margin, left)}px`;
+  menu.style.top = `${top}px`;
+}
+
+function installAssetManagerSidebarHover() {
+  let anchor = null;
+  let menu = null;
+  let hideTimer = null;
+  let scheduled = false;
+  const hide = (delay = 220) => {
+    window.clearTimeout(hideTimer);
+    hideTimer = window.setTimeout(() => {
+      if (menu) menu.hidden = true;
+    }, delay);
+  };
+  const show = () => {
+    if (!anchor || !menu) return;
+    window.clearTimeout(hideTimer);
+    positionAssetManagerSidebarMenu(menu, anchor);
+  };
+  const attach = () => {
+    const button = document.querySelector(
+      `[data-testid="${ASSET_MANAGER_SIDEBAR_TEST_ID}"]`,
+    );
+    if (!button || button === anchor) return Boolean(button);
+    anchor = button;
+    if (!menu) {
+      menu = buildAssetManagerSidebarMenu();
+      document.body.append(menu);
+      menu.addEventListener("mouseenter", show);
+      menu.addEventListener("mouseleave", () => hide());
+    }
+    button.addEventListener("mouseenter", show);
+    button.addEventListener("mouseleave", () => hide());
+    return true;
+  };
+  attach();
+  const observer = new MutationObserver(() => {
+    if (scheduled) return;
+    scheduled = true;
+    window.requestAnimationFrame(() => {
+      scheduled = false;
+      if (!anchor || !anchor.isConnected) attach();
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener("resize", () => {
+    if (menu && !menu.hidden && anchor) {
+      positionAssetManagerSidebarMenu(menu, anchor);
+    }
+  });
+}
+
+function renderAssetManagerSidebarPane(element) {
+  const pane = createElement("div", "astral-am-sidebar-panel");
+  pane.append(
+    createElement("h3", "astral-am-sidebar-title", "Asset Manager"),
+    createElement(
+      "p",
+      "astral-am-sidebar-hint",
+      "Prompts, media, models and LoRA sources in one panel.",
+    ),
+  );
+  const launch = createElement(
+    "button",
+    "astral-am-sidebar-launch",
+    "Launch Asset Manager",
+  );
+  launch.type = "button";
+  launch.addEventListener("click", () => openAssetManager());
+  pane.append(launch);
+  registerLocalizationRoot(pane);
+  element.replaceChildren(pane);
+}
+
+function sidebarTabList(manager) {
+  const store = manager?.sidebarTab?.value ?? manager?.sidebarTab ?? manager;
+  const tabs = store?.sidebarTabs;
+  if (Array.isArray(tabs)) return tabs;
+  return Array.isArray(tabs?.value) ? tabs.value : null;
+}
+
+function placeSidebarTabAfter(manager, tabId, anchorId) {
+  const tabs = sidebarTabList(manager);
+  if (!tabs) return;
+  const currentIndex = tabs.findIndex((item) => item?.id === tabId);
+  const anchorIndex = tabs.findIndex((item) => item?.id === anchorId);
+  if (currentIndex < 0 || anchorIndex < 0) return;
+  if (currentIndex === anchorIndex + 1) return;
+  const [tab] = tabs.splice(currentIndex, 1);
+  tabs.splice(anchorIndex + (currentIndex < anchorIndex ? 0 : 1), 0, tab);
+}
+
+function registerAssetManagerSidebar() {
+  ensureStyles();
+  const title = translateUiText("Asset Manager", getLanguage());
+  const tab = {
+    id: ASSET_MANAGER_SIDEBAR_ID,
+    icon: "pi pi-images",
+    title,
+    tooltip: title,
+    type: "custom",
+    // Returning true keeps the sidebar closed: the icon behaves like the
+    // top-bar button and toggles the floating manager instead of opening a pane.
+    onToggle: () => {
+      toggleAssetManager();
+      return true;
+    },
+    render: renderAssetManagerSidebarPane,
+  };
+  const sidebar = app.extensionManager;
+  let registered = false;
+  if (typeof sidebar?.registerSidebarTab === "function") {
+    sidebar.registerSidebarTab(tab);
+    registered = true;
+  } else if (typeof sidebar?.sidebarTab?.registerSidebarTab === "function") {
+    sidebar.sidebarTab.registerSidebarTab(tab);
+    registered = true;
+  }
+  // The sidebar API can only prepend, so move the tab next to the built-in
+  // Assets tab to keep the two related entries together.
+  if (registered) {
+    placeSidebarTabAfter(sidebar, ASSET_MANAGER_SIDEBAR_ID, "assets");
+    installAssetManagerSidebarHover();
+  }
+  return registered;
 }
 
 function installAstralMenuButton(attempt = 0) {
@@ -12216,21 +12627,6 @@ function installAstralMenuButton(attempt = 0) {
 }
 
 app.registerExtension({
-  name: "ComfyUI-Astral-Manage.NodeTypeMigration",
-  beforeConfigureGraph(graphData) {
-    migrateLegacyNodeTypes(graphData);
-  },
-  beforeRegisterVueAppNodeDefs(nodeDefs) {
-    hideLegacyNodeDefs(nodeDefs);
-  },
-  setup() {
-    for (const legacyType of Object.keys(LEGACY_NODE_TYPES)) {
-      LiteGraph.unregisterNodeType?.(legacyType);
-    }
-  },
-});
-
-app.registerExtension({
   name: "ComfyUI-Astral-Manage.AssetManager",
   setup() {
     window.openAssetsAstralManager = (tab = "prompts") =>
@@ -12240,6 +12636,6 @@ app.registerExtension({
     window.openAssetsAstralApiConfig = (section = "api") =>
       openAstralApiConfig(section);
     installAssetManagerShortcut();
-    installAstralMenuButton();
+    if (!registerAssetManagerSidebar()) installAstralMenuButton();
   },
 });

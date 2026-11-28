@@ -404,6 +404,20 @@ def _normalize_local_llm_config(
   return config
 
 
+def build_local_llm_config(
+  payload: Any,
+  *,
+  models_root: str | None = None,
+  require_model_file: bool = True,
+) -> dict[str, Any]:
+  """Normalize an in-memory local LLM config without reading or writing files."""
+  return _normalize_local_llm_config(
+    payload,
+    models_root=models_root,
+    require_model_file=require_model_file,
+  )
+
+
 def load_local_llm_config(
   data_directory: str,
   *,
@@ -898,6 +912,44 @@ def _call_chat_completion(
   return llama.create_chat_completion(**kwargs)
 
 
+_CONTEXT_OVERFLOW_MARKERS = (
+  "context shift is explicitly disabled",
+  "context shift failed",
+  "exceeded context limit",
+  "larger than the entire context window",
+)
+_CONTEXT_N_CTX_MAX = 131072
+
+
+def _is_context_overflow_error(error: BaseException) -> bool:
+  text = str(error).casefold()
+  return any(marker in text for marker in _CONTEXT_OVERFLOW_MARKERS)
+
+
+def _context_overflow_message(n_ctx: int) -> str:
+  message = (
+    "Local model prompt exceeded the context window "
+    f"(n_ctx={n_ctx}), and this model cannot shift context "
+    "automatically (M-RoPE / vision models such as Qwen-VL)."
+  )
+  if n_ctx < _CONTEXT_N_CTX_MAX:
+    suggested = min(_CONTEXT_N_CTX_MAX, n_ctx * 2)
+    message += (
+      f" Raise \"Context length n_ctx\" (local_n_ctx) to at least "
+      f"{suggested}, or reduce history rounds (local_max_rounds), "
+      "image edge (local_max_image_edge), the selected Skill or system "
+      "prompt, or max reply tokens (local_max_tokens)."
+    )
+  else:
+    message += (
+      " n_ctx is already at the maximum; reduce history rounds "
+      "(local_max_rounds), image edge (local_max_image_edge), the "
+      "selected Skill or system prompt, or max reply tokens "
+      "(local_max_tokens)."
+    )
+  return message
+
+
 class LocalLlamaManager:
   def __init__(
     self,
@@ -1137,6 +1189,10 @@ class LocalLlamaManager:
           },
         )
       except Exception as error:
+        if _is_context_overflow_error(error):
+          raise LocalLLMError(
+            _context_overflow_message(int(normalized["nCtx"]))
+          ) from error
         raise LocalLLMError(f"Local model inference failed: {error}") from error
       finally:
         with self._state_lock:

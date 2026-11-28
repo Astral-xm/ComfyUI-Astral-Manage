@@ -2443,8 +2443,10 @@ def invert_prompt(
 
 def _prompt_task_kind(value: Any) -> str:
   normalized = str(value or "expand").strip().casefold()
-  if normalized not in {"expand", "invert", "translate"}:
-    raise ChatServiceError("The prompt task must be expand, invert, or translate")
+  if normalized not in {"expand", "invert", "translate", "chat"}:
+    raise ChatServiceError(
+      "The prompt task must be expand, invert, chat, or translate"
+    )
   return normalized
 
 
@@ -2507,7 +2509,9 @@ def _prompt_task_rule(
   }.get(task)
   if expected_category is None:
     raise ChatServiceError(
-      "Translation tasks do not use prompt expansion or image inversion rules"
+      "Chat mode does not use prompt expansion or image inversion rules"
+      if task == "chat"
+      else "Translation tasks do not use prompt expansion or image inversion rules"
     )
   if str(template.get("category") or "") != expected_category:
     raise ChatServiceError(
@@ -2543,6 +2547,9 @@ PROMPT_TASK_LANGUAGE_NAMES = {
 }
 
 
+MAX_PROMPT_HISTORY_MESSAGES = 200
+
+
 def _prompt_task_messages(
   config: dict[str, Any],
   *,
@@ -2556,6 +2563,8 @@ def _prompt_task_messages(
   max_image_edge: int = MAX_IMAGE_EDGE,
   image_jpeg_quality: int = IMAGE_JPEG_QUALITY,
   progressive_jpeg: bool = False,
+  history: list[dict[str, Any]] | None = None,
+  system_prompt: str = "",
 ) -> list[dict[str, Any]]:
   if task == "translate":
     return merge_system_messages(
@@ -2578,6 +2587,10 @@ def _prompt_task_messages(
       "光线、色彩、材质、空间关系与风格。只输出提示词，不要解释、标题、"
       "引号或 Markdown。"
     ),
+    "chat": (
+      "你是提示词工程助手。根据用户的要求直接作答；当用户需要提示词时，"
+      "只输出最终提示词，不要解释、标题、引号或 Markdown。"
+    ),
   }[task]
   if task == "invert":
     language_name = PROMPT_TASK_LANGUAGE_NAMES.get(
@@ -2589,6 +2602,7 @@ def _prompt_task_messages(
         f"Write the final prompt only in {language_name}."
       )
   system_parts = [
+    str(system_prompt or "").strip(),
     str(config.get("systemPrompt") or "").strip(),
     rule_context.strip(),
     skill_context.strip(),
@@ -2597,11 +2611,24 @@ def _prompt_task_messages(
   user_text = text
   if task == "invert" and not user_text:
     user_text = "请分析附件并反推生成提示词。"
+  history_messages: list[dict[str, Any]] = []
+  for entry in history or []:
+    if not isinstance(entry, dict):
+      continue
+    role = str(entry.get("role") or "").strip().lower()
+    content = entry.get("content")
+    if role not in {"user", "assistant"} or not isinstance(content, str):
+      continue
+    stripped = content.strip()
+    if stripped:
+      history_messages.append({"role": role, "content": stripped})
+  history_messages = history_messages[-MAX_PROMPT_HISTORY_MESSAGES:]
   return [
     {
       "role": "system",
       "content": "\n\n".join(part for part in system_parts if part),
     },
+    *history_messages,
     {
       "role": "user",
       "content": build_user_content(
@@ -2629,6 +2656,11 @@ def run_prompt_task(
   target_language: str = "en",
   source_language: str = "auto",
   seed: int | None = None,
+  history: list[dict[str, Any]] | None = None,
+  api_config: dict[str, Any] | None = None,
+  local_config: dict[str, Any] | None = None,
+  system_prompt: str = "",
+  skill_context: str = "",
 ) -> dict[str, Any]:
   """Run one stateless prompt operation without touching conversation history."""
   started_at = time.time()
@@ -2660,7 +2692,13 @@ def run_prompt_task(
     raise ChatServiceError(
       "Only one of a system prompt or a Skill can be selected"
     )
-  _, skill_context = build_skill_context(selected_skills)
+  _, built_skill_context = build_skill_context(selected_skills)
+  extra_skill_context = str(skill_context or "").strip()
+  if extra_skill_context:
+    built_skill_context = "\n\n".join(
+      part for part in (built_skill_context, extra_skill_context) if part
+    )
+
 
   reply = ""
   received_at = 0.0
@@ -2671,7 +2709,11 @@ def run_prompt_task(
   clear_vram_error = ""
   try:
     if mode_id == "local":
-      config = load_local_llm_config(data_directory)
+      config = (
+        local_config
+        if isinstance(local_config, dict)
+        else load_local_llm_config(data_directory)
+      )
       _validate_local_attachments(config, selected_attachments)
       messages = _prompt_task_messages(
         config,
@@ -2681,12 +2723,14 @@ def run_prompt_task(
         rule_context=(
           selected_rule["content"] if selected_rule else ""
         ),
-        skill_context=skill_context,
+        skill_context=built_skill_context,
         target_language=target_language,
         source_language=source_language,
         max_image_edge=int(config["maxImageEdge"]),
         image_jpeg_quality=int(config["imageJpegQuality"]),
         progressive_jpeg=True,
+        history=history,
+        system_prompt=system_prompt,
       )
       _raise_if_cancelled(request_id)
       closer = LOCAL_LLM_MANAGER.abort_current
@@ -2700,9 +2744,13 @@ def run_prompt_task(
         if closer_registered:
           _unregister_request_closer(request_id, closer)
     else:
-      config = resolve_api_config(
-        data_directory,
-        "image" if task_id == "invert" else "text",
+      config = (
+        api_config
+        if isinstance(api_config, dict)
+        else resolve_api_config(
+          data_directory,
+          "image" if task_id == "invert" else "text",
+        )
       )
       messages = _prompt_task_messages(
         config,
@@ -2712,9 +2760,11 @@ def run_prompt_task(
         rule_context=(
           selected_rule["content"] if selected_rule else ""
         ),
-        skill_context=skill_context,
+        skill_context=built_skill_context,
         target_language=target_language,
         source_language=source_language,
+        history=history,
+        system_prompt=system_prompt,
       )
       reply = request_chat_completion(
         config,

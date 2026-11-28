@@ -241,11 +241,13 @@ def _clean_text(value: Any, *, maximum: int, field: str, required: bool = False)
 
 
 def _clean_category(value: Any) -> str:
-  category = str(value or "text").strip().lower()
-  if category not in TEMPLATE_CATEGORIES:
-    raise PromptDataError(
-      "Prompt category must be text, image, audio, video, expand or invert"
-    )
+  category = " ".join(str(value or "").split())
+  if not category:
+    return "text"
+  if len(category) > 40:
+    raise PromptDataError("Prompt category cannot exceed 40 characters")
+  if category.casefold() in TEMPLATE_CATEGORIES:
+    return category.casefold()
   return category
 
 
@@ -324,6 +326,99 @@ def _conversations_path(data_directory: str) -> str:
   return os.path.join(_ensure_data_directory(data_directory), "conversations.json")
 
 
+def _categories_path(data_directory: str) -> str:
+  return os.path.join(
+    _ensure_data_directory(data_directory),
+    "prompt-categories.json",
+  )
+
+
+def _load_categories(data_directory: str) -> list[str]:
+  payload = _read_json(
+    _categories_path(data_directory),
+    {"version": 1, "categories": list(TEMPLATE_CATEGORIES)},
+  )
+  raw = payload.get("categories") if isinstance(payload, dict) else payload
+  if not isinstance(raw, list):
+    raw = list(TEMPLATE_CATEGORIES)
+  categories: list[str] = []
+  seen: set[str] = set()
+  for item in raw:
+    value = " ".join(str(item or "").split())
+    if not value:
+      continue
+    key = value.casefold()
+    if key in seen:
+      continue
+    seen.add(key)
+    categories.append(value)
+  return categories
+
+
+def _save_categories(data_directory: str, categories: list[str]) -> None:
+  _atomic_write_json(
+    _categories_path(data_directory),
+    {"version": 1, "categories": categories},
+  )
+
+
+def _category_list(
+  data_directory: str,
+  categories: list[str] | None = None,
+) -> list[str]:
+  base = list(
+    categories if categories is not None else _load_categories(data_directory)
+  )
+  seen = {item.casefold() for item in base}
+  extras: list[str] = []
+  for item in _load_templates(data_directory):
+    value = str(item.get("category") or "text").strip() or "text"
+    if value.casefold() in seen:
+      continue
+    seen.add(value.casefold())
+    extras.append(value)
+  return [*base, *sorted(extras, key=str.casefold)]
+
+
+def create_prompt_category(data_directory: str, name: Any) -> dict[str, Any]:
+  category = _clean_category(name)
+  categories = _load_categories(data_directory)
+  seen = {item.casefold() for item in categories}
+  created = category.casefold() not in seen
+  if created:
+    categories.append(category)
+    _save_categories(data_directory, categories)
+  return {
+    "created": created,
+    "category": category,
+    "categories": _category_list(data_directory, categories),
+  }
+
+
+def delete_prompt_category(data_directory: str, name: Any) -> dict[str, Any]:
+  category = " ".join(str(name or "").split())
+  if not category:
+    raise PromptDataError("Category name cannot be empty")
+  key = category.casefold()
+  if key in {"expand", "invert"}:
+    raise PromptDataError("Built-in rule categories cannot be removed")
+  used = [
+    item
+    for item in _load_templates(data_directory)
+    if str(item.get("category") or "text").casefold() == key
+  ]
+  if used:
+    raise PromptDataError(
+      f"Category still contains {len(used)} prompt templates "
+      "and cannot be removed"
+    )
+  categories = _load_categories(data_directory)
+  remaining = [item for item in categories if item.casefold() != key]
+  if len(remaining) != len(categories):
+    _save_categories(data_directory, remaining)
+  return {"categories": _category_list(data_directory, remaining)}
+
+
 def _load_templates(data_directory: str) -> list[dict[str, Any]]:
   payload = _read_json(
     _templates_path(data_directory),
@@ -360,13 +455,14 @@ def list_templates(
   category: str = "",
 ) -> dict[str, Any]:
   normalized_query = " ".join(str(query or "").split()).casefold()
-  normalized_category = str(category or "").strip().lower()
-  if normalized_category and normalized_category not in TEMPLATE_CATEGORIES:
-    raise PromptDataError("Unknown prompt category")
-  templates = _load_templates(data_directory)
+  normalized_category = str(category or "").strip().casefold()
+  all_templates = _load_templates(data_directory)
+  templates = all_templates
   if normalized_category:
     templates = [
-      item for item in templates if str(item.get("category", "text")) == normalized_category
+      item
+      for item in templates
+      if str(item.get("category") or "text").casefold() == normalized_category
     ]
   if normalized_query:
     templates = [
@@ -391,7 +487,7 @@ def list_templates(
   return {
     "items": templates,
     "total": len(templates),
-    "categories": list(TEMPLATE_CATEGORIES),
+    "categories": _category_list(data_directory),
   }
 
 

@@ -480,13 +480,13 @@ assert.deepEqual(
     {
       name: SET_GROUP_NODE,
       displayName: "SetGroup",
-      category: "Assets Astral/Set & Get",
+      category: "Astral/Set & Get",
       pythonModule: NODE_PACKAGE_MODULE,
     },
     {
       name: GET_GROUP_NODE,
       displayName: "GetGroup",
-      category: "Assets Astral/Set & Get",
+      category: "Astral/Set & Get",
       pythonModule: NODE_PACKAGE_MODULE,
     },
   ],

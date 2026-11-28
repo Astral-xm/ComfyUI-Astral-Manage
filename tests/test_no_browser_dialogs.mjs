@@ -8,6 +8,10 @@ const webRoot = path.join(packageRoot, "web");
 const webFiles = readdirSync(webRoot);
 const jsFiles = webFiles.filter((name) => name.endsWith(".js"));
 const cssFiles = webFiles.filter((name) => name.endsWith(".css"));
+// The Skill loader deliberately offers a local file picker: loading a Skill
+// from anywhere on the computer is a product requirement, and a hidden
+// <input type="file"> is the only browser API that can do it.
+const FILE_INPUT_ALLOWED = new Set(["prompt_skill_loader.js"]);
 
 for (const fileName of jsFiles) {
   const source = readFileSync(path.join(webRoot, fileName), "utf8");
@@ -26,11 +30,13 @@ for (const fileName of jsFiles) {
     /\b(?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)\s*\(/,
     `${fileName} must not open native browser file pickers`,
   );
-  assert.doesNotMatch(
-    source,
-    /\.type\s*=\s*["']file["']|setAttribute\(\s*["']type["']\s*,\s*["']file["']/,
-    `${fileName} must not create native browser file inputs`,
-  );
+  if (!FILE_INPUT_ALLOWED.has(fileName)) {
+    assert.doesNotMatch(
+      source,
+      /\.type\s*=\s*["']file["']|setAttribute\(\s*["']type["']\s*,\s*["']file["']/,
+      `${fileName} must not create native browser file inputs`,
+    );
+  }
   assert.doesNotMatch(
     source,
     /\bwebkitdirectory\b/i,
@@ -67,10 +73,6 @@ const assetManagementSource = readFileSync(
   "utf8",
 );
 const setGetSource = readFileSync(path.join(webRoot, "set_get_groups.js"), "utf8");
-const bypassSource = readFileSync(
-  path.join(webRoot, "typed_bypass_switch.js"),
-  "utf8",
-);
 const globalDialogSource = readFileSync(
   path.join(webRoot, "astral_dialogs.js"),
   "utf8",
@@ -82,7 +84,6 @@ assert.match(setGetSource, /app\.canvas\?\.prompt/);
 assert.match(setGetSource, /prompt\.call\(/);
 assert.doesNotMatch(setGetSource, /extensionManager\?\.dialog/);
 assert.doesNotMatch(setGetSource, /showAstralPrompt/);
-assert.match(bypassSource, /showAstralAlert/);
 assert.doesNotMatch(
   globalDialogSource,
   /\.showModal\s*\(/,

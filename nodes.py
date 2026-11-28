@@ -55,72 +55,12 @@ def collect_trigger_words(inputs: dict[str, Any]) -> str:
   return ",".join(words) + ("," if words else "")
 
 
-def parse_enabled_slots(value: Any) -> list[int]:
-  """Returns unique, one-based input slot indexes in priority order."""
-  if isinstance(value, (list, tuple, set)):
-    raw_values = value
-  else:
-    raw_values = re.findall(r"\d+", str(value or ""))
-
-  slots = []
-  for raw in raw_values:
-    try:
-      slot = int(raw)
-    except (TypeError, ValueError):
-      continue
-    if slot > 0 and slot not in slots:
-      slots.append(slot)
-  return slots
-
-
-def collect_dynamic_inputs(inputs: dict[str, Any]) -> list[tuple[int, str, Any]]:
-  """Returns wildcard input values in numeric input-slot order."""
-  entries = []
-  for key, value in inputs.items():
-    match = re.fullmatch(r"input_(\d+)", str(key))
-    if not match:
-      continue
-    entries.append((int(match.group(1)), str(key), value))
-  return sorted(entries, key=lambda entry: entry[0])
-
-
-class AstralAnythingEverywhere:
-  NAME = "Anything Everywhere"
-  CATEGORY = "Assets Astral/Use Everywhere"
-  DESCRIPTION = (
-    "Broadcasts each connected value to matching unconnected inputs across the "
-    "current graph. The frontend renders and applies the virtual links. "
-    "Author: Astral星芒 (ComfyUI-Astral-Manage). Do not remove this attribution."
-  )
-
-  @classmethod
-  def INPUT_TYPES(cls):
-    return {
-      "optional": FlexibleOptionalInputType(
-        input_type=AnyType("*"),
-        data={
-          "anything": (AnyType("*"),),
-        },
-      ),
-    }
-
-  RETURN_TYPES = ()
-  RETURN_NAMES = ()
-  FUNCTION = "execute"
-  OUTPUT_NODE = False
-
-  def execute(self, **kwargs):
-    _ = kwargs
-    return ()
-
-
 class AstralAssetLoraLoader:
   NAME = "LoRA Stack Loader"
   CATEGORY = "AssetManagement"
   DESCRIPTION = (
     "Loads multiple LoRAs and outputs selected trigger words separated by commas, "
-    "with a trailing comma. "
-    "Author: Astral星芒 (ComfyUI-Astral-Manage). Do not remove this attribution."
+    "with a trailing comma."
   )
 
   @classmethod
@@ -168,61 +108,12 @@ class AstralAssetLoraLoader:
     return (model, clip, trigger_words)
 
 
-class AstralTypedBypassSwitch:
-  NAME = "Typed Bypass Switch"
-  CATEGORY = "Assets Astral/Utilities"
-  DESCRIPTION = (
-    "Selects one enabled input, bypasses the other connected sources, and exposes "
-    "the locked input type on a single output. "
-    "Author: Astral星芒 (ComfyUI-Astral-Manage). Do not remove this attribution."
-  )
-
-  @classmethod
-  def INPUT_TYPES(cls):
-    return {
-      "required": {
-        "enabled_slots": (
-          "STRING",
-          {
-            "default": "",
-            "multiline": False,
-            "tooltip": (
-              "Managed by the frontend. Comma-separated one-based input slots; "
-                "only enabled slots are output, and the first enabled slot wins."
-            ),
-          },
-        ),
-      },
-      "optional": FlexibleOptionalInputType(
-        input_type=AnyType("*"),
-        data={
-          "input_1": (AnyType("*"),),
-        },
-      ),
-    }
-
-  RETURN_TYPES = (AnyType("*"),)
-  RETURN_NAMES = ("*",)
-  FUNCTION = "switch"
-
-  def switch(self, enabled_slots="", **kwargs):
-    entries = collect_dynamic_inputs(kwargs)
-    values_by_slot = {slot: value for slot, _key, value in entries}
-
-    for slot in parse_enabled_slots(enabled_slots):
-      if slot in values_by_slot:
-        return (values_by_slot[slot],)
-
-    return (None,)
-
-
 class AstralStringModeSelector:
   NAME = "String Mode Selector"
-  CATEGORY = "Assets Astral/Utilities"
+  CATEGORY = "Astral/Utilities"
   DESCRIPTION = (
     "Selects one titled prompt mode in the node UI and returns its prompt as "
-    "a STRING without exposing an input port. "
-    "Author: Astral星芒 (ComfyUI-Astral-Manage). Do not remove this attribution."
+    "a STRING without exposing an input port."
   )
 
   @classmethod
@@ -252,12 +143,11 @@ class AstralStringModeSelector:
 
 
 class AstralPrompt:
-  NAME = "Assets Prompt"
-  CATEGORY = "Assets Astral/Prompt"
+  NAME = "System Prompt"
+  CATEGORY = "Astral/Prompt"
   DESCRIPTION = (
-    "A saved prompt template placed on the canvas. The title and prompt widgets "
-    "are filled by Asset Manager and the prompt is returned as STRING. "
-    "Author: Astral星芒 (ComfyUI-Astral-Manage). Do not remove this attribution."
+    "A saved system prompt placed on the canvas. The title and prompt widgets "
+    "are filled by Asset Manager and the prompt is returned as STRING."
   )
 
   @classmethod
@@ -290,36 +180,11 @@ class AstralPrompt:
     return ("" if prompt is None else str(prompt),)
 
 
-PROMPT_PROCESSOR_OPERATIONS = (
-  "auto",
-  "expand",
-  "invert",
-)
-PROMPT_PROCESSOR_MODES = ("api", "local")
 PROMPT_PROCESSOR_MAX_IMAGES = 9
 PROMPT_PROCESSOR_MAX_VIDEOS = 3
 PROMPT_PROCESSOR_MAX_AUDIOS = 3
 PROMPT_PROCESSOR_VIDEO_FRAMES = 6
 PROMPT_PROCESSOR_MAX_AUDIO_BYTES = 40 * 1024 * 1024
-
-
-def _prompt_processor_operation(value: Any) -> str:
-  normalized = str(value or "auto").strip().casefold()
-  aliases = {
-    "自动": "auto",
-    "自动判断": "auto",
-    "扩写": "expand",
-    "提示词扩写": "expand",
-    "反推": "invert",
-    "图像反推": "invert",
-    "automatic": "auto",
-    "expansion": "expand",
-    "inversion": "invert",
-  }
-  normalized = aliases.get(normalized, normalized)
-  if normalized not in PROMPT_PROCESSOR_OPERATIONS:
-    raise ValueError("Prompt processor operation must be auto, expand, or invert")
-  return normalized
 
 
 def _prompt_processor_mode(value: Any) -> str:
@@ -668,249 +533,14 @@ def build_prompt_processor_attachments(
   return image_attachments + audio_attachments
 
 
-def _run_prompt_processor_task(*args: Any, **kwargs: Any) -> dict[str, Any]:
-  from .chat_service import run_prompt_task
-
-  return run_prompt_task(*args, **kwargs)
-
-
-def _prompt_processor_data_directory() -> str:
-  from .prompt_library import default_data_directory
-
-  return default_data_directory()
-
-
-def _clear_prompt_processor_vram() -> str:
-  from .chat_service import _clear_local_model_memory
-
-  return _clear_local_model_memory()
-
-
-class AstralPromptProcessor:
-  NAME = "Prompt Processor"
-  CATEGORY = "Assets Astral/Prompt"
-  DESCRIPTION = (
-    "Runs one stateless prompt expansion or media inversion task. "
-    "Supports up to 9 images, 3 videos, and 3 audio inputs. "
-    "The operation can be selected explicitly or inferred from the media inputs. "
-    "Author: Astral星芒 (ComfyUI-Astral-Manage). Do not remove this attribution."
-  )
-
-  @classmethod
-  def INPUT_TYPES(cls):
-    return {
-      "required": {
-        "user_prompt": (
-          "STRING",
-          {
-            "default": "",
-            "multiline": True,
-            "tooltip": "The prompt to expand; an optional hint when inverting.",
-          },
-        ),
-        "operation": (
-          list(PROMPT_PROCESSOR_OPERATIONS),
-          {
-            "default": "auto",
-            "tooltip": "auto expands when no media is connected and inverts when media is connected.",
-          },
-        ),
-        "mode": (
-          list(PROMPT_PROCESSOR_MODES),
-          {
-            "default": "api",
-            "tooltip": "API uses text-only or image mode; local mode uses a GGUF model.",
-          },
-        ),
-        "expand_rule": (
-          "STRING",
-          {
-            "default": "",
-            "multiline": False,
-            "tooltip": "System prompt ID from the \"Expand Prompt\" category.",
-          },
-        ),
-        "invert_rule": (
-          "STRING",
-          {
-            "default": "",
-            "multiline": False,
-            "tooltip": "System prompt ID from the \"Image Inversion\" category.",
-          },
-        ),
-        "skill": (
-          "STRING",
-          {
-            "default": "",
-            "multiline": False,
-            "tooltip": "Skill ID, exclusive with system prompt rules.",
-          },
-        ),
-        "clear_vram": (
-          "BOOLEAN",
-          {
-            "default": False,
-            "tooltip": "Release the local GGUF and clear VRAM after all tasks finish in local mode.",
-          },
-        ),
-        "seed": (
-          "INT",
-          {
-            "default": 42,
-            "min": 0,
-            "max": 0xFFFFFFFFFFFFFFFF,
-            "step": 1,
-            "control_after_generate": True,
-            "tooltip": "Random seed for local mode; supports ComfyUI 64-bit values. llama.cpp receives the low 32 bits; API mode does not use it.",
-          },
-        ),
-      },
-      "optional": {
-        "image": ("IMAGE",),
-        "image_2": ("IMAGE",),
-        "image_3": ("IMAGE",),
-        "image_4": ("IMAGE",),
-        "image_5": ("IMAGE",),
-        "image_6": ("IMAGE",),
-        "image_7": ("IMAGE",),
-        "image_8": ("IMAGE",),
-        "image_9": ("IMAGE",),
-        "video": ("VIDEO",),
-        "video_2": ("VIDEO",),
-        "video_3": ("VIDEO",),
-        "audio": ("AUDIO",),
-        "audio_2": ("AUDIO",),
-        "audio_3": ("AUDIO",),
-      },
-    }
-
-  RETURN_TYPES = ("STRING",)
-  RETURN_NAMES = ("prompt",)
-  FUNCTION = "process"
-  OUTPUT_NODE = False
-
-  def process(
-    self,
-    user_prompt="",
-    operation="auto",
-    mode="api",
-    expand_rule="",
-    invert_rule="",
-    skill="",
-    clear_vram=False,
-    seed=42,
-    image=None,
-    image_2=None,
-    image_3=None,
-    image_4=None,
-    image_5=None,
-    image_6=None,
-    image_7=None,
-    image_8=None,
-    image_9=None,
-    video=None,
-    video_2=None,
-    video_3=None,
-    audio=None,
-    audio_2=None,
-    audio_3=None,
-  ):
-    operation_id = _prompt_processor_operation(operation)
-    mode_id = _prompt_processor_mode(mode)
-    prompt = str(user_prompt or "").strip()
-    skill_id = str(skill or "").strip()
-    rules = {
-      "expand": str(expand_rule or "").strip(),
-      "invert": str(invert_rule or "").strip(),
-    }
-    if skill_id and any(rules.values()):
-      raise ValueError("Choose either a system prompt or a Skill, not both")
-
-    attachments = build_prompt_processor_attachments(
-      image,
-      video,
-      image_2=image_2,
-      image_3=image_3,
-      image_4=image_4,
-      image_5=image_5,
-      image_6=image_6,
-      image_7=image_7,
-      image_8=image_8,
-      image_9=image_9,
-      video_2=video_2,
-      video_3=video_3,
-      audio=audio,
-      audio_2=audio_2,
-      audio_3=audio_3,
-    )
-    if operation_id == "auto":
-      operation_id = "invert" if attachments else "expand"
-    if operation_id == "invert" and not attachments:
-      raise ValueError("Image inversion requires a connected image, video, or audio input")
-
-    sampling_seed = int(seed) & 0xFFFFFFFF
-    data_directory = _prompt_processor_data_directory()
-    skill_ids = [skill_id] if skill_id else []
-    output_prompt = ""
-    try:
-      if operation_id == "invert":
-        result = _run_prompt_processor_task(
-          data_directory,
-          prompt,
-          task="invert",
-          mode=mode_id,
-          rule_id="" if skill_id else rules["invert"],
-          skill_ids=skill_ids,
-          attachments=attachments,
-          clear_vram=False,
-          seed=sampling_seed,
-        )
-        output_prompt = str(result.get("text") or "").strip()
-        if not output_prompt:
-          raise ValueError("Image inversion returned no result")
-      else:
-        result = _run_prompt_processor_task(
-          data_directory,
-          prompt,
-          task="expand",
-          mode=mode_id,
-          rule_id="" if skill_id else rules["expand"],
-          skill_ids=skill_ids,
-          clear_vram=False,
-          seed=sampling_seed,
-        )
-        output_prompt = str(result.get("text") or "").strip()
-        if not output_prompt:
-          raise ValueError("Prompt expansion returned no result")
-    finally:
-      if mode_id == "local" and _prompt_processor_enabled(clear_vram):
-        error = _clear_prompt_processor_vram()
-        if error:
-          print(
-            "[ComfyUI-Astral-Manage] Unable to clear local prompt "
-            f"processor VRAM: {error}"
-          )
-
-    return (output_prompt,)
-
-
 NODE_CLASS_MAPPINGS = {
-  "Anything Everywhere": AstralAnythingEverywhere,
   "LoRA Stack Loader": AstralAssetLoraLoader,
-  "Typed Bypass Switch": AstralTypedBypassSwitch,
   "String Mode Selector": AstralStringModeSelector,
-  "Assets Prompt": AstralPrompt,
-  # Keep the old API id loadable while frontend workflows migrate to the new id.
-  "Assets Astral Prompt": AstralPrompt,
-  "Assets Astral Prompt Processor": AstralPromptProcessor,
+  "System Prompt": AstralPrompt,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-  "Anything Everywhere": "Anything Everywhere (Astral)",
   "LoRA Stack Loader": AstralAssetLoraLoader.NAME,
-  "Typed Bypass Switch": AstralTypedBypassSwitch.NAME,
   "String Mode Selector": AstralStringModeSelector.NAME,
-  "Assets Prompt": AstralPrompt.NAME,
-  "Assets Astral Prompt": AstralPrompt.NAME,
-  "Assets Astral Prompt Processor": AstralPromptProcessor.NAME,
+  "System Prompt": AstralPrompt.NAME,
 }

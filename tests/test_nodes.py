@@ -156,94 +156,25 @@ class TriggerWordTests(unittest.TestCase):
     self.assertEqual(result, ("model", "clip", "selected,"))
 
 
-class UseEverywhereNodeTests(unittest.TestCase):
-  def test_anything_everywhere_keeps_upstream_type_id(self):
-    self.assertIs(
-      asset_nodes.NODE_CLASS_MAPPINGS["Anything Everywhere"],
-      asset_nodes.AstralAnythingEverywhere,
-    )
-    self.assertEqual(
-      asset_nodes.NODE_DISPLAY_NAME_MAPPINGS["Anything Everywhere"],
-      "Anything Everywhere (Astral)",
-    )
-
+class NodeRegistrationTests(unittest.TestCase):
   def test_combo_clone_is_not_registered(self):
     self.assertNotIn("Combo Clone", asset_nodes.NODE_CLASS_MAPPINGS)
     self.assertNotIn("Combo Clone", asset_nodes.NODE_DISPLAY_NAME_MAPPINGS)
     self.assertFalse(hasattr(asset_nodes, "AstralComboClone"))
 
-  def test_anything_everywhere_accepts_dynamic_wildcard_inputs(self):
-    node_class = asset_nodes.AstralAnythingEverywhere
-    optional = node_class.INPUT_TYPES()["optional"]
+  def test_anything_everywhere_is_not_registered(self):
+    self.assertNotIn("Anything Everywhere", asset_nodes.NODE_CLASS_MAPPINGS)
+    self.assertNotIn("Anything Everywhere", asset_nodes.NODE_DISPLAY_NAME_MAPPINGS)
+    self.assertFalse(hasattr(asset_nodes, "AstralAnythingEverywhere"))
 
-    self.assertIn("anything", optional)
-    self.assertIn("anything13", optional)
-    self.assertIsInstance(optional["anything13"][0], asset_nodes.AnyType)
-    self.assertEqual(optional["anything13"][0], "*")
-    self.assertEqual(node_class.RETURN_TYPES, ())
-    self.assertEqual(node_class.FUNCTION, "execute")
-    self.assertEqual(asset_nodes.AstralAnythingEverywhere().execute(), ())
+  def test_prompt_expert_is_registered_outside_nodes(self):
+    self.assertNotIn("Prompt Processor", asset_nodes.NODE_CLASS_MAPPINGS)
+    self.assertFalse(hasattr(asset_nodes, "AstralPromptExpert"))
 
-class TypedBypassSwitchTests(unittest.TestCase):
-  def test_node_registration(self):
-    switch_class = asset_nodes.AstralTypedBypassSwitch
-    self.assertEqual(switch_class.NAME, "Typed Bypass Switch")
-    self.assertIn("Typed Bypass Switch", asset_nodes.NODE_CLASS_MAPPINGS)
-    self.assertEqual(
-      asset_nodes.NODE_DISPLAY_NAME_MAPPINGS["Typed Bypass Switch"],
-      "Typed Bypass Switch",
-    )
-    self.assertEqual(switch_class.RETURN_NAMES, ("*",))
-    self.assertEqual(switch_class.FUNCTION, "switch")
-
-  def test_parses_and_deduplicates_enabled_slots(self):
-    self.assertEqual(
-      asset_nodes.parse_enabled_slots("2, 1,2, invalid, 0, 3"),
-      [2, 1, 3],
-    )
-    self.assertEqual(asset_nodes.parse_enabled_slots([3, "1", None, -1]), [3, 1])
-
-  def test_first_enabled_input_wins(self):
-    switch = asset_nodes.AstralTypedBypassSwitch()
-    result = switch.switch(
-      enabled_slots="2,1",
-      input_1="first",
-      input_2="second",
-      input_3="third",
-    )
-    self.assertEqual(result, ("second",))
-
-  def test_disabled_inputs_are_ignored(self):
-    switch = asset_nodes.AstralTypedBypassSwitch()
-    result = switch.switch(
-      enabled_slots="2,3",
-      input_1="first",
-      input_2=None,
-      input_3="third",
-    )
-    self.assertEqual(result, (None,))
-
-  def test_only_enabled_inputs_are_output(self):
-    switch = asset_nodes.AstralTypedBypassSwitch()
-    result = switch.switch(
-      enabled_slots="2",
-      input_1="first",
-      input_2=None,
-      input_3="third",
-    )
-    self.assertEqual(result, (None,))
-
-    result = switch.switch(
-      enabled_slots="9",
-      input_1=None,
-      input_2="second",
-    )
-    self.assertEqual(result, (None,))
-
-  def test_empty_inputs_return_none(self):
-    switch = asset_nodes.AstralTypedBypassSwitch()
-    self.assertEqual(switch.switch(enabled_slots="", input_1=None), (None,))
-
+  def test_typed_bypass_switch_is_not_registered(self):
+    self.assertNotIn("Typed Bypass Switch", asset_nodes.NODE_CLASS_MAPPINGS)
+    self.assertNotIn("Typed Bypass Switch", asset_nodes.NODE_DISPLAY_NAME_MAPPINGS)
+    self.assertFalse(hasattr(asset_nodes, "AstralTypedBypassSwitch"))
 
 class StringModeSelectorTests(unittest.TestCase):
   def test_node_registration_and_ports(self):
@@ -278,16 +209,27 @@ class StringModeSelectorTests(unittest.TestCase):
 
 class AssetPromptNodeTests(unittest.TestCase):
   def test_prompt_node_is_registered(self):
-    node_name = "Assets Prompt"
+    node_name = "System Prompt"
     self.assertIn(node_name, asset_nodes.NODE_CLASS_MAPPINGS)
     self.assertEqual(
       asset_nodes.NODE_DISPLAY_NAME_MAPPINGS[node_name],
-      node_name,
+      "System Prompt",
     )
-    self.assertIs(
-      asset_nodes.NODE_CLASS_MAPPINGS["Assets Astral Prompt"],
-      asset_nodes.NODE_CLASS_MAPPINGS[node_name],
-    )
+
+  def test_legacy_prompt_api_id_is_not_registered(self):
+    for mapping in (
+      asset_nodes.NODE_CLASS_MAPPINGS,
+      asset_nodes.NODE_DISPLAY_NAME_MAPPINGS,
+    ):
+      self.assertNotIn("Assets Astral Prompt", mapping)
+
+  def test_node_keys_do_not_mention_assets(self):
+    for mapping in (
+      asset_nodes.NODE_CLASS_MAPPINGS,
+      asset_nodes.NODE_DISPLAY_NAME_MAPPINGS,
+    ):
+      for node_name in mapping:
+        self.assertNotIn("assets", node_name.lower(), node_name)
 
   def test_chat_nodes_are_not_registered(self):
     for node_name in (
@@ -304,224 +246,7 @@ class AssetPromptNodeTests(unittest.TestCase):
     self.assertEqual(prompt.get_prompt("Title", None), ("",))
 
 
-class PromptProcessorTests(unittest.TestCase):
-  def setUp(self):
-    self.patch_data = mock.patch.object(
-      asset_nodes,
-      "_prompt_processor_data_directory",
-      return_value="/fake/data",
-    )
-    self.patch_clear = mock.patch.object(
-      asset_nodes,
-      "_clear_prompt_processor_vram",
-      return_value="",
-    )
-    self.patch_task = mock.patch.object(
-      asset_nodes,
-      "_run_prompt_processor_task",
-    )
-    self.patch_data.start()
-    self.clear = self.patch_clear.start()
-    self.task = self.patch_task.start()
-    self.addCleanup(self.patch_task.stop)
-    self.addCleanup(self.patch_clear.stop)
-    self.addCleanup(self.patch_data.stop)
-
-  def test_prompt_processor_is_registered(self):
-    node_class = asset_nodes.AstralPromptProcessor
-    self.assertIn(
-      "Assets Astral Prompt Processor",
-      asset_nodes.NODE_CLASS_MAPPINGS,
-    )
-    self.assertEqual(
-      asset_nodes.NODE_DISPLAY_NAME_MAPPINGS[
-        "Assets Astral Prompt Processor"
-      ],
-      "Prompt Processor",
-    )
-    self.assertEqual(
-      node_class.RETURN_NAMES,
-      ("prompt",),
-    )
-    self.assertEqual(node_class.RETURN_TYPES, ("STRING",))
-    inputs = node_class.INPUT_TYPES()
-    seed_input = inputs["required"]["seed"]
-    self.assertEqual(seed_input[0], "INT")
-    self.assertEqual(seed_input[1]["default"], 42)
-    self.assertEqual(seed_input[1]["min"], 0)
-    self.assertEqual(seed_input[1]["max"], 0xFFFFFFFFFFFFFFFF)
-    self.assertTrue(seed_input[1]["control_after_generate"])
-    for name in ("image", *(f"image_{index}" for index in range(2, 10))):
-      self.assertEqual(inputs["optional"][name], ("IMAGE",))
-    for name in ("video", "video_2", "video_3"):
-      self.assertEqual(inputs["optional"][name], ("VIDEO",))
-    for name in ("audio", "audio_2", "audio_3"):
-      self.assertEqual(inputs["optional"][name], ("AUDIO",))
-
-  def test_auto_without_media_only_expands(self):
-    self.task.return_value = {"text": "expanded"}
-    processor = asset_nodes.AstralPromptProcessor()
-
-    result = processor.process(
-      "portrait",
-      operation="auto",
-      mode="api",
-      expand_rule="expand-rule",
-      seed=123456,
-    )
-
-    self.assertEqual(result, ("expanded",))
-    self.task.assert_called_once()
-    kwargs = self.task.call_args.kwargs
-    self.assertEqual(kwargs["task"], "expand")
-    self.assertEqual(kwargs["rule_id"], "expand-rule")
-    self.assertEqual(kwargs["skill_ids"], [])
-    self.assertEqual(kwargs["seed"], 123456)
-    self.clear.assert_not_called()
-
-  def test_64_bit_seed_is_reduced_to_llama_cpp_range(self):
-    self.task.return_value = {"text": "expanded"}
-    processor = asset_nodes.AstralPromptProcessor()
-    seed = 390_686_072_267_333
-
-    result = processor.process(
-      "portrait",
-      operation="expand",
-      mode="local",
-      seed=seed,
-    )
-
-    self.assertEqual(result, ("expanded",))
-    self.assertEqual(self.task.call_args.kwargs["seed"], seed & 0xFFFFFFFF)
-
-  def test_auto_with_media_only_inverts(self):
-    self.task.return_value = {"text": "reverse prompt"}
-    processor = asset_nodes.AstralPromptProcessor()
-    image_attachments = [
-      {
-        "kind": "image",
-        "mimeType": "image/jpeg",
-        "data": "data:image/jpeg;base64,ZmFrZQ==",
-        "name": "image-1.jpg",
-      }
-    ]
-
-    with mock.patch.object(
-      asset_nodes,
-      "build_prompt_processor_attachments",
-      return_value=image_attachments,
-    ):
-      result = processor.process(
-        "make it cinematic",
-        operation="auto",
-        mode="api",
-        expand_rule="expand-rule",
-        invert_rule="invert-rule",
-        image="fake-image",
-      )
-
-    self.assertEqual(
-      result,
-      ("reverse prompt",),
-    )
-    self.task.assert_called_once()
-    call = self.task.call_args
-    self.assertEqual(call.kwargs["task"], "invert")
-    self.assertEqual(call.kwargs["rule_id"], "invert-rule")
-    self.assertEqual(call.kwargs["attachments"], image_attachments)
-    self.assertFalse(call.kwargs["clear_vram"])
-
-  def test_invert_requires_media(self):
-    processor = asset_nodes.AstralPromptProcessor()
-    with self.assertRaisesRegex(ValueError, "image, video, or audio"):
-      processor.process(operation="invert", mode="api")
-    self.task.assert_not_called()
-
-  def test_all_media_inputs_are_forwarded_to_attachment_conversion(self):
-    self.task.return_value = {"text": "reverse"}
-    processor = asset_nodes.AstralPromptProcessor()
-    image_values = {
-      "image": "image-1",
-      "image_2": "image-2",
-      "image_3": "image-3",
-      "image_4": "image-4",
-      "image_5": "image-5",
-      "image_6": "image-6",
-      "image_7": "image-7",
-      "image_8": "image-8",
-      "image_9": "image-9",
-    }
-
-    with mock.patch.object(
-      asset_nodes,
-      "build_prompt_processor_attachments",
-      return_value=[{"kind": "audio", "data": "data:audio/wav;base64,eA=="}],
-    ) as build:
-      processor.process(
-        operation="invert",
-        mode="api",
-        video="video-1",
-        video_2="video-2",
-        video_3="video-3",
-        audio="audio-1",
-        audio_2="audio-2",
-        audio_3="audio-3",
-        **image_values,
-      )
-
-    build.assert_called_once_with(
-      "image-1",
-      "video-1",
-      image_2="image-2",
-      image_3="image-3",
-      image_4="image-4",
-      image_5="image-5",
-      image_6="image-6",
-      image_7="image-7",
-      image_8="image-8",
-      image_9="image-9",
-      video_2="video-2",
-      video_3="video-3",
-      audio="audio-1",
-      audio_2="audio-2",
-      audio_3="audio-3",
-    )
-
-  def test_rule_and_skill_are_mutually_exclusive(self):
-    processor = asset_nodes.AstralPromptProcessor()
-    with self.assertRaisesRegex(ValueError, "Choose either a system prompt or a Skill, not both"):
-      processor.process(
-        "portrait",
-        operation="expand",
-        mode="api",
-        expand_rule="rule",
-        skill="skill",
-      )
-    self.task.assert_not_called()
-
-  def test_local_vram_is_cleared_once_after_task(self):
-    self.task.return_value = {"text": "reverse"}
-    processor = asset_nodes.AstralPromptProcessor()
-
-    with mock.patch.object(
-      asset_nodes,
-      "build_prompt_processor_attachments",
-      return_value=[{"kind": "image", "data": "data:image/jpeg;base64,eA=="}],
-    ):
-      processor.process(
-        operation="invert",
-        mode="local",
-        skill="vision-skill",
-        clear_vram=True,
-      )
-
-    self.clear.assert_called_once_with()
-    call = self.task.call_args
-    self.assertEqual(call.kwargs["mode"], "local")
-    self.assertEqual(call.kwargs["skill_ids"], ["vision-skill"])
-    self.assertEqual(call.kwargs["rule_id"], "")
-    self.assertFalse(call.kwargs["clear_vram"])
-
+class PromptAttachmentTests(unittest.TestCase):
   def test_media_categories_have_independent_limits_and_audio_conversion(self):
     import base64
     import wave

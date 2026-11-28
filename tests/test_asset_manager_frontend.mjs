@@ -148,6 +148,14 @@ assert.match(
 );
 assert.match(css, /\.astral-am-language-toggle\.is-en .*data-language="en"/);
 assert.match(css, /\.astral-am-menu-button\s*\{[\s\S]*?width:\s*auto;/);
+assert.match(css, /\.astral-am-sidebar-panel\s*\{/);
+assert.match(css, /\.astral-am-sidebar-launch\s*\{/);
+assert.match(css, /\.astral-am-sidebar-menu\s*\{[\s\S]*?position:\s*fixed;/);
+assert.match(css, /\.astral-am-sidebar-menu\[hidden\]/);
+assert.match(css, /\.astral-am-sidebar-menu-item\s*\{/);
+assert.match(css, /\.astral-am-sidebar-menu-fill\s*\{/);
+assert.match(css, /\.astral-am-category-manager-list\s*\{/);
+assert.match(css, /\.astral-am-category-manager-row\s*\{/);
 assert.match(css, /\.astral-am-heading-links\s*\{/);
 assert.match(css, /\.astral-am-heading-star\s*\{/);
 assert.match(css, /\.astral-am-heading-star-icon\s*\{/);
@@ -156,9 +164,50 @@ assert.match(source, /"System Prompt Management"/);
 assert.doesNotMatch(source, /"Template Library"/);
 assert.match(
   source,
-  /modeTabs\.append\(\s*this\.skillTagModeButton,\s*this\.templateModeButton,\s*this\.skillModeButton,\s*this\.chatModeButton,\s*this\.apiConfigModeButton,?\s*\)/,
+  /modeTabs\.append\(\s*this\.skillTagModeButton,\s*this\.templateModeButton,\s*this\.skillModeButton,?\s*\)/,
 );
+assert.doesNotMatch(source, /this\.chatModeButton\b|this\.apiConfigModeButton\b/);
 assert.doesNotMatch(source, /localLlmConfigModeButton/);
+assert.match(
+  source,
+  /tabs\.append\(this\.promptTab, this\.assetTab, this\.modelTab, this\.chatTab\)/,
+  "API Chat must be a top-level tab to the right of Model Management",
+);
+assert.match(
+  source,
+  /const topbar = createElement\("div", "astral-am-topbar"\);\s*topbar\.append\(tabs, header\);\s*windowElement\.append\(topbar, main\);/,
+  "The header contents must sit on the tab row, to the right of the tabs",
+);
+assert.doesNotMatch(
+  source,
+  /"astral-am-header-button is-primary",\s*"Refresh"|refreshComfyRegistries/,
+  "The manager header refresh button and its logic must be removed",
+);
+assert.match(
+  source,
+  /this\.chatPaneHost\.append\(\s*this\.promptBrowser\.chatPane,\s*this\.promptBrowser\.apiConfigPane,\s*\)/,
+  "The chat and API configuration panes must live in the API Chat tab",
+);
+assert.match(source, /"Back to API Chat"/);
+assert.match(
+  source,
+  /this\.templateEditorCategory = createCustomDropdown\(/,
+  "The template editor must pick from the managed category list",
+);
+assert.match(source, /"Manage Categories"/);
+assert.match(
+  source,
+  /"\/assets-astral\/prompt-templates\/categories\/create"/,
+);
+assert.match(
+  source,
+  /"\/assets-astral\/prompt-templates\/categories\/delete"/,
+);
+assert.match(
+  source,
+  /built-in rule categories cannot be removed|Built-in rule categories cannot be removed/i,
+);
+assert.match(source, /registerLocalizationRoot\(dialog\)/);
 assert.match(
   source,
   /this\.skillTagModeButton = createElement\(\s*"button",\s*"astral-am-subtab",\s*"Prompt Inspiration",?\s*\)/,
@@ -285,7 +334,7 @@ assert.doesNotMatch(source, /\/assets-astral\/skill-tags\/assign/);
 assert.doesNotMatch(source, /skillMatchesTags\(skill\)/);
 assert.doesNotMatch(source, /buildSkillTagAssignmentEditor\(skill\)/);
 assert.doesNotMatch(source, /activeSkillTagFilters/);
-assert.match(source, /"API Configuration"/);
+assert.match(source, /"Open API Configuration"/);
 assert.doesNotMatch(source, /"API and Chat Parameters"/);
 assert.match(source, /this\.apiConfigPane = this\.buildApiConfigPane\(\)/);
 assert.match(source, /buildApiConfigPane\(\) \{/);
@@ -308,7 +357,10 @@ assert.match(
 assert.doesNotMatch(source, /mode === "localLlmConfig"/);
 assert.match(source, /const CHAT_MODE_DEFINITIONS = \[[\s\S]*?LOCAL_CHAT_MODE_DEFINITION/);
 assert.match(source, /label: "Local Mode"/);
-assert.match(source, /label: "English"[\s\S]*?label: "Simplified Chinese"/);
+assert.match(
+  source,
+  /const TRANSLATION_TARGETS = \[[\s\S]*?value: "zh"[\s\S]*?value: "en"[\s\S]*?\];/,
+);
 assert.match(source, /\/assets-astral\/local-llm\/config/);
 assert.match(source, /\/assets-astral\/local-llm\/models/);
 assert.match(source, /\/assets-astral\/local-llm\/chat/);
@@ -361,30 +413,16 @@ assert.match(source, /"Duplicate Model Cleanup"/);
 assert.match(source, /"Fill Missing Models"/);
 assert.match(
   source,
-  /modeTabs\.append\(\s*this\.missingModeButton,\s*this\.loraModeButton,\s*this\.duplicateModeButton,?\s*\)/,
+  /modeTabs\.append\(this\.loraModeButton, this\.duplicateModeButton\)/,
 );
+assert.doesNotMatch(source, /missingModeButton/);
 assert.doesNotMatch(source, /modeTabs\.append\([\s\S]*?fileModeButton/);
 assert.doesNotMatch(source, /buildFilePane|loadFiles\(true\)|models\/tree\?/);
 assert.match(source, /"Quick Open User Folders"/);
-assert.match(source, /for \(const root of \[[\s\S]*?"models"[\s\S]*?"custom_nodes"[\s\S]*?"input"[\s\S]*?"output"[\s\S]*?"workflows"[\s\S]*?\]\)/);
-assert.match(source, /button\.dataset\.pathLabel = root/);
-assert.match(css, /\.astral-am-directory-prompt\s*\{/);
+assert.doesNotMatch(source, /"Comfy\.RefreshNodeDefinitions"/);
+assert.doesNotMatch(css, /data-path-label/);
+assert.doesNotMatch(css, /astral-am-directory-prompt/);
 assert.match(css, /\.astral-am-header-button\s*\{[\s\S]*?min-height:\s*38px;[\s\S]*?font:\s*700 13px/);
-assert.match(css, /\.astral-am-directory-label::before\s*\{[\s\S]*?content:\s*attr\(data-path-label\)/);
-assert.match(source, /"Comfy\.RefreshNodeDefinitions"/);
-assert.match(
-  source,
-  /button\.title = `Show the \$\{root\} folder in system file manager now`/,
-);
-const openDirectoryBody =
-  source.match(
-    /  async openDirectory\(root\) \{([\s\S]*?)\n  \}\n\n  async refreshComfyRegistries/,
-  )?.[1] || "";
-assert.match(openDirectoryBody, /\/assets-astral\/workspace\/open/);
-assert.doesNotMatch(
-  openDirectoryBody,
-  /showTab|\.navigate|\.setMode|\.load\(/,
-);
 assert.match(source, /\/assets-astral\/workspace\/entries/);
 assert.match(source, /\/assets-astral\/workspace\/open/);
 assert.match(source, /\/assets-astral\/models\/open/);
@@ -498,7 +536,7 @@ assert.match(source, /\/assets-astral\/models\/duplicates\/cancel/);
 assert.match(source, /\/assets-astral\/models\/missing\/resolve/);
 assert.match(
   source,
-  /modeTabs\.append\(\s*this\.missingModeButton,\s*this\.loraModeButton,\s*this\.duplicateModeButton,/,
+  /modeTabs\.append\(this\.loraModeButton, this\.duplicateModeButton\)/,
 );
 assert.match(source, /collectMissingModelReferences\(\)/);
 assert.match(source, /MISSING_MODEL_FILE_PATTERN/);
@@ -570,8 +608,8 @@ assert.match(
   source,
   /reliableMissingModelEntries\(\) \{[\s\S]*?entry\.result\?\.state === "match"[\s\S]*?Boolean\(entry\.selectedTarget\)/,
 );
-assert.match(source, /mode === "missing"/);
-assert.match(source, /this\.missingModelPane/);
+assert.match(source, /this\.missingModelPane = this\.buildMissingModelPane\(\)/);
+assert.doesNotMatch(source, /mode === "missing"/);
 assert.match(source, /THUMBNAIL_PREFERENCE/);
 assert.match(source, /"Show thumbnails"/);
 assert.match(source, /\/assets-astral\/thumbnails\/proxy\?/);
@@ -772,7 +810,23 @@ assert.match(
 );
 assert.match(
   source,
-  /this\.translationTargetLanguage = "en"/,
+  /this\.translationTargetLanguage = "zh"/,
+  "Translation must default to Simplified Chinese",
+);
+assert.match(
+  source,
+  /const TRANSLATION_TARGETS = \[\s*\{\s*value: "zh",\s*label: "Simplified Chinese"\s*\},\s*\{\s*value: "en",\s*label: "English"\s*\},?\s*\]/,
+  "Only Chinese and English targets may remain",
+);
+assert.doesNotMatch(source, /translationLanguageSelect|TRANSLATION_LANGUAGES/);
+assert.match(
+  source,
+  /this\.translationTargetButtons = new Map\(\)/,
+  "The translation target must use the two-state switch control",
+);
+assert.match(
+  source,
+  /setTranslationTarget\(value\) \{[\s\S]*?this\.translationTargetLanguage = target\.value;[\s\S]*?aria-pressed/,
 );
 assert.match(
   source,
@@ -795,7 +849,19 @@ assert.match(source, /"Load Skill \(1\)"/);
 assert.match(source, /"Load System Prompt \(1\)"/);
 assert.match(
   source,
-  /const loadToChat = createElement\(\s*"button",\s*"astral-am-button is-small",\s*loaded \? "Current Session Prompt" : "Load to Conversation",?\s*\)/,
+  /const loadToChat = createElement\(\s*"button",\s*"astral-am-button is-small",\s*loaded \? "Current Session Prompt" : "Add to Conversation",?\s*\)/,
+);
+assert.match(
+  source,
+  /actions\.append\(edit, copy, insert, loadToChat, remove\)/,
+  "Add to Canvas must sit to the left of Add to Conversation",
+);
+assert.doesNotMatch(css, /^\.astral-am-button\.is-primary\s*\{/m);
+assert.doesNotMatch(css, /^\.astral-am-header-button\.is-primary\s*\{/m);
+assert.doesNotMatch(css, /#316d9d|#4e8dbe|#3d7cac|rgba\(61, 119, 166|rgba\(53, 119, 169/);
+assert.match(
+  css,
+  /\.astral-am-menu-button\s*\{[\s\S]*?background:\s*#2a3039;/,
 );
 assert.match(source, /void this\.addSystemPromptToChat\(template\)/);
 assert.doesNotMatch(
@@ -812,7 +878,7 @@ assert.match(
 );
 assert.match(
   source,
-  /openChatSystemPromptSelection\(\s*promptBrowser = this\.promptBrowser,\s*category = "all",?\s*\) \{\s*this\.open\("prompts"\);\s*promptBrowser\.setMode\("templates"\);/,
+  /openChatSystemPromptSelection\(\s*promptBrowser = this\.promptBrowser,\s*category = "all",?\s*\) \{\s*this\.open\("prompts"\);\s*promptBrowser\.chatPickerReturn = "prompt";\s*promptBrowser\.setMode\("templates"\);/,
 );
 assert.match(
   source,
@@ -820,7 +886,7 @@ assert.match(
 );
 assert.match(
   source,
-  /openChatSkillSelection\(promptBrowser = this\.promptBrowser\) \{\s*this\.open\("prompts"\);\s*promptBrowser\.setMode\("skills"\);\s*void promptBrowser\.loadSkills\(\);/,
+  /openChatSkillSelection\(promptBrowser = this\.promptBrowser\) \{\s*this\.open\("prompts"\);\s*promptBrowser\.chatPickerReturn = "skill";\s*promptBrowser\.setMode\("skills"\);\s*void promptBrowser\.loadSkills\(\);/,
 );
 assert.match(
   source,
@@ -896,7 +962,7 @@ assert.match(
 );
 assert.match(
   source,
-  /actions\.append\(preview, openDirectory, addToChat\)/,
+  /actions\.append\(preview, openDirectory, addToCanvas, addToChat\)/,
 );
 assert.doesNotMatch(source, /manageTags/);
 assert.match(source, /async openSkillDirectory\(skill\) \{/);
@@ -938,9 +1004,14 @@ assert.match(source, /No Skills match "\$\{query\}"/);
 assert.match(source, /`Source: \$\{skill\.source\}`/);
 assert.doesNotMatch(source, /Scan node package skills directory/);
 assert.match(source, /asset\.root === "output" \? `\$\{asset\.path\} \[output\]`/);
-assert.match(source, /canvasElement\?\.getBoundingClientRect/);
+assert.match(source, /canvas\?\.canvas\?\.getBoundingClientRect\?\.\(\)/);
 assert.match(source, /canvas\.convertEventToCanvasOffset\(\{/);
-assert.match(source, /loader\.pos = \[\s*Number\(graphPosition\[0\]\) - nodeWidth \/ 2/);
+assert.match(source, /function placeNodesAtViewCenter\(nodes\)/);
+assert.match(source, /placeNodesAtViewCenter\(\[node\]\)/);
+assert.match(source, /placeNodesAtViewCenter\(\[loader\]\)/);
+assert.match(source, /placeNodesAtViewCenter\(nodes\)/);
+assert.match(source, /canvas\?\.deselectAllNodes\?\.\(\)/);
+assert.doesNotMatch(source, /graph_offset/);
 assert.match(source, /Name candidate/);
 assert.match(source, /not confirmed by file hash/);
 assert.doesNotMatch(source, /verify the model file SHA256/);
@@ -1008,7 +1079,25 @@ assert.match(
   css,
   /\.astral-am-window\s*\{[\s\S]*?pointer-events:\s*auto;/,
 );
+assert.match(
+  css,
+  /\.astral-am-window\s*\{[\s\S]*?grid-template-rows:\s*auto minmax\(0, 1fr\);/,
+);
+assert.match(
+  css,
+  /\.astral-am-topbar\s*\{[\s\S]*?justify-content:\s*space-between;/,
+);
 assert.match(source, /startWindowDrag\(event\)/);
+assert.match(
+  source,
+  /topbar\.addEventListener\(\s*"pointerdown",\s*\(event\) => this\.startWindowDrag\(event\),?\s*\)/,
+  "The whole top row must stay draggable",
+);
+assert.doesNotMatch(source, /header\.addEventListener\(\s*"pointerdown"/);
+assert.match(
+  css,
+  /\.astral-am-topbar\s*\{[\s\S]*?cursor:\s*grab;/,
+);
 assert.match(source, /translate3d\(\$\{this\.windowOffset\.x\}px/);
 assert.doesNotMatch(source, /setAttribute\("aria-modal", "true"\)/);
 assert.doesNotMatch(source, /this\.temperatureInput|this\.maxTokensInput|this\.maxRoundsInput/);
@@ -1035,6 +1124,9 @@ assert.match(css, /\.astral-am-chat-mode-button\.is-active\s*\{/);
 assert.match(css, /\.astral-am-chat-current-model\s*\{/);
 assert.match(css, /\.astral-am-local-llm-grid\s*\{/);
 assert.match(css, /\.astral-am-chat-translation-toggle\s*\{/);
+assert.match(css, /\.astral-am-chat-translation-target\s*\{/);
+assert.match(css, /\.astral-am-chat-translation-target-option\.is-active\s*\{/);
+assert.doesNotMatch(css, /\.astral-am-chat-translation-language\s*\{/);
 assert.match(
   css,
   /\.astral-am-chat-translation-toggle\.is-active[\s\S]*?border-color:/,
@@ -1496,7 +1588,7 @@ assert.doesNotMatch(
 );
 assert.match(
   source,
-  /headerActions\.prepend\(this\.shortcutButton\);[\s\S]*?headerActions\.append\(this\.refreshButton\);/,
+  /headerActions\.append\(this\.shortcutButton\);/,
 );
 assert.match(
   source,
@@ -1510,8 +1602,57 @@ assert.match(
 );
 assert.match(
   source,
-  /setup\(\) \{[\s\S]*?installAssetManagerShortcut\(\);[\s\S]*?installAstralMenuButton\(\);/,
+  /setup\(\) \{[\s\S]*?installAssetManagerShortcut\(\);[\s\S]*?if \(!registerAssetManagerSidebar\(\)\) installAstralMenuButton\(\);/,
   "The shortcut must work before the manager is opened for the first time",
+);
+assert.match(
+  source,
+  /function registerAssetManagerSidebar\(\)[\s\S]*?icon: "pi pi-images"/,
+  "The manager button must live in the ComfyUI sidebar with the pi-images icon",
+);
+assert.match(
+  source,
+  /sidebar\?\.registerSidebarTab === "function"[\s\S]*?sidebar\?\.sidebarTab\?\.registerSidebarTab === "function"/,
+  "Both the current and legacy sidebar registration APIs must be supported",
+);
+assert.match(
+  source,
+  /onToggle: \(\) => \{[\s\S]*?toggleAssetManager\(\);[\s\S]*?return true;/,
+  "Clicking the sidebar icon must toggle the floating manager and keep the pane closed",
+);
+assert.match(
+  source,
+  /function placeSidebarTabAfter\(manager, tabId, anchorId\)[\s\S]*?tabs\.splice\(/,
+  "The sidebar tab must be reordered after registration because the API only prepends",
+);
+assert.match(
+  source,
+  /placeSidebarTabAfter\(sidebar, ASSET_MANAGER_SIDEBAR_ID, "assets"\)/,
+  "The manager tab must sit directly below the built-in Assets tab",
+);
+assert.match(
+  source,
+  /function installAssetManagerSidebarHover\(\)[\s\S]*?\[data-testid="\$\{ASSET_MANAGER_SIDEBAR_TEST_ID\}"\]/,
+  "The sidebar icon must open a hover menu in addition to its click action",
+);
+assert.match(
+  source,
+  /const ASSET_MANAGER_SIDEBAR_FOLDERS = Object\.freeze\(\[[\s\S]*?"models",[\s\S]*?"custom_nodes",[\s\S]*?"input",[\s\S]*?"output",[\s\S]*?"workflows",[\s\S]*?\]\)/,
+  "The hover menu must offer the five workspace folders",
+);
+assert.match(
+  source,
+  /async function openWorkspaceRoot\(root\)[\s\S]*?\/assets-astral\/workspace\/open/,
+  "Folder shortcuts must reuse the workspace open endpoint",
+);
+assert.match(
+  source,
+  /async function fillMissingModelsFromSidebar[\s\S]*?autoFillMissingModels = true[\s\S]*?scanMissingModels\(\)/,
+  "The hover menu's fill action must run the missing-model scan with auto-fill enabled",
+);
+assert.match(
+  source,
+  /"astral-am-sidebar-menu"[\s\S]*?"Fill Missing Models"/,
 );
 assert.match(
   source,
@@ -1536,6 +1677,22 @@ assert.match(
 assert.match(
   dialogCss,
   /\.astral-am-shortcut-recorder\s*\{[\s\S]*?min-height:\s*76px;[\s\S]*?place-content:\s*center;/,
+);
+
+assert.match(
+  source,
+  /const ASTRAL_SKILL_LOADER_NODE_ID = "Prompt Skill Loader"/,
+);
+assert.match(source, /insertSkillLoader\(skill\) \{/);
+assert.match(source, /LiteGraph\.createNode\(ASTRAL_SKILL_LOADER_NODE_ID\)/);
+assert.match(source, /placeNodesAtViewCenter\(\[node\]\)/);
+assert.match(
+  source,
+  /addToCanvas\.addEventListener\("click", \(\) => this\.insertSkillLoader\(skill\)\)/,
+);
+assert.match(
+  source,
+  /actions\.append\(preview, openDirectory, addToCanvas, addToChat\)/,
 );
 
 console.log("Asset manager frontend checks passed.");

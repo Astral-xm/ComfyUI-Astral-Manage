@@ -1,0 +1,530 @@
+.astral-pe {
+  align-self: flex-start;
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  min-height: 0;
+  padding: 5px 7px;
+  color: #e5e7eb;
+  background: #202327;
+  border: 1px solid #47515c;
+  border-radius: 7px;
+  font: 12px/1.3 "Segoe UI", "Microsoft YaHei", sans-serif;
+  pointer-events: none;
+  container-type: inline-size;
+}
+
+.astral-pe-widget-shell {
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+.astral-pe * {
+  box-sizing: border-box;
+}
+
+.astral-pe :is(button, select, input, textarea, label, a, [role="button"]) {
+  pointer-events: auto;
+}
+
+.astral-pe[hidden],
+.astral-pe [hidden] {
+  display: none !important;
+}
+
+.astral-pe-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.astral-pe-heading {
+  color: #f3f6fa;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.astral-pe-hint {
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-pe-icon-button {
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  color: #cbd5e1;
+  background: #2b3540;
+  border: 1px solid #4b5d6d;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.astral-pe-icon-button:hover {
+  color: #f8fafc;
+  border-color: #64748b;
+}
+
+.astral-pe-field {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.astral-pe-field-label {
+  overflow: hidden;
+  color: #9fb0c3;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-pe-input,
+.astral-pe-select {
+  width: 100%;
+  min-width: 0;
+  height: 23px;
+  padding: 1px 6px;
+  color: #e5e7eb;
+  background: #171a1f;
+  border: 1px solid #47515c;
+  border-radius: 5px;
+  font: inherit;
+}
+
+.astral-pe-input:focus,
+.astral-pe-select:focus,
+.astral-pe-textarea:focus {
+  border-color: #7c93aa;
+  outline: none;
+}
+
+.astral-pe-textarea {
+  height: auto;
+  min-height: 72px;
+  padding: 4px 6px;
+  resize: vertical;
+}
+
+.astral-pe-row {
+  display: flex;
+  gap: 4px;
+}
+
+.astral-pe-row .astral-pe-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.astral-pe-row .astral-pe-button {
+  flex: 0 0 auto;
+  min-width: 76px;
+  white-space: nowrap;
+}
+
+.astral-pe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 5px 6px;
+}
+
+.astral-pe-grid .astral-pe-field {
+  min-width: 0;
+}
+
+.astral-pe-section {
+  color: #dbe4ee;
+  background: #262b31;
+  border: 1px solid #3a444f;
+  border-radius: 6px;
+}
+
+.astral-pe-section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 7px;
+  color: #dbe4ee;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.astral-pe-section-head:hover {
+  background: #2d343b;
+}
+
+.astral-pe-chevron {
+  width: 9px;
+  color: #94a3b8;
+  font-size: 9px;
+}
+
+.astral-pe-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.astral-pe-section-note {
+  overflow: hidden;
+  color: #7f8b99;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-pe-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px 7px 7px;
+  border-top: 1px solid #343c45;
+}
+
+.astral-pe-section[data-section="chat"] {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.astral-pe-section[data-section="chat"] > .astral-pe-section-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.astral-pe-note {
+  margin: 0;
+  color: #7f8b99;
+  font-size: 10px;
+}
+
+.astral-pe-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 23px;
+  color: #cbd5e1;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.astral-pe-check input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+}
+
+.astral-pe-chat {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  gap: 6px;
+  min-height: 0;
+}
+
+.astral-pe-sessions {
+  display: flex;
+  flex: 0 0 132px;
+  flex-direction: column;
+  gap: 5px;
+  width: 132px;
+}
+
+.astral-pe-session-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.astral-pe-session-button {
+  height: 22px;
+  padding: 0 6px;
+  color: #dbe4ee;
+  background: #2b3540;
+  border: 1px solid #4b5d6d;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+.astral-pe-session-button.is-danger {
+  color: #fca5a5;
+  background: #3a2424;
+  border-color: #7f3b3b;
+}
+
+.astral-pe-session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.astral-pe-session {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 4px 6px;
+  color: #cfd8e3;
+  background: #1b1f24;
+  border: 1px solid #333d47;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.astral-pe-session.is-active {
+  background: #22303c;
+  border-color: #4d82aa;
+}
+
+.astral-pe-session-title {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-pe-session-rename {
+  width: 100%;
+  height: 20px;
+  padding: 0 4px;
+  color: #e5e7eb;
+  background: #171a1f;
+  border: 1px solid #4d82aa;
+  border-radius: 4px;
+  outline: none;
+  font: inherit;
+  font-size: 11px;
+}
+
+.astral-pe-session-count {
+  color: #7f8b99;
+  font-size: 9px;
+}
+
+.astral-pe-chat-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.astral-pe-msg-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.astral-pe-msg-time {
+  color: #6f7c8a;
+  font-size: 9px;
+}
+
+.astral-pe-msg-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.astral-pe-msg-action {
+  height: 17px;
+  padding: 0 5px;
+  color: #9fb0c3;
+  background: #232a32;
+  border: 1px solid #3b4650;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 9px;
+}
+
+.astral-pe-msg-action:hover {
+  color: #e5e7eb;
+  border-color: #5b6b7a;
+}
+
+.astral-pe-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 160px;
+  padding: 6px;
+  overflow-y: auto;
+  background: #14171b;
+  border: 1px solid #2f3740;
+  border-radius: 6px;
+}
+
+.astral-pe-empty {
+  color: #7f8b99;
+  font-size: 11px;
+  text-align: center;
+}
+
+.astral-pe-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 92%;
+}
+
+.astral-pe-msg.is-user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.astral-pe-msg.is-assistant {
+  align-self: flex-start;
+}
+
+.astral-pe-msg-role {
+  color: #7d8a99;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.astral-pe-msg .astral-am-chat-message-content {
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.astral-pe-msg.is-user .astral-am-chat-message-content {
+  color: #eaf4ff;
+  background: #2f5d82;
+  border-bottom-right-radius: 2px;
+}
+
+.astral-pe-msg.is-assistant .astral-am-chat-message-content {
+  color: #dbe4ee;
+  background: #262d35;
+  border: 1px solid #343d47;
+  border-bottom-left-radius: 2px;
+}
+
+.astral-pe-msg.is-pending {
+  opacity: 0.6;
+}
+
+.astral-pe-compose {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.astral-pe-compose .astral-pe-textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.astral-pe-compose-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.astral-pe-button {
+  min-width: 60px;
+  height: 23px;
+  padding: 0 9px;
+  color: #dbe4ee;
+  background: #2b3540;
+  border: 1px solid #4b5d6d;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.astral-pe-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.astral-pe-button:hover {
+  border-color: #64748b;
+}
+
+.astral-pe-button.is-primary {
+  color: #f8fafc;
+  background: #3b6f96;
+  border-color: #4d82aa;
+}
+
+.astral-pe-button.is-primary:hover {
+  background: #4680ab;
+}
+
+.astral-pe-status {
+  display: none;
+  padding: 3px 6px;
+  border-radius: 5px;
+  font-size: 10px;
+  word-break: break-word;
+}
+
+.astral-pe-status.is-visible {
+  display: block;
+}
+
+.astral-pe-status[data-kind="error"] {
+  color: #fecaca;
+  background: rgba(190, 40, 40, 0.24);
+}
+
+.astral-pe-status[data-kind="success"] {
+  color: #bbf7d0;
+  background: rgba(34, 120, 74, 0.22);
+}
+
+.astral-pe-status[data-kind="loading"] {
+  color: #cbd5e1;
+  background: rgba(70, 90, 110, 0.3);
+}
+
+@container (max-width: 320px) {
+  .astral-pe-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .astral-pe-sessions {
+    flex-basis: 108px;
+    width: 108px;
+  }
+
+  .astral-pe-messages {
+    min-height: 120px;
+  }
+}

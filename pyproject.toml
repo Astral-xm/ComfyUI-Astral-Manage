@@ -1,6 +1,6 @@
 [project]
 name = "comfyui-astral-manage"
-version = "0.9.11"
+version = "0.10.0"
 description = "ComfyUI node pack for LoRA stacks, prompt handling, media and model management, and workflow utilities."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,6 +34,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 py-modules = [
   "nodes",
+  "prompt_expert",
+  "prompt_skill_loader",
   "routes",
   "asset_library",
   "chat_service",

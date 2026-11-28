@@ -33,7 +33,7 @@ const SET_GET_NODE_METADATA = new Map([
     SET_GROUP_NODE,
     {
       display_name: "SetGroup",
-      category: "Assets Astral/Set & Get",
+      category: "Astral/Set & Get",
       description: "Store multiple named ports and make them available to matching GetGroup nodes.",
     },
   ],
@@ -41,7 +41,7 @@ const SET_GET_NODE_METADATA = new Map([
     GET_GROUP_NODE,
     {
       display_name: "GetGroup",
-      category: "Assets Astral/Set & Get",
+      category: "Astral/Set & Get",
       description: "Enter one or more SetGroup port names to expose the matching values.",
     },
   ],
@@ -173,7 +173,7 @@ function showCanvasPrompt(
 ) {
   const prompt = app.canvas?.prompt;
   if (typeof prompt !== "function") {
-    console.warn("[Assets Astral] ComfyUI canvas prompt is unavailable.");
+    console.warn("[Astral]ComfyUI canvas prompt is unavailable.");
     return Promise.resolve(null);
   }
   return new Promise((resolve) => {
@@ -744,7 +744,7 @@ export function drawSetGetNodeOnly(canvas, node, ctx) {
     ctx.globalAlpha = 1;
     return true;
   } catch (error) {
-    console.warn("[Assets Astral] Failed to draw SetGroup/GetGroup shape", error);
+    console.warn("[Astral]Failed to draw SetGroup/GetGroup shape", error);
     return false;
   } finally {
     if (hadCurrentNode) canvas.current_node = previousCurrentNode;
@@ -1198,7 +1198,7 @@ function findSetPortEntryByPortId(graph, portId) {
 
 class AstralSetGroupNode extends LiteGraph.LGraphNode {
   static title = "SetGroup";
-  static category = "Assets Astral/Set & Get";
+  static category = "Astral/Set & Get";
   static title_mode = LiteGraph.NO_TITLE ?? 1;
 
   get title_mode() {
@@ -2573,7 +2573,7 @@ class AstralSetGroupNode extends LiteGraph.LGraphNode {
 
 class AstralGetGroupNode extends LiteGraph.LGraphNode {
   static title = "GetGroup";
-  static category = "Assets Astral/Set & Get";
+  static category = "Astral/Set & Get";
   static title_mode = LiteGraph.NO_TITLE ?? 1;
 
   get title_mode() {
@@ -4084,7 +4084,7 @@ function installConnectionMenuEntries() {
     try {
       return original(optPass);
     } catch (error) {
-      console.warn("[Assets Astral] Failed to add Set/Get connection menu entries", error);
+      console.warn("[Astral]Failed to add Set/Get connection menu entries", error);
       throw error;
     } finally {
       interceptActive = false;

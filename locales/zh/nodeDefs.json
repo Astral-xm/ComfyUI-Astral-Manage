@@ -1,16 +1,7 @@
 {
-  "Anything Everywhere": {
-    "display_name": "万物互联（Astral）",
-    "description": "把每个已连接的值广播到当前画布中匹配的未连接输入。虚拟连线由前端绘制并生效。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
-    "inputs": {
-      "anything": {
-        "name": "任意输入"
-      }
-    }
-  },
   "LoRA Stack Loader": {
     "display_name": "LoRA 堆栈加载器",
-    "description": "加载多个 LoRA，并以逗号分隔输出所选触发词，末尾保留逗号。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "description": "加载多个 LoRA，并以逗号分隔输出所选触发词，末尾保留逗号。",
     "inputs": {
       "model": {
         "name": "模型"
@@ -20,19 +11,9 @@
       }
     }
   },
-  "Typed Bypass Switch": {
-    "display_name": "类型旁路开关",
-    "description": "选择一个已启用的输入，旁路其他已连接来源，并在单个输出上暴露锁定的输入类型。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
-    "inputs": {
-      "enabled_slots": {
-        "name": "已启用输入",
-        "tooltip": "由前端管理。以逗号分隔的输入槽位（从 1 开始）；只有启用的槽位会输出，最靠前的启用槽位优先。"
-      }
-    }
-  },
   "String Mode Selector": {
     "display_name": "字符串模式选择器",
-    "description": "在节点界面中选择一个带标题的提示词模式，并以 STRING 返回其提示词，不暴露输入端口。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "description": "在节点界面中选择一个带标题的提示词模式，并以 STRING 返回其提示词，不暴露输入端口。",
     "inputs": {
       "selected_string": {
         "name": "选中的字符串",
@@ -40,9 +21,9 @@
       }
     }
   },
-  "Assets Prompt": {
-    "display_name": "素材提示词",
-    "description": "放在画布上的已保存提示词模板。标题与提示词控件由素材管理器填充，提示词以 STRING 返回。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+  "System Prompt": {
+    "display_name": "系统提示词",
+    "description": "放在画布上的已保存系统提示词。标题与提示词控件由素材管理器填充，提示词以 STRING 返回。",
     "inputs": {
       "title": {
         "name": "标题"
@@ -57,72 +38,263 @@
       }
     }
   },
-  "Assets Astral Prompt": {
-    "display_name": "素材提示词",
-    "description": "放在画布上的已保存提示词模板。标题与提示词控件由素材管理器填充，提示词以 STRING 返回。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
-    "inputs": {
-      "title": {
-        "name": "标题"
-      },
-      "prompt": {
-        "name": "提示词"
-      }
-    },
-    "outputs": {
-      "0": {
-        "name": "STRING"
-      }
-    }
-  },
-  "Assets Astral Prompt Processor": {
+  "Prompt Processor": {
     "display_name": "提示词处理器",
-    "description": "运行一次无状态的提示词扩写或媒体反推任务。支持最多 9 张图片、3 个视频和 3 个音频输入。操作可显式选择，也可根据媒体输入自动推断。作者：Astral星芒（ComfyUI-Astral-Manage）。请勿删除此署名。",
+    "description": "节点内自带 5 组 API 配置与本地 GGUF 配置的提示词处理器，支持多轮对话；user prompt / system prompt / skill 通过输入端口接入，配置区与对话区可展开或收缩。",
     "inputs": {
       "user_prompt": {
         "name": "用户提示词",
-        "tooltip": "要扩写的提示词；反推时作为可选提示。"
+        "tooltip": "连接后覆盖对话面板中输入的消息。"
       },
-      "operation": {
-        "name": "操作",
-        "tooltip": "auto 在未连接媒体时扩写，连接媒体时反推。",
-        "options": {
-          "auto": "自动",
-          "expand": "扩写",
-          "invert": "反推"
-        }
+      "system_prompt": {
+        "name": "系统提示词",
+        "tooltip": "连接后加入系统提示词，位于内置指令之前。"
+      },
+      "skill": {
+        "name": "Skill",
+        "tooltip": "连接提示词 Skill 加载器（或 Qwen llama TE 的 Skill加载器）；其 Skill 正文会加入系统提示词。"
+      },
+      "prompt_text": {
+        "name": "面板消息",
+        "tooltip": "对话面板输入的消息；user prompt 端口连接时被覆盖。"
+      },
+      "chat_history": {
+        "name": "对话历史",
+        "tooltip": "节点面板维护、随工作流保存的多轮对话历史。"
+      },
+      "conversations": {
+        "name": "会话列表",
+        "tooltip": "节点面板维护、随工作流保存的多个会话。"
       },
       "mode": {
         "name": "服务",
-        "tooltip": "API 使用纯文本或图片模式，本地模式使用 GGUF 模型。",
+        "tooltip": "API 模式使用本节点的 API 配置，本地模式使用本节点的 GGUF 配置。",
         "options": {
           "api": "API 模式",
           "local": "本地模式"
         }
       },
-      "expand_rule": {
-        "name": "扩写规则",
-        "tooltip": "“提示词扩写”分类的系统提示词 ID。"
-      },
-      "invert_rule": {
-        "name": "反推规则",
-        "tooltip": "“图像反推”分类的系统提示词 ID。"
-      },
-      "skill": {
-        "name": "Skill（与规则互斥）",
-        "tooltip": "与系统提示词规则互斥的 Skill ID。"
-      },
-      "clear_vram": {
-        "name": "清理显存",
-        "tooltip": "本地模式完成全部任务后释放本地 GGUF 并清理显存。"
+      "multi_turn": {
+        "name": "多轮对话",
+        "tooltip": "每次请求都携带已保存的对话历史。"
       },
       "seed": {
         "name": "随机种子",
-        "tooltip": "本地模式的随机种子，支持 ComfyUI 64 位随机值；传给 llama.cpp 时使用低 32 位，API 模式不使用。"
+        "tooltip": "本地模式的随机种子，支持 ComfyUI 64 位随机值；传给 llama.cpp 时使用低 32 位。"
+      },
+      "api_profiles": {
+        "name": "API 配置组",
+        "tooltip": "最多 5 组 API 配置（名称、地址、密钥、模型），随本节点保存。"
+      },
+      "api_active": {
+        "name": "启用配置组",
+        "tooltip": "API 模式使用第几组配置（1–5）。"
+      },
+      "api_temperature": {
+        "name": "温度",
+        "tooltip": "API 模式的采样温度。"
+      },
+      "api_max_tokens": {
+        "name": "最大生成长度",
+        "tooltip": "API 模式的最大回复长度。"
+      },
+      "api_top_p": {
+        "name": "Top P",
+        "tooltip": "API top-p 采样。"
+      },
+      "api_frequency_penalty": {
+        "name": "频率惩罚",
+        "tooltip": "API 频率惩罚。"
+      },
+      "api_presence_penalty": {
+        "name": "存在惩罚",
+        "tooltip": "API 存在惩罚。"
+      },
+      "api_response_format": {
+        "name": "响应格式",
+        "tooltip": "API 响应格式。",
+        "options": {
+          "default": "默认（不发送）",
+          "text": "text",
+          "json_object": "json_object"
+        }
+      },
+      "api_reasoning_effort": {
+        "name": "推理强度",
+        "tooltip": "支持该参数的 API 模型的推理强度。",
+        "options": {
+          "default": "默认（不发送）",
+          "low": "低",
+          "medium": "中等",
+          "high": "高"
+        }
+      },
+      "api_history_rounds": {
+        "name": "携带历史轮数",
+        "tooltip": "API 模式每次携带的历史轮数。"
+      },
+      "local_model": {
+        "name": "本地模型",
+        "tooltip": "ComfyUI/models/LLM 下的 GGUF 文件。"
+      },
+      "local_vision_model": {
+        "name": "视觉模型（mmproj）",
+        "tooltip": "本地模式下用于图像输入的可选 mmproj 文件。"
+      },
+      "local_n_ctx": {
+        "name": "上下文长度",
+        "tooltip": "本地上下文窗口大小。视觉 / M-RoPE 模型无法滑动上下文，使用图片或多轮历史时请调大。"
+      },
+      "local_n_batch": {
+        "name": "批大小 n_batch",
+        "tooltip": "本地提示词批处理大小。"
+      },
+      "local_n_ubatch": {
+        "name": "微批 n_ubatch",
+        "tooltip": "本地微批大小。"
+      },
+      "local_gpu_layers": {
+        "name": "GPU 层数",
+        "tooltip": "卸载到 GPU 的层数；-1 表示全部卸载。"
+      },
+      "local_threads": {
+        "name": "CPU 线程",
+        "tooltip": "CPU 线程数；0 表示由 llama.cpp 决定。"
+      },
+      "local_max_tokens": {
+        "name": "最大生成长度（本地）",
+        "tooltip": "本地模式的最大回复长度。"
+      },
+      "local_temperature": {
+        "name": "温度（本地）",
+        "tooltip": "本地模式的采样温度。"
+      },
+      "local_max_rounds": {
+        "name": "携带历史轮数",
+        "tooltip": "本地模型保留的历史轮数。"
+      },
+      "local_top_p": {
+        "name": "Top P",
+        "tooltip": "本地 top-p 采样。"
+      },
+      "local_top_k": {
+        "name": "Top K",
+        "tooltip": "本地 top-k 采样。"
+      },
+      "local_min_p": {
+        "name": "Min P",
+        "tooltip": "本地 min-p 采样。"
+      },
+      "local_repeat_penalty": {
+        "name": "重复惩罚",
+        "tooltip": "本地重复惩罚。"
+      },
+      "local_frequency_penalty": {
+        "name": "频率惩罚",
+        "tooltip": "本地频率惩罚。"
+      },
+      "local_presence_penalty": {
+        "name": "存在惩罚",
+        "tooltip": "本地存在惩罚。"
+      },
+      "local_max_image_edge": {
+        "name": "图片最大边",
+        "tooltip": "发送给本地模型的图片最长边。"
+      },
+      "local_image_jpeg_quality": {
+        "name": "JPEG 质量",
+        "tooltip": "本地图片附件的 JPEG 质量。"
+      },
+      "local_context_checkpoints": {
+        "name": "Context Checkpoints",
+        "tooltip": "llama.cpp 上下文检查点数量。"
+      },
+      "local_flash_attention": {
+        "name": "Flash Attention",
+        "tooltip": "llama.cpp Flash Attention 模式。",
+        "options": {
+          "auto": "自动",
+          "enabled": "启用",
+          "disabled": "禁用"
+        }
+      },
+      "local_kv_cache_k": {
+        "name": "KV Cache K",
+        "tooltip": "K 缓存类型。",
+        "options": {
+          "default": "默认",
+          "q8_0": "q8_0"
+        }
+      },
+      "local_kv_cache_v": {
+        "name": "KV Cache V",
+        "tooltip": "V 缓存类型。",
+        "options": {
+          "default": "默认",
+          "q8_0": "q8_0"
+        }
+      },
+      "local_reasoning_effort": {
+        "name": "推理强度",
+        "tooltip": "支持该参数的模型的推理强度。",
+        "options": {
+          "xhigh": "极高",
+          "medium": "中等",
+          "low": "低"
+        }
+      },
+      "local_enable_thinking": {
+        "name": "启用思考",
+        "tooltip": "请求本地模型输出思考内容。"
+      },
+      "local_use_mmap": {
+        "name": "使用 mmap",
+        "tooltip": "对 GGUF 文件使用内存映射。"
+      },
+      "clear_vram": {
+        "name": "清理显存",
+        "tooltip": "任务完成后释放本地 GGUF 并清理显存。"
       }
     },
     "outputs": {
       "0": {
         "name": "提示词"
+      },
+      "1": {
+        "name": "回复"
+      },
+      "2": {
+        "name": "对话历史"
+      },
+      "3": {
+        "name": "报告"
+      }
+    }
+  },
+  "Prompt Skill Loader": {
+    "display_name": "提示词 Skill 加载器",
+    "description": "从本插件 skills 目录中选择 Skill，或加载本机任意 .md / .txt 文件；输出可直接连接提示词专家或 Qwen llama TE 节点。",
+    "inputs": {
+      "skill": {
+        "name": "Skill",
+        "tooltip": "选择已安装的 Skill，或用下方按钮加载文件。"
+      },
+      "skill_path": {
+        "name": "Skill 文件路径",
+        "tooltip": "资产管理器“放入画布”时固定的 Skill 文件绝对路径。"
+      },
+      "inline_name": {
+        "name": "已加载文件名",
+        "tooltip": "从磁盘加载的 Skill 文件名。"
+      },
+      "inline_content": {
+        "name": "已加载内容",
+        "tooltip": "从磁盘加载的 Skill 正文。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Skill"
       }
     }
   }

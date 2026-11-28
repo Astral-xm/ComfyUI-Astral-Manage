@@ -1,0 +1,70 @@
+.astral-sl {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 6px;
+  color: #cbd5e1;
+  font: 11px/1.3 "Segoe UI", "Microsoft YaHei", sans-serif;
+  pointer-events: none;
+}
+
+.astral-sl-actions {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.astral-sl-widget-shell {
+  pointer-events: none !important;
+}
+
+.astral-sl * {
+  box-sizing: border-box;
+}
+
+.astral-sl :is(button, input, label) {
+  pointer-events: auto;
+}
+
+.astral-sl-button {
+  flex: 1 1 0;
+  height: 22px;
+  min-width: 0;
+  padding: 0 8px;
+  color: #dbe4ee;
+  background: #2b3540;
+  border: 1px solid #4b5d6d;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.astral-sl-button:hover {
+  border-color: #64748b;
+}
+
+.astral-sl-status {
+  width: 100%;
+  overflow: hidden;
+  color: #9fb0c3;
+  font-size: 10px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.astral-sl-status[data-kind="success"] {
+  color: #bbf7d0;
+}
+
+.astral-sl-status[data-kind="error"] {
+  color: #fca5a5;
+}
+
+.astral-sl-file {
+  display: none;
+}

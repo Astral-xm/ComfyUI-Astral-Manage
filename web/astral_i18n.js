@@ -21,9 +21,6 @@ const USER_CONTENT_SELECTOR = [
   ".astral-am-chat-message-images",
   ".astral-am-template-prompt",
   ".astral-am-skill-preview-content",
-  ".astral-pt-user-content",
-  ".astral-pt-result-content",
-  ".astral-pt-attachment",
   ".astral-pp-user-content",
 ].join(",");
 

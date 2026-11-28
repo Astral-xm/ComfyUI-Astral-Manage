@@ -77,10 +77,13 @@ from .model_library import (
 )
 from .prompt_library import (
   PromptDataError,
+  _api_base_url,
   create_conversation,
+  create_prompt_category,
   default_data_directory,
   delete_conversation,
   delete_conversation_message,
+  delete_prompt_category,
   delete_template,
   get_conversation,
   list_conversations,
@@ -1060,6 +1063,40 @@ async def post_prompt_template(request: web.Request) -> web.Response:
   return web.json_response(result, headers=NO_STORE_HEADERS)
 
 
+@ROUTES.post("/assets-astral/prompt-templates/categories/create")
+async def post_prompt_category_create(request: web.Request) -> web.Response:
+  try:
+    payload = await _json_body(request)
+    result = await asyncio.to_thread(
+      create_prompt_category,
+      default_data_directory(),
+      payload.get("name"),
+    )
+  except (PromptDataError, ValueError) as error:
+    return _prompt_error(error)
+  except Exception as error:
+    print(f"[ComfyUI-Astral-Manage] Unable to create prompt category: {error}")
+    return _prompt_error(error)
+  return web.json_response(result, headers=NO_STORE_HEADERS)
+
+
+@ROUTES.post("/assets-astral/prompt-templates/categories/delete")
+async def post_prompt_category_delete(request: web.Request) -> web.Response:
+  try:
+    payload = await _json_body(request)
+    result = await asyncio.to_thread(
+      delete_prompt_category,
+      default_data_directory(),
+      payload.get("name"),
+    )
+  except (PromptDataError, ValueError) as error:
+    return _prompt_error(error)
+  except Exception as error:
+    print(f"[ComfyUI-Astral-Manage] Unable to delete prompt category: {error}")
+    return _prompt_error(error)
+  return web.json_response(result, headers=NO_STORE_HEADERS)
+
+
 @ROUTES.post("/assets-astral/prompt-templates/delete")
 async def post_prompt_template_delete(request: web.Request) -> web.Response:
   try:
@@ -1107,6 +1144,38 @@ async def post_chat_config(request: web.Request) -> web.Response:
     print(f"[ComfyUI-Astral-Manage] Unable to save chat config: {error}")
     return _prompt_error(error)
   return web.json_response(result, headers=NO_STORE_HEADERS)
+
+
+@ROUTES.post("/assets-astral/prompt-expert/models")
+async def post_prompt_expert_models(request: web.Request) -> web.Response:
+  try:
+    payload = await _json_body(request)
+    base_url = _api_base_url(payload.get("baseUrl"))
+    if not base_url:
+      raise ChatServiceError("Please enter the API address first")
+    models = await asyncio.to_thread(
+      list_api_models,
+      {
+        "baseUrl": base_url,
+        "apiKey": str(payload.get("apiKey") or "").strip(),
+      },
+    )
+  except (
+    ChatServiceError,
+    PromptDataError,
+    ValueError,
+  ) as error:
+    return _chat_error(error)
+  except Exception as error:
+    print(
+      "[ComfyUI-Astral-Manage] Unable to fetch Prompt Processor API models: "
+      f"{error}"
+    )
+    return _chat_error(error)
+  return web.json_response(
+    {"items": models, "total": len(models)},
+    headers=NO_STORE_HEADERS,
+  )
 
 
 @ROUTES.post("/assets-astral/chat/models")

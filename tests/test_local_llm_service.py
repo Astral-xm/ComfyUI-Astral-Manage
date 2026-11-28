@@ -48,6 +48,23 @@ class LocalLLMServiceTests(unittest.TestCase):
   def tearDown(self):
     shutil.rmtree(self.temp_path, ignore_errors=True)
 
+  def test_build_local_llm_config_normalizes_without_writing(self):
+    config = local_llm_service.build_local_llm_config(
+      {"modelPath": "chat.gguf", "nCtx": 4096, "temperature": 0.4},
+      models_root=str(self.models_root),
+    )
+    self.assertEqual(config["modelPath"], "chat.gguf")
+    self.assertEqual(config["nCtx"], 4096)
+    self.assertAlmostEqual(config["temperature"], 0.4)
+    self.assertFalse((self.data_directory / "local-llm-config.json").exists())
+
+  def test_build_local_llm_config_rejects_missing_model(self):
+    with self.assertRaises(local_llm_service.LocalLLMError):
+      local_llm_service.build_local_llm_config(
+        {"modelPath": "missing.gguf"},
+        models_root=str(self.models_root),
+      )
+
   def test_lists_only_main_gguf_models_recursively(self):
     models = local_llm_service.list_local_llm_models(str(self.models_root))
     self.assertEqual(
@@ -199,6 +216,36 @@ class LocalLLMServiceTests(unittest.TestCase):
     self.assertEqual(closed, [True, True])
     manager.reset()
     self.assertEqual(closed, [True, True, True])
+
+  def test_manager_translates_context_overflow_into_actionable_error(self):
+    class FakeLlama:
+      def __init__(self, **kwargs):
+        pass
+
+      def create_chat_completion(self, **kwargs):
+        raise RuntimeError(
+          "Llama.eval: Context Shift is explicitly disabled by the C++ "
+          "backend (n_pos_per_embd > 1 or incompatible M-RoPE). You MUST "
+          "increase n_ctx (currently 8192) to fit the dialogue."
+        )
+
+    manager = local_llm_service.LocalLlamaManager(llama_factory=FakeLlama)
+    config = {
+      **local_llm_service.DEFAULT_LOCAL_LLM_CONFIG,
+      "modelPath": "chat.gguf",
+      "nCtx": 8192,
+    }
+    with self.assertRaises(local_llm_service.LocalLLMError) as raised:
+      manager.chat(
+        config,
+        [{"role": "user", "content": "hello"}],
+        models_root=str(self.models_root),
+      )
+    message = str(raised.exception)
+    self.assertIn("n_ctx=8192", message)
+    self.assertIn("local_n_ctx", message)
+    self.assertIn("16384", message)
+    self.assertIsInstance(raised.exception.__cause__, RuntimeError)
 
   def test_manager_applies_request_seed_without_reloading_model(self):
     created = []
