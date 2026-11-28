@@ -5,9 +5,9 @@
 - （B 站）：https://space.bilibili.com/176339505
 - （YouTube）：https://www.youtube.com/@Astral%E6%98%9F%E8%8A%92
 
-作者：**Astral星芒** · 许可证：**AGPL-3.0** · 节点与界面中的原作者信息不得删除或替换
+作者：**Astral星芒** · 许可证：**AGPL-3.0** · 原作者署名保留在本 README 与 `NOTICE.md` 中
 
-ComfyUI 自定义节点与资产管理合集，包含 `LoRA Stack Loader`、`String Mode Selector`、`SetGroup` / `GetGroup`、提示词与 API 对话节点、`Prompt Processor`、本地 GGUF 对话，以及通过 ComfyUI 侧边栏“资产管理”图标打开的资产管理器。资产管理器顶部的 `ComfyUI-Astral-Manage` 标题可点击打开 GitHub 发布页。
+ComfyUI 自定义节点与资产管理合集，包含 `LoRA Stack Loader`、`String Mode Selector`、`SetGroup` / `GetGroup`、`System Prompt`、`Prompt Processor`、`Prompt Skill Loader`，以及通过 ComfyUI 侧边栏“资产管理”图标打开的资产管理器（提示词、媒体、模型、LoRA 管理与 API 对话）。资产管理器右上角的 `ComfyUI-Astral-Manage` 标题可点击打开 GitHub 发布页。
 
 ## 功能一览
 
@@ -16,9 +16,9 @@ ComfyUI 自定义节点与资产管理合集，包含 `LoRA Stack Loader`、`Str
 | `LoRA Stack Loader` | `AssetManagement` | 多 LoRA 堆叠加载，每个 LoRA 最多附带 6 个触发词 |
 | `String Mode Selector` | `Astral/Utilities` | 单选模式提示词并输出字符串 |
 | `SetGroup` / `GetGroup` | `Astral/Set & Get` | 用分组保存和读取中间值 |
-| 提示词 / 对话节点 | `Astral/Prompt` | 提示词库、API 对话与本地 GGUF 对话 |
+| `System Prompt` | `Astral/Prompt` | 将已保存的系统提示词模板放到画布并输出 `STRING` |
 | `Prompt Processor` | `Astral/Prompt` | 节点内配置 API / 本地 GGUF 的可折叠提示词对话节点 |
-| `Prompt Skill Loader` | `Astral/Prompt` | 从节点包或本机文件加载 Skill，供提示词专家使用 |
+| `Prompt Skill Loader` | `Astral/Prompt` | 从节点包或本机文件加载 Skill，供 `Prompt Processor` 使用 |
 | 直角曲线 | ComfyUI 设置 → 连线渲染模式 | 正交走线、圆角拐弯、平行线自动分道 |
 | `Asset Manager` | 侧边栏“资产管理”图标 | 提示词、媒体、模型、LoRA 的统一管理 |
 
@@ -194,7 +194,7 @@ Hugging Face 与魔搭的改名识别按以下顺序进行：
 
 ## Prompt Processor
 
-`Prompt Processor` 是多轮对话节点：API / 本地 GGUF 配置全部写在节点上，不再读取资产管理器的全局 API 或本地 LLM 配置。节点始终以对话方式工作，没有扩写/反推/自由对话的模式切换。
+`Prompt Processor` 是多轮对话节点：API / 本地 GGUF 配置全部写在节点上，不再读取资产管理器的全局 API 或本地 LLM 配置。节点始终以对话方式工作，支持多会话与多轮历史。
 
 ### 面板结构
 
@@ -235,11 +235,11 @@ Hugging Face 与魔搭的改名识别按以下顺序进行：
 
 ## Asset Manager
 
-点击 ComfyUI 侧边栏中的“资产管理”图标即可打开。管理器不注册独立节点，包含“提示词管理”、“媒体管理”和“模型管理”三个页签。
+点击 ComfyUI 侧边栏中的“资产管理”图标即可打开。管理器不注册独立节点，包含“提示词管理”“媒体管理”“模型管理”“API 对话”四个页签。
 
 把鼠标悬停在该图标上会弹出快捷浮层：`models`、`custom_nodes`、`input`、`output`、`workflows` 五个按钮可直接在系统文件管理器中打开对应目录；“填充缺失模型”会立即扫描当前工作流中失效的模型下拉值，并按 SHA256、原路径或唯一同名自动填充，结果显示在浮层内。自动填充只修改当前工作流，不会保存或改动本地模型文件。
 
-管理器以悬浮窗口显示，四周的 ComfyUI 画布仍可正常查看和操作；拖动窗口顶部标题栏可调整位置。
+管理器以悬浮窗口显示，四周的 ComfyUI 画布仍可正常查看和操作；按住顶部页签行的空白区域可拖动窗口。
 
 默认按 `Ctrl + Alt + M` 可以打开或关闭资产管理器，无需先点击侧边栏的“资产管理”图标。该组合避开 ComfyUI 常用编辑/画布快捷键、浏览器高频快捷键和 Windows 常用系统快捷键；面板关闭时，在输入框、文本框或其他 Astral 对话框中按键不会触发，面板已打开时再次按同一快捷键会关闭。
 
@@ -251,11 +251,40 @@ Hugging Face 与魔搭的改名识别按以下顺序进行：
 
 #### 系统提示词管理
 
-- 每个模板包含标题、提示词正文和分类；分类默认提供文本、图片、音频、视频、提示词扩写、图像反推。工具栏的“管理分类”可以添加自定义分类或移除分类；分类下仍有模板时无法移除，“提示词扩写”和“图像反推”是内置规则分类，始终保留。
-- “提示词扩写”和“图像反推”是内置的系统提示词分类，便于归类扩写和反推提示词；它们属于内置规则分类，在分类管理中不能删除。
+- 每个模板包含标题、提示词正文和分类；分类默认提供文本、图片、音频、视频、提示词扩写、图像反推。工具栏的“管理分类”可以添加自定义分类或移除分类，分类下仍有模板时无法移除；“提示词扩写”和“图像反推”是内置分类，始终保留，不能删除。
 - 支持按标题、分类或正文关键词筛选。
 - 支持新建、编辑、删除和复制模板正文。
 - 可将任一模板通过 `System Prompt` 节点一键放到当前 ComfyUI 画布；节点标题和正文会自动填入，并输出 `STRING`。
+
+#### 提示词灵感
+
+- 初次安装默认创建“人物”“场景”“服饰”“道具”四个分类，每类预置 12 个参考提示词小助手的常用标签。
+- 分类支持二级子分类。“人物”默认包含数量、性别、年龄、肤色、身材、发型、表情、动作；“服饰”默认包含上衣、裤子、套装、鞋、饰品；“场景”默认包含天气、时间、光照、镜头视角、地点。
+- 可通过分类旁的 `+` 新建子分类或批量新增标签；二级分类旁的 `+` 只在该二级分类下批量新增标签，分类树最多两级。
+- 批量新增支持每行一个标签，也支持使用英文逗号、中文逗号或分号分隔。一次只会写入当前分类或当前二级分类，重复名称自动跳过，并统一写入一次标签数据。
+- 二级分类支持重命名、删除和在同一父分类内拖拽排序。
+- 新建或编辑标签时可选择二级分类。删除二级分类只会把其中的标签移回该父分类的“未分类”，不会删除标签、收藏或原有标签数据。
+- 标签只用于提供视觉提示词灵感，不用于标记、归类或筛选 Skill。
+- 可跨分类多选一批标签；也可使用“随机组合”从 2–4 个不同分类各抽取一个标签，再次点击可换一批。
+- 每张标签卡片都有独立的批量管理复选框；勾选不会改变“加入灵感”的选择。支持全选当前结果和清空勾选。
+- 可批量删除勾选标签，或把它们统一移动到目标分类、目标二级分类或该分类的“未分类”。目标分类已有同名标签时会自动跳过，不会覆盖原标签。
+- 输入基础画面想法后，可把所选标签自然扩写为文生图或文生视频提示词，并选择英文或中文输出。文生视频会额外考虑动作变化、镜头运动、节奏、光影和空间连续性。
+- 灵感扩写可在页面切换“API纯文本模式”和“本地模式”：API纯文本模式使用“纯文本模式”API 与模型，本地模式使用“API配置”底部的本地 GGUF 模型。
+- 两种模式共用同一套内置扩写规则，不受 API 配置的系统提示词或“提示词扩写”模板影响。
+- 生成结果可以继续编辑、复制、作为新的基础想法再次扩写，或加入 API 对话。
+- 支持新增、重命名、删除分类和标签，设置标签颜色、收藏标签，以及拖拽调整分类、二级分类和标签顺序。
+- 标签数据继续保存在兼容文件 `skill-tags.json` 中；旧版仅含空“通用”分类的默认数据会自动迁移，用户已有的自定义分类、标签和旧版 Skill 分配数据都会保留，但 Skill 分配不再出现在界面中，也不参与 Skill 搜索或对话上下文。
+
+#### Skill 管理
+
+- 同时扫描 ComfyUI `custom_nodes` 与 `input` 目录树中的 Skill，每个 Skill 子目录可放一个 `SKILL.md`。
+- `custom_nodes` 中的 Skill 保持原有 ID；`input` 中的 Skill 使用 `input/...` 命名空间，并在卡片上标明来源。
+- 同一目录同时存在 `SKILL.cn.md` 和 `SKILL.md` 时，优先读取 `SKILL.cn.md`。
+- 支持查看 Skill 正文、大小、描述和 `references` 文件列表，并打开 Skill 所在目录。
+- 可从 Skill 管理页直接刷新；首次打开对话时也会等待 Skill 扫描完成，无需再点第二次。
+- 支持按 Skill 名称、ID、描述、来源或文件名搜索。
+
+提示词模板、提示词分类、API 配置、本地 LLM 配置和会话默认保存在 `ComfyUI 用户目录/assets-astral`（例如 `ComfyUI/user/assets-astral`），自定义分类保存在 `prompt-categories.json`。`api-config.json` 含本地保存的 API Key，请勿随工作流派发此目录。
 
 ### API 对话（独立页签）
 
@@ -299,36 +328,6 @@ API Key 只会以掩码形式回传到浏览器，不会在页面中回显明文
 - 本地 LLM 配置不再包含默认系统提示词；如需系统提示词，请从“系统提示词管理”加载到当前会话。
 - 本地普通对话支持当前会话的系统提示词、单个 Skill 和历史上下文。图片和视频需要 mmproj；音频仅支持 Gemma4，并需要匹配的 BF16 mmproj。开启翻译模式后，本地模型只执行严格翻译，不读取上述上下文。
 - 如果未安装 `llama-cpp-python`、模型文件不存在、模型不是 GGUF 或运行时加载失败，页面会显示具体错误原因。
-
-#### Skill 管理
-
-- 同时扫描 ComfyUI `custom_nodes` 与 `input` 目录树中的 Skill，每个 Skill 子目录可放一个 `SKILL.md`。
-- `custom_nodes` 中的 Skill 保持原有 ID；`input` 中的 Skill 使用 `input/...` 命名空间，并在卡片上标明来源。
-- 同一目录同时存在 `SKILL.cn.md` 和 `SKILL.md` 时，优先读取 `SKILL.cn.md`。
-- 支持查看 Skill 正文、大小、描述和 `references` 文件列表，并打开 Skill 所在目录。
-- 可从 Skill 管理页直接刷新；首次打开对话时也会等待 Skill 扫描完成，无需再点第二次。
-- 支持按 Skill 名称、ID、描述、来源或文件名搜索。
-
-#### 提示词灵感
-
-- 初次安装默认创建“人物”“场景”“服饰”“道具”四个分类，每类预置 12 个参考提示词小助手的常用标签。
-- 分类支持二级子分类。“人物”默认包含数量、性别、年龄、肤色、身材、发型、表情、动作；“服饰”默认包含上衣、裤子、套装、鞋、饰品；“场景”默认包含天气、时间、光照、镜头视角、地点。
-- 可通过分类旁的 `+` 新建子分类或批量新增标签；二级分类旁的 `+` 只在该二级分类下批量新增标签，分类树最多两级。
-- 批量新增支持每行一个标签，也支持使用英文逗号、中文逗号或分号分隔。一次只会写入当前分类或当前二级分类，重复名称自动跳过，并统一写入一次标签数据。
-- 二级分类支持重命名、删除和在同一父分类内拖拽排序。
-- 新建或编辑标签时可选择二级分类。删除二级分类只会把其中的标签移回该父分类的“未分类”，不会删除标签、收藏或原有标签数据。
-- 标签只用于提供视觉提示词灵感，不用于标记、归类或筛选 Skill。
-- 可跨分类多选一批标签；也可使用“随机组合”从 2–4 个不同分类各抽取一个标签，再次点击可换一批。
-- 每张标签卡片都有独立的批量管理复选框；勾选不会改变“加入灵感”的选择。支持全选当前结果和清空勾选。
-- 可批量删除勾选标签，或把它们统一移动到目标分类、目标二级分类或该分类的“未分类”。目标分类已有同名标签时会自动跳过，不会覆盖原标签。
-- 输入基础画面想法后，可把所选标签自然扩写为文生图或文生视频提示词，并选择英文或中文输出。文生视频会额外考虑动作变化、镜头运动、节奏、光影和空间连续性。
-- 灵感扩写可在页面切换“API纯文本模式”和“本地模式”：API纯文本模式使用“纯文本模式”API 与模型，本地模式使用“API配置”底部的本地 GGUF 模型。
-- 两种模式共用同一套内置扩写规则，不受 API 配置的系统提示词或“提示词扩写”模板影响。
-- 生成结果可以继续编辑、复制、作为新的基础想法再次扩写，或加入 API 对话。
-- 支持新增、重命名、删除分类和标签，设置标签颜色、收藏标签，以及拖拽调整分类、二级分类和标签顺序。
-- 标签数据继续保存在兼容文件 `skill-tags.json` 中；旧版仅含空“通用”分类的默认数据会自动迁移，用户已有的自定义分类、标签和旧版 Skill 分配数据都会保留，但 Skill 分配不再出现在界面中，也不参与 Skill 搜索或对话上下文。
-
-提示词模板、API 配置、本地 LLM 配置和会话默认保存在 `ComfyUI 用户目录/assets-astral`（例如 `ComfyUI/user/assets-astral`）。`api-config.json` 含本地保存的 API Key，请勿随工作流派发此目录。
 
 ### 媒体管理
 
@@ -425,6 +424,8 @@ GET  /assets-astral/prompts
 GET  /assets-astral/prompt-templates
 POST /assets-astral/prompt-templates
 POST /assets-astral/prompt-templates/delete
+POST /assets-astral/prompt-templates/categories/create
+POST /assets-astral/prompt-templates/categories/delete
 GET  /assets-astral/chat/config
 POST /assets-astral/chat/config
 GET  /assets-astral/chat/conversations
@@ -438,6 +439,7 @@ POST /assets-astral/chat/cancel
 POST /assets-astral/chat/translate
 POST /assets-astral/chat/messages/delete
 POST /assets-astral/prompt-task
+POST /assets-astral/prompt-expert/models
 GET  /assets-astral/local-llm/config
 POST /assets-astral/local-llm/config
 GET  /assets-astral/local-llm/models
@@ -453,7 +455,10 @@ GET  /assets-astral/models
 GET  /assets-astral/models/categories
 GET  /assets-astral/models/tree
 POST /assets-astral/models/duplicates
+GET  /assets-astral/models/duplicates/status
+POST /assets-astral/models/duplicates/cancel
 POST /assets-astral/models/missing/resolve
+POST /assets-astral/models/open
 POST /assets-astral/models/recycle
 GET  /assets-astral/thumbnails/proxy
 ```
@@ -507,5 +512,5 @@ username or password are always rejected.
 
 本项目以 **GNU Affero General Public License v3.0（AGPL-3.0）** 发布。你可以在遵守许可证的前提下使用、修改和分发；通过网络提供服务时也必须提供完整源代码。
 
-依据 AGPL-3.0 第 7(b) 条，作者附加要求：**不得删除、隐藏或替换节点、界面和源代码中的原作者署名“Astral星芒”及项目名称**。完整条款见 [NOTICE.md](NOTICE.md)，许可证全文见 [LICENSE](LICENSE)。
+依据 AGPL-3.0 第 7(b) 条，作者附加要求：复制、修改或分发本项目（含修改版），或通过网络向用户提供本项目时，**必须在 `README.md` 与 `NOTICE.md` 中完整保留原作者署名“Astral星芒”、项目名称及相关版权声明**，不得删除、隐藏、弱化、遮挡或以他人名义替换；节点与界面中不再强制显示作者信息。完整条款见 [NOTICE.md](NOTICE.md)，许可证全文见 [LICENSE](LICENSE)。
 
